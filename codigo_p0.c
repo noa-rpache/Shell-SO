@@ -3,11 +3,46 @@
 #include <stdbool.h>
 #include <unistd.h> //esta venía en el man C de google
 #include <errno.h> //aquí se supone que está perror()
+#include <sys/utsname.h> //esto es para infosis
+#include "list.h"
 #define MAX_INPUT 100
 
 //incluir el tipo del historial
 
 //COMANDOS
+
+void procesarEntrada( char orden[MAX_INPUT] ){
+
+    //mismo método de strcmp que en bool_salir
+
+    switch(/*comando principal*/){
+
+        //aquí se introducen las funciones del resto con sus modificadores y eso
+
+        default: printf("ha ocurrido un error jeje");
+            break;
+    }
+
+}
+
+void infosis(){
+
+    struct utsname informacion;
+
+    uname(&informacion);
+
+    printf("%s %s %s %s %s\n", informacion.machine, informacion.nodename, informacion.release, informacion.sysname, informacion.version);
+
+}//en cuanto se ejecute cambiamos el orden para que coincida con el de la shell
+
+void repetir_comando(int orden, tList hist){
+
+    tItemL repeticion = getItem(findItem(orden, hist), hist);
+
+    procesarEntrada(repeticion.comando);
+
+}
+
 
 void autores( char modo ){
 
@@ -124,20 +159,6 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 } //no tengo ni idea de cómo funciona así que no sé cómo usarla
 
-void procesarEntrada( /**/ ){
-
-    //mismo método de strcmp que en bool_salir
-
-    switch(/*comando principal*/){
-
-        //aquí se introducen las funciones del resto con sus modificadores y eso
-
-        default: printf("ha ocurrido un error jeje");
-            break;
-    }
-
-} //al no saber cómo salen de la de trocear no sé lo que poner en la entrada
-
 void leerEntrada( char *entrada[], char *comandos_separados[]){
 
 	fgets(*entrada, MAX_INPUT, stdin);
@@ -146,7 +167,7 @@ void leerEntrada( char *entrada[], char *comandos_separados[]){
 
 }
 
-void new_historial(char *comando, int numero){
+void new_historial(char *comando, int numero, tList hist){
     //llamar a la función de insertar nodo, y le pasamos el comando mdo texto y el número
 } //recibe una cadena que almacena en la lista, falta la lista y sus funciones
 
@@ -154,6 +175,7 @@ void new_historial(char *comando, int numero){
 
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
 
+    tList historial;
     bool salida = false;
     int contador = 0;
 
@@ -167,7 +189,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         printf("\n");
 
         salida = salir(arvg);
-        new_historial( *arvg,contador); //se tiene que guardar el comando si no está bien escrito??
+        new_historial( *arvg,contador, historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
         procesarEntrada(/**/);
 
     }
