@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define LNULL NULL
-#define MAX_LENGHT 200
+#define MAX_LENGHT 100
 
 typedef int posicion;
 typedef struct{

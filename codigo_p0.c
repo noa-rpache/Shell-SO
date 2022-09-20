@@ -1,3 +1,9 @@
+/*
+ * Grupo 2.2
+ * Noa Rodríguez Pache - noa.rpache
+ * Fátima Ansemil - fatima.ansemil
+ * */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -5,13 +11,20 @@
 #include <errno.h> //aquí se supone que está perror()
 #include <sys/utsname.h> //esto es para infosis
 #include "list.h"
-#define MAX_INPUT 100
+//#define MAX_INPUT 100 -> se define en la lista
 
-//incluir el tipo del historial
 
-//COMANDOS
 
-void procesarEntrada( char orden[MAX_INPUT] ){
+void ayuda(char especificador){
+    if(strcmp(&especificador, "\0") == 0){
+        printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
+        printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
+    }if( strcmp(&especificador, "fin") == 0 ){
+        printf("fin\t");
+    }
+}
+
+void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
 
     //mismo método de strcmp que en bool_salir
 
@@ -23,7 +36,7 @@ void procesarEntrada( char orden[MAX_INPUT] ){
             break;
     }
 
-}
+} //falta bastante
 
 void infosis(){
 
@@ -42,7 +55,6 @@ void repetir_comando(int orden, tList hist){
     procesarEntrada(repeticion.comando);
 
 }
-
 
 void autores( char modo ){
 
@@ -113,7 +125,6 @@ void carpeta(char modo){
 } //falta que salte un aviso cuando metes un directorio raro
 
 
-//FUNCIONES QUE NO SON COMANDOS
 
 void printPrompt(){
     printf(">>");
@@ -121,19 +132,15 @@ void printPrompt(){
 
 bool salir(char *cadena[]){
 
-    int fin = strcmp(*cadena, "fin");
-
-	if ( fin == 0 ){ //si es fin O salir
+	if ( strcmp(*cadena, "fin")  == 0 ){ //si es fin O salir
 		return true;
 	}else{
 
-        int salir = strcmp(*cadena, "salir");
-        if (salir == 0){
+        if (strcmp(*cadena, "salir") == 0){
             return true;
         }else{
 
-            int bye = strcmp(*cadena, "bye");
-            if( bye == 0 ) { //si es bye
+            if( strcmp(*cadena, "bye") == 0 ) { //si es bye
                 return true;
             }else{ //si NO ES NINGUNO de los tres
                 return false;
@@ -157,40 +164,46 @@ int TrocearCadena(char *cadena, char *trozos[]){
         return i;
     }
 
-} //no tengo ni idea de cómo funciona así que no sé cómo usarla
+}
 
 void leerEntrada( char *entrada[], char *comandos_separados[]){
 
-	fgets(*entrada, MAX_INPUT, stdin);
+	fgets(*entrada, MAX_LENGHT, stdin);
 	
 	TrocearCadena(*entrada, comandos_separados);
 
 }
 
-void new_historial(char *comando, int numero, tList hist){
-    //llamar a la función de insertar nodo, y le pasamos el comando mdo texto y el número
-} //recibe una cadena que almacena en la lista, falta la lista y sus funciones
+void new_historial(char *comando, int numero, tList *hist){
+
+    tItemL nuevo;
+    nuevo.comando = comando; //por qué no se asigna??
+    nuevo.puesto = numero;
+    if ( !insertElement(nuevo, LNULL, hist) ) return ; //mensaje error
+
+
+} //hay fallitos con el tipo del comando
 
 
 
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
 
     tList historial;
-    bool salida = false;
-    int contador = 0;
+    bool salida = false; //comprobador de condición de salida
+    int contador = 0; //número de ítems en el historial
 
     while( salida == false ){ //mientras no se cumpla ninguna condición de salida
 
         contador++;
-        char *orden_procesada[] = {}; //comandos separados
+        char *orden_procesada[MAX_LENGHT + 1]; //comandos separados
 
         printPrompt();
         leerEntrada(arvg,orden_procesada);
         printf("\n");
 
         salida = salir(arvg);
-        new_historial( *arvg,contador, historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
-        procesarEntrada(/**/);
+        new_historial( arvg,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
+        procesarEntrada(*orden_procesada, argc);
 
     }
 
