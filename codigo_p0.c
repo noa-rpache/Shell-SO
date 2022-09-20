@@ -15,28 +15,66 @@
 
 
 
-void ayuda(char especificador){
-    if(strcmp(&especificador, "\0") == 0){
+bool salir(char *cadena[]){
+
+    if ( strcmp(*cadena, "fin")  == 0 ){ //si es fin O salir
+        return true;
+    }else{
+
+        if (strcmp(*cadena, "salir") == 0){
+            return true;
+        }else{
+
+            if( strcmp(*cadena, "bye") == 0 ) { //si es bye
+                return true;
+            }else{ //si NO ES NINGUNO de los tres
+                return false;
+            }
+
+        }
+
+
+    }
+}//check //devuelve true si hay que salir, false si no
+
+void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
+
+    if(ntokens == 0){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
-    }if( strcmp(&especificador, "fin") == 0 ){
-        printf("fin\t");
+
+    }else{
+        if(salir(&comando)) printf("%s\tTermina la ejecucion del shell", comando); //creo que no está bonito el printf
+        else{
+            if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
+            else{
+                if (strcmp(comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
+                else{
+                    if (strcmp(comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
+                    else{
+                        if(strcmp(comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
+                        else{
+                            if(strcmp(comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
+                            else{
+                                if(strcmp(comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
+                                else{
+                                    if( strcmp(comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
+                                    else{
+                                        if( strcmp(comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos");
+                                        else{
+                                            printf("%s no encontrado", comando);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
-void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
-
-    //mismo método de strcmp que en bool_salir
-
-    switch(/*comando principal*/){
-
-        //aquí se introducen las funciones del resto con sus modificadores y eso
-
-        default: printf("ha ocurrido un error jeje");
-            break;
-    }
-
-} //falta bastante
 
 void infosis(){
 
@@ -56,32 +94,27 @@ void repetir_comando(int orden, tList hist){
 
 }
 
-void autores( char modo ){
-
-    int opcion = (int)modo;
-
+void autores( char modo, int ntokens ){
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
     char nombre_fatima[] = {}, login_fatima[] = {};
 
-
-    if ( strcmp(&modo, "\0") == 0 ){ //no se especifica nada
+    if ( ntokens == 0 ){ //no se especifica nada
         printf("%s: %s\n", nombre_noa, login_noa);
         printf("%s: %s\n", nombre_fatima, login_fatima);
-    }else{
 
-        switch(opcion){
-            case 108: //-l //mostrar logins
-                printf("%s\n", login_noa);
-                printf("%s\n", login_fatima);
-                break;
-            case 110: //-n //mostrar nombres
+    }else {
+
+        if (strcmp(&modo, "-l") == 0) {
+            printf("%s\n", login_noa);
+            printf("%s\n", login_fatima);
+        } else {
+            if (strcmp(&modo, "-p") == 0) {
                 printf("%s\n", nombre_noa);
                 printf("%s\n", nombre_fatima);
-                break;
-            default: printf("no ha introducido un especificador válido\n");
-                break;
+            } else {
+                printf("no ha introducido un especificador válido\n");
+            }
         }
-
     }
 
 } //creo que check, pero como aún no se ha probado nada pues no sé
@@ -124,33 +157,25 @@ void carpeta(char modo){
 
 } //falta que salte un aviso cuando metes un directorio raro
 
+void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
+
+    //mismo método de strcmp que en bool_salir
+
+    switch(/*comando principal*/){
+
+        //aquí se introducen las funciones del resto con sus modificadores y eso
+
+        default: printf("ha ocurrido un error jeje");
+            break;
+    }
+
+} //falta bastante
+
 
 
 void printPrompt(){
     printf(">>");
 } //check
-
-bool salir(char *cadena[]){
-
-	if ( strcmp(*cadena, "fin")  == 0 ){ //si es fin O salir
-		return true;
-	}else{
-
-        if (strcmp(*cadena, "salir") == 0){
-            return true;
-        }else{
-
-            if( strcmp(*cadena, "bye") == 0 ) { //si es bye
-                return true;
-            }else{ //si NO ES NINGUNO de los tres
-                return false;
-            }
-
-        }
-
-
-    }
-}//check //devuelve true si hay que salir, false si no
 
 int TrocearCadena(char *cadena, char *trozos[]){
 
