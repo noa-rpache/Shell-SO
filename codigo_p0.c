@@ -14,6 +14,19 @@
 //#define MAX_INPUT 100 -> se define en la lista
 
 
+void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
+
+    perror(orden);
+
+    switch(/*comando principal*/){
+
+        //aquí se introducen las funciones del resto con sus modificadores y eso
+
+        default: printf("ha ocurrido un error jeje");
+            break;
+    }
+
+} //falta bastante
 
 bool salir(char *cadena[]){
 
@@ -73,8 +86,7 @@ void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igua
             }
         }
     }
-}
-
+} //check
 
 void infosis(){
 
@@ -90,7 +102,7 @@ void repetir_comando(int orden, tList hist){
 
     tItemL repeticion = getItem(findItem(orden, hist), hist);
 
-    procesarEntrada(repeticion.comando);
+    procesarEntrada(repeticion.comando, repeticion.tokens);
 
 }
 
@@ -156,21 +168,6 @@ void carpeta(char modo){
     }
 
 } //falta que salte un aviso cuando metes un directorio raro
-
-void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
-
-    //mismo método de strcmp que en bool_salir
-
-    switch(/*comando principal*/){
-
-        //aquí se introducen las funciones del resto con sus modificadores y eso
-
-        default: printf("ha ocurrido un error jeje");
-            break;
-    }
-
-} //falta bastante
-
 
 
 void printPrompt(){
