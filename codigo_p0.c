@@ -198,7 +198,7 @@ void leerEntrada( char *entrada[], char *comandos_separados[]){
 void new_historial(char *comando, int numero, tList *hist){
 
     tItemL nuevo;
-    nuevo.comando = comando; //por qué no se asigna??
+    strcpy(nuevo.comando, comando);
     nuevo.puesto = numero;
     if ( !insertElement(nuevo, LNULL, hist) ) return ; //mensaje error
 
