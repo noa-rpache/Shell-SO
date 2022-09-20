@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h> //esta venía en el man C de google
-#include <errno.h> //aquí se supone que está perror()
 #include <sys/utsname.h> //esto es para infosis
 #include "list.h"
 //#define MAX_INPUT 100 -> se define en la lista
@@ -22,7 +21,7 @@ void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
 
         //aquí se introducen las funciones del resto con sus modificadores y eso
 
-        default: printf("ha ocurrido un error jeje");
+        default: printf("%s: no es un comando del shell", orden);
             break;
     }
 
