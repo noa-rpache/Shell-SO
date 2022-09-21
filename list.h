@@ -8,6 +8,7 @@ typedef int posicion;
 typedef struct{
     posicion puesto;
     char comando[MAX_LENGHT];
+    int tokens;
 }tItemL;
 typedef struct tNode *tPosL;
 struct  tNode {
