@@ -10,7 +10,7 @@
 #include <unistd.h> //esta venía en el man C de google
 #include <sys/utsname.h> //esto es para infosis
 #include "list.h"
-//#define MAX_INPUT 100 -> se define en la lista
+//#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 
 
 void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
@@ -47,7 +47,7 @@ bool salir(char *cadena[]){
 
 
     }
-}//check //devuelve true si hay que salir, false si no
+}//check (?) //devuelve true si hay que salir, false si no
 
 void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
 
@@ -85,7 +85,7 @@ void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igua
             }
         }
     }
-} //check
+} //check (?)
 
 void infosis(){
 
@@ -103,7 +103,7 @@ void repetir_comando(int pos, tList hist){
 
     procesarEntrada(repeticion.comando, repeticion.tokens);
 
-}
+} //check (?)
 
 void autores( char modo, int ntokens ){
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
@@ -128,7 +128,7 @@ void autores( char modo, int ntokens ){
         }
     }
 
-} //creo que check, pero como aún no se ha probado nada pues no sé
+} // check (?)
 
 void pillar_pid( char modo, int ntokens){
 
@@ -151,7 +151,7 @@ void pillar_pid( char modo, int ntokens){
 
     }
 
-} //falta pid -p
+} //check (?)
 
 void carpeta(char modo, int ntokens){
 
@@ -185,17 +185,17 @@ int TrocearCadena(char *cadena, char *trozos[]){
         return i;
     }
 
-}
+} //check
 
 void leerEntrada( char *entrada[], char *comandos_separados[]){
 
 	fgets(*entrada, MAX_LENGHT, stdin);
-	
+
 	TrocearCadena(*entrada, comandos_separados);
 
-}
+} //check (?)
 
-void new_historial(char *comando, int numero, tList *hist){
+void new_historial(char *comando, int numero, tList *hist){ //el comando tiene que llevar los tokens incluidos, así nos ahorramos pensar cómo guardarlos
 
     tItemL nuevo;
     strcpy(nuevo.comando, comando);
@@ -203,7 +203,7 @@ void new_historial(char *comando, int numero, tList *hist){
     if ( !insertElement(nuevo, LNULL, hist) ) return ; //mensaje error
 
 
-} //hay fallitos con el tipo del comando
+} //check(?)
 
 
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
@@ -218,11 +218,11 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         char *orden_procesada[MAX_LENGHT + 1]; //comandos separados
 
         printPrompt();
-        leerEntrada(arvg,orden_procesada);
-        printf("\n");
+        leerEntrada(arvg,orden_procesada); printf("\n");
+        //si a partir de aquí solo se usa orden_procesada no habrá problemas con el resto de funciones porque todas usarán el mismo formato de char[]
 
-        salida = salir(arvg);
-        new_historial( *arvg,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
+        salida = salir(orden_procesada);
+        new_historial( *orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
         procesarEntrada(*orden_procesada, argc);
 
     }
