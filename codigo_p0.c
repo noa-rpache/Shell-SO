@@ -95,11 +95,11 @@ void infosis(){
 
     printf("%s %s %s %s %s\n", informacion.machine, informacion.nodename, informacion.release, informacion.sysname, informacion.version);
 
-}//en cuanto se ejecute cambiamos el orden para que coincida con el de la shell
+}//en cuanto lo probemos a ejecutar cambiamos el orden para que coincida con el de la shell
 
-void repetir_comando(int orden, tList hist){
+void repetir_comando(int pos, tList hist){
 
-    tItemL repeticion = getItem(findItem(orden, hist), hist);
+    tItemL repeticion = getItem(findItem(pos, hist), hist);
 
     procesarEntrada(repeticion.comando, repeticion.tokens);
 
@@ -130,19 +130,19 @@ void autores( char modo, int ntokens ){
 
 } //creo que check, pero como aún no se ha probado nada pues no sé
 
-void pillar_pid( char modo){
+void pillar_pid( char modo, int ntokens){
 
     char p;
     int PID;
 
-    if( strcmp(&modo, "\0") == 0 ){ //significa que no se ha especificado el -p
+    if( ntokens == 0 ){ //no se ha especificado -p
         PID = getpid();
-        printf("Pid de shell: %d", PID);
+        printf("Pid de shell: %d\n", PID);
     }else{
 
         if( strcmp(&modo, &p) == 0 ){ //hay que sacar el proceso padre de la shell
             PID = getppid();
-            printf("Pid del padre del shell: %d", PID);
+            printf("Pid del padre del shell: %d\n", PID);
         }else{
 
             printf("no ha introducido un especificador válido\n");
@@ -153,16 +153,16 @@ void pillar_pid( char modo){
 
 } //falta pid -p
 
-void carpeta(char modo){
+void carpeta(char modo, int ntokens){
 
-    if ( strcmp(&modo, "\0") == 0 ){ //no se han recibido argumentos
+    if ( ntokens == 0 ){ //no se han recibido argumentos
 
         char *get_current_dir_name(void); //así queda guardada aquí la cadena que contiene la ruta al directorio actual
         printf("%s", get_current_dir_name());
 
     }else { //se cambia de directorio
 
-        chdir(&modo);
+        chdir(&modo); //no tengo claro cómo funciona
 
     }
 
@@ -206,7 +206,6 @@ void new_historial(char *comando, int numero, tList *hist){
 } //hay fallitos con el tipo del comando
 
 
-
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
 
     tList historial;
@@ -223,7 +222,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         printf("\n");
 
         salida = salir(arvg);
-        new_historial( arvg,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
+        new_historial( *arvg,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
         procesarEntrada(*orden_procesada, argc);
 
     }
