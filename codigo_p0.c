@@ -4,7 +4,6 @@
  * Fátima Ansemil - fatima.ansemil
  * */
 
-//quitar las que ya vengan en el list.h para que no sean redundantes
 #include <stdio.h>
 #include <unistd.h> //esta venía en el man C de google
 #include <sys/utsname.h> //esto es para infosis
@@ -13,7 +12,76 @@
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 
 
+//generales
 void procesarEntrada( char *orden[], int ntokens, tList historial);
+bool salir(char *cadena[]);
+void printPrompt();
+int TrocearCadena(char *cadena, char *trozos[]);
+void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
+void new_historial(char *comando, int numero, tList *hist);
+
+//comandos
+void ayuda(char *comando, int ntokens);
+void infosis();
+void repetir_comando(char pos, tList hist);
+void autores( char *modo, int ntokens );
+void pillar_pid( char modo[], int ntokens);
+void carpeta(char modo, int ntokens);
+void fecha(char modo[], int ntokens);
+
+
+int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
+
+    tList historial;
+    printf("declaras el historial\n");
+    createList(&historial);
+    bool salida = false; //comprobador de condición de salida
+    int contador = 0; //número de ítems en el historial
+
+    while( salida == false ){ //mientras no se cumpla ninguna condición de salida
+
+        contador++;
+        char *orden_procesada[MAX_LENGHT]; //comandos separados
+        int ntokens=0;
+
+        printPrompt();
+        leerEntrada(arvg,orden_procesada, &ntokens);
+        printf("leyó la entrada\n");
+        salida = salir(orden_procesada);
+        printf("no se sale\n");
+        if(!salida){
+            new_historial(*orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
+            printf("guardó en el historial\n\n");
+            procesarEntrada(orden_procesada, ntokens, historial);
+        }
+
+    }
+
+    deleteList(&historial);
+    return 0;
+}
+
+
+void procesarEntrada( char *orden[], int ntokens, tList historial ){
+    printf("entró a procesar\n");
+    for (int i=0; i!=ntokens+1; i++){
+        printf("[%d] %s\n",i,orden[i]);
+    }
+
+    /*
+
+    if (strcmp(&orden[0], "autores") == 0) autores(&orden[1], ntokens);
+    else if (strcmp(&orden[0], "pid") == 0) pillar_pid(&orden[1],ntokens);
+    else if(strcmp(&orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
+    else if(strcmp(&orden[0], "fecha") == 0) fecha(&orden[1],ntokens);
+    //else if(strcmp(&orden[0], "hist") == 0) ;
+    else if(strcmp(&orden[0], "comando") == 0) repetir_comando(orden[1],historial);
+    else if(strcmp(&orden[0], "infosis") == 0) infosis();
+    else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens);
+    else printf("%s: no es un comando del shell\n", &orden[0]);
+
+     */
+}
 
 bool salir(char *cadena[]){
 
@@ -190,7 +258,6 @@ void fecha(char modo[], int ntokens){
 
 } //check
 
-
 void printPrompt(){
     printf(">> ");
 } //check
@@ -211,8 +278,8 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens){
 
-	fgets(*entrada, MAX_LENGHT, stdin);
-	*ntokens = TrocearCadena(*entrada, comandos_separados);
+    fgets(*entrada, MAX_LENGHT, stdin);
+    *ntokens = TrocearCadena(*entrada, comandos_separados);
 
 } //check
 
@@ -224,60 +291,6 @@ void new_historial(char *comando, int numero, tList *hist){
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
 
 } //check
-
-
-int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
-
-    tList historial;
-    printf("declaras el historial\n");
-    createList(&historial);
-    bool salida = false; //comprobador de condición de salida
-    int contador = 0; //número de ítems en el historial
-
-    while( salida == false ){ //mientras no se cumpla ninguna condición de salida
-
-        contador++;
-        char *orden_procesada[MAX_LENGHT]; //comandos separados
-        int ntokens=0;
-
-        printPrompt();
-        leerEntrada(arvg,orden_procesada, &ntokens);
-        printf("leyó la entrada\n");
-        salida = salir(orden_procesada);
-        printf("no se sale\n");
-        if(!salida){
-            new_historial(*orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
-            printf("guardó en el historial\n\n");
-            procesarEntrada(orden_procesada, ntokens, historial);
-        }
-
-    }
-
-    deleteList(&historial);
-    return 0;
-}
-
-
-void procesarEntrada( char *orden[], int ntokens, tList historial ){
-    printf("entró a procesar\n");
-    for (int i=0; i!=ntokens+1; i++){
-        printf("[%d] %s\n",i,orden[i]);
-    }
-
-    /*
-
-    if (strcmp(&orden[0], "autores") == 0) autores(&orden[1], ntokens);
-    else if (strcmp(&orden[0], "pid") == 0) pillar_pid(&orden[1],ntokens);
-    else if(strcmp(&orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
-    else if(strcmp(&orden[0], "fecha") == 0) fecha(&orden[1],ntokens);
-    //else if(strcmp(&orden[0], "hist") == 0) ;
-    else if(strcmp(&orden[0], "comando") == 0) repetir_comando(orden[1],historial);
-    else if(strcmp(&orden[0], "infosis") == 0) infosis();
-    else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens);
-    else printf("%s: no es un comando del shell\n", &orden[0]);
-
-     */
-}
 
 
 
