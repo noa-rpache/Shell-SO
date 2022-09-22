@@ -23,11 +23,11 @@ void new_historial(char *comando, int numero, tList *hist);
 //comandos
 void ayuda(char *comando, int ntokens);
 void infosis();
-void repetir_comando(char pos, tList hist);
+void repetir_comando(char *pos, tList hist);
 void autores( char *modo, int ntokens );
-void pillar_pid( char modo[], int ntokens);
-void carpeta(char modo, int ntokens);
-void fecha(char modo[], int ntokens);
+void pillar_pid( char *modo, int ntokens);
+void carpeta(char *modo, int ntokens);
+void fecha(char *modo, int ntokens);
 
 
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
@@ -51,7 +51,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         printf("no se sale\n");
         if(!salida){
             new_historial(*orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
-            printf("guardó en el historial\n\n");
+            printf("guardó en el historial\n");
             procesarEntrada(orden_procesada, ntokens, historial);
         }
 
@@ -63,7 +63,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
 
 void procesarEntrada( char *orden[], int ntokens, tList historial ){
-    printf("entró a procesar\n");
+    printf("entró a procesar\n\n");
 
     /*
     for (int i=0; i!=ntokens+1; i++){
@@ -71,15 +71,15 @@ void procesarEntrada( char *orden[], int ntokens, tList historial ){
     }
      */
 
-    if (strcmp(&orden[0], "autores") == 0) autores(&orden[1], ntokens);
-    else if (strcmp(&orden[0], "pid") == 0) pillar_pid(&orden[1],ntokens);
-    else if(strcmp(&orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
-    else if(strcmp(&orden[0], "fecha") == 0) fecha(&orden[1],ntokens);
+    if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
+    else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
+    else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
+    else if(strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
     //else if(strcmp(&orden[0], "hist") == 0) ;
-    else if(strcmp(&orden[0], "comando") == 0) repetir_comando(orden[1],historial);
-    else if(strcmp(&orden[0], "infosis") == 0) infosis();
-    else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens);
-    else printf("%s: no es un comando del shell\n", &orden[0]);
+    else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial);
+    else if(strcmp(orden[0], "infosis") == 0) infosis();
+    else if(strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
+    else printf("%s: no es un comando del shell\n", orden[0]);
 
 }
 
@@ -145,9 +145,10 @@ void infosis(){
 
 }//check
 
-void repetir_comando(char pos, tList hist){
+void repetir_comando(char pos[], tList hist){
 
     int posicion = (int)pos;
+    printf("%s\n", pos);
 
     tItemL repeticion = getItem(findItem(posicion, hist), hist);
     printf("Ejecutando hist (%d): %s\n",posicion, *repeticion.comando);
@@ -159,7 +160,7 @@ void autores( char *modo, int ntokens ){
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
     char nombre_fatima[] = "Fátima Ansemil Barros", login_fatima[] = "fatima.ansemil";
 
-    printf("%s\n", modo);
+    //printf("%s\n", modo);
     if ( ntokens == 1 ){ //no se especifica nada
         printf("%s: %s\n", nombre_noa, login_noa);
         printf("%s: %s\n", nombre_fatima, login_fatima);
@@ -181,7 +182,7 @@ void autores( char *modo, int ntokens ){
 
 } //check
 
-void pillar_pid( char modo[], int ntokens){
+void pillar_pid( char *modo, int ntokens){
 
     if( ntokens == 1 ){ //no se ha especificado -p
         int PID = getpid();
@@ -201,23 +202,23 @@ void pillar_pid( char modo[], int ntokens){
 
 } //check
 
-void carpeta(char modo, int ntokens){
+void carpeta(char *modo, int ntokens){
 
     if ( ntokens == 1 ){ //no se han recibido argumentos adicionales
-        printf("se ha llegado al if\n");
+        //printf("se ha llegado al if\n");
         char *get_current_dir_name(void); //así queda guardada aquí la cadena que contiene la ruta al directorio actual
-        printf("no llega a imprimirlo");
+        //printf("no llega a imprimirlo\n");
         printf("%s\n", get_current_dir_name());
 
     }else { //se cambia de directorio
 
-        chdir(&modo); //no tengo claro cómo funciona
+        chdir(modo); //no tengo claro cómo funciona
 
     }
 
 } //falta que salte un aviso cuando metes un directorio raro
 
-void fecha(char modo[], int ntokens){
+void fecha(char *modo, int ntokens){
 
     int horas,minutos,segundos,dia,mes,anho;
 
