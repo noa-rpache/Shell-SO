@@ -19,19 +19,17 @@ void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens, tList historial);
 
 bool salir(char *cadena[], tList *historial){
 
-    if ( strcmp(*cadena, "fin")  == 0 ){ //si es fin O salir
+    if ( strcmp(*cadena, "fin")  == 0 ){
         deleteList(historial);
         return true;
     }else{
 
         if (strcmp(*cadena, "salir") == 0){
-            printf("preborrado\n");
             deleteList(historial);
-            printf("postborrado\n");
             return true;
         }else{
 
-            if( strcmp(*cadena, "bye") == 0 ) { //si es bye
+            if( strcmp(*cadena, "bye") == 0 ) {
                 deleteList(historial);
                 return true;
             }else{ //si NO ES NINGUNO de los tres
@@ -42,7 +40,7 @@ bool salir(char *cadena[], tList *historial){
 
 
     }
-}//check (?) //devuelve true si hay que salir, false si no
+}//check //devuelve true si hay que salir, false si no
 
 void ayuda(char *comando, int ntokens, tList *historial){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
 
@@ -86,7 +84,7 @@ void ayuda(char *comando, int ntokens, tList *historial){ //como manda el mismo 
             }
         }
     }
-} //check (?)
+} //check
 
 void infosis(){
 
@@ -94,7 +92,7 @@ void infosis(){
 
     uname(&informacion);
 
-    printf("%s %s %s %s %s\n", informacion.machine, informacion.nodename, informacion.release, informacion.sysname, informacion.version);
+    printf("%s (%s), OS: %s %s %s\n", informacion.nodename, informacion.machine, informacion.sysname,informacion.release, informacion.version);
 
 }//en cuanto lo probemos a ejecutar cambiamos el orden para que coincida con el de la shell
 
@@ -131,7 +129,7 @@ void autores( char modo, int ntokens ){
         }
     }
 
-} // check (?)
+} // check
 
 void pillar_pid( char modo, int ntokens){
 
@@ -151,7 +149,7 @@ void pillar_pid( char modo, int ntokens){
 
     }
 
-} //check (?)
+} //check
 
 void carpeta(char modo, int ntokens){
 
@@ -195,23 +193,22 @@ void fecha(char modo, int ntokens){
 
     //ya tenemos hechas todas las variables
 
-    if(ntokens==0){//tiene que imprimir la fecha y la hora
+    if(ntokens==1){//tiene que imprimir la fecha y la hora
 
         printf("%02d:%02d:%02d \n",horas,minutos,segundos);
         printf("%02d/%02d/%d\n",dia,mes,anho);
 
-    }
-    else if(strcmp(&modo,"-d")==0){//imprime solo la fecha actual
+    }else if(strcmp(&modo,"-d")==0){//imprime solo la fecha actual
         printf("%02d/%02d/%d\n",dia,mes,anho);
 
     }else if(strcmp(&modo,"h")==0){//imprime solo la hora actual
         printf("%02d:%02d:%02d \n",horas,minutos,segundos);
     }
 
-}
+} //check
 
 void printPrompt(){
-    printf(">>");
+    printf(">> ");
 } //check
 
 int TrocearCadena(char *cadena, char *trozos[]){
@@ -264,9 +261,10 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         //ntokens es el número de argumentos que se han recibido
 
         salida = salir(orden_procesada, &historial);
-        //printf("ya salió\n");
-        new_historial( *orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
-        procesarEntrada(*orden_procesada, ntokens, historial);
+        if(!salida){
+            new_historial( *orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
+            procesarEntrada(*orden_procesada, ntokens, historial);
+        }
 
     }
 
@@ -280,13 +278,13 @@ void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens, tList historial )
     else if (strcmp(&orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(&orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
     else if(strcmp(&orden[0], "fecha") == 0) fecha(orden[1],ntokens);
-    else if(strcmp(&orden[0], "hist") == 0) ;
+    //else if(strcmp(&orden[0], "hist") == 0) ;
     else if(strcmp(&orden[0], "comando") == 0) repetir_comando(orden[1],historial);
     else if(strcmp(&orden[0], "infosis") == 0) infosis();
     else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens, &historial);
     else printf("%s: no es un comando del shell\n", &orden[0]);
 
-} //falta bastante
+}
 
 
 
