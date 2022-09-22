@@ -1,4 +1,5 @@
 #include "list.h"
+#include <stdio.h>
 
 
 bool createNode(tPosL* p){
@@ -11,6 +12,10 @@ bool createList(tList *L){
 
     if (!createNode(&q)) return false; //no hay memoria
     else{
+        q->data.puesto = 0;
+        strcpy(q->data.comando, "\0");
+        q->data.tokens = 0;
+        q->next = LNULL;
         *L = q;
         return true;
 
@@ -18,20 +23,22 @@ bool createList(tList *L){
 
 }
 
-bool insertElement(tItemL d, tPosL p, tList *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
+bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
 
     tPosL q, r;
 
     if (!createNode(&q)) return false; //no hay espacio
     else{
-
         //asignamos valores al nodo
         q->data = d;
         q->next = LNULL;
 
-        //vamos al último elemento de la lista
-        for (r = *L; r->next != LNULL; r = r->next);
-        r->next = q;
+        if( (*L)->data.puesto == 0){ //estamos insertando en el head node
+            (*L)->next = q;
+        }else{ //la lista tiene más elementos
+            for (r = *L; r->next != LNULL; r = r->next);
+            r->next = q;
+        }
 
         return true;
     }

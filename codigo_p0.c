@@ -11,6 +11,7 @@
 #include <unistd.h> //esta venía en el man C de google
 #include <sys/utsname.h> //esto es para infosis
 #include "list.h"
+#include <time.h>
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 
 
@@ -24,7 +25,9 @@ bool salir(char *cadena[], tList *historial){
     }else{
 
         if (strcmp(*cadena, "salir") == 0){
+            printf("preborrado\n");
             deleteList(historial);
+            printf("postborrado\n");
             return true;
         }else{
 
@@ -48,25 +51,31 @@ void ayuda(char *comando, int ntokens, tList *historial){ //como manda el mismo 
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
 
     }else{
-        if(salir(&comando, historial)) printf("%s\tTermina la ejecucion del shell", comando); //creo que no está bonito el printf
+        if(strcmp(comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell");
         else{
-            if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
+            if(strcmp(comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell");
             else{
-                if (strcmp(comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
+                if(strcmp(comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell");
                 else{
-                    if (strcmp(comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
+                    if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
                     else{
-                        if(strcmp(comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
+                        if (strcmp(comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
                         else{
-                            if(strcmp(comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
+                            if (strcmp(comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
                             else{
-                                if(strcmp(comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
+                                if(strcmp(comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
                                 else{
-                                    if( strcmp(comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
+                                    if(strcmp(comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
                                     else{
-                                        if( strcmp(comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos");
+                                        if(strcmp(comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
                                         else{
-                                            printf("%s no encontrado", comando);
+                                            if( strcmp(comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
+                                            else{
+                                                if( strcmp(comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos");
+                                                else{
+                                                    printf("%s no encontrado\n", comando);
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -101,7 +110,7 @@ void repetir_comando(char pos, tList hist){
 
 void autores( char modo, int ntokens ){
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
-    char nombre_fatima[] = {}, login_fatima[] = {};
+    char nombre_fatima[] = "Fátima Ansemil Barros", login_fatima[] = "fatima.ansemil";
 
     if ( ntokens == 1 ){ //no se especifica nada
         printf("%s: %s\n", nombre_noa, login_noa);
@@ -149,7 +158,7 @@ void carpeta(char modo, int ntokens){
     if ( ntokens == 1 ){ //no se han recibido argumentos adicionales
 
         char *get_current_dir_name(void); //así queda guardada aquí la cadena que contiene la ruta al directorio actual
-        printf("%s", get_current_dir_name());
+        printf("%s\n", get_current_dir_name());
 
     }else { //se cambia de directorio
 
@@ -159,6 +168,47 @@ void carpeta(char modo, int ntokens){
 
 } //falta que salte un aviso cuando metes un directorio raro
 
+void fecha(char modo, int ntokens){
+
+    int horas,minutos,segundos,dia,mes,anho;
+
+    time_t now;//tipo de tiempo aritmetico
+    time(&now);//'time()' devuelve la hora actual del sistema como un valor 'time_t'
+
+    //localtime convierte un valor de 'time_t' a la hora del calendario
+
+    struct tm *local = localtime(&now);
+
+    horas= local->tm_hour;
+    //aqui obtiene horas desde la medianoche
+    minutos=local->tm_min;
+    //obtiene los minutos
+    segundos=local->tm_sec;
+    //obtiene los segundos
+
+    dia=local->tm_mday;
+    //obtiene el dia del mes (1 al 31)
+    mes=local->tm_mon+1;
+    //ontiene el mes del año del 0 al 11
+    anho=local->tm_year + 1900;
+    //obtiene el año desde 1900
+
+    //ya tenemos hechas todas las variables
+
+    if(ntokens==0){//tiene que imprimir la fecha y la hora
+
+        printf("%02d:%02d:%02d \n",horas,minutos,segundos);
+        printf("%02d/%02d/%d\n",dia,mes,anho);
+
+    }
+    else if(strcmp(&modo,"-d")==0){//imprime solo la fecha actual
+        printf("%02d/%02d/%d\n",dia,mes,anho);
+
+    }else if(strcmp(&modo,"h")==0){//imprime solo la hora actual
+        printf("%02d:%02d:%02d \n",horas,minutos,segundos);
+    }
+
+}
 
 void printPrompt(){
     printf(">>");
@@ -190,7 +240,7 @@ void new_historial(char *comando, int numero, tList *hist){
     tItemL nuevo;
     strcpy(nuevo.comando, comando); //ya está separado
     nuevo.puesto = numero; //posición en la lista de
-    if ( !insertElement(nuevo, LNULL, hist) ) return ; //mensaje error
+    if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
 
 } //check(?)
 
@@ -198,6 +248,7 @@ void new_historial(char *comando, int numero, tList *hist){
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
 
     tList historial;
+    createList(&historial);
     bool salida = false; //comprobador de condición de salida
     int contador = 0; //número de ítems en el historial
 
@@ -208,11 +259,12 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         int ntokens = 0;
 
         printPrompt();
-        leerEntrada(arvg,orden_procesada, &ntokens); printf("\n");
+        leerEntrada(arvg,orden_procesada, &ntokens);
         //si a partir de aquí solo se usa orden_procesada no habrá problemas con el resto de funciones porque todas usarán el mismo formato de char[]
         //ntokens es el número de argumentos que se han recibido
 
         salida = salir(orden_procesada, &historial);
+        //printf("ya salió\n");
         new_historial( *orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
         procesarEntrada(*orden_procesada, ntokens, historial);
 
@@ -224,17 +276,15 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
 void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens, tList historial ){
 
-    perror(orden);
-
     if (strcmp(&orden[0], "autores") == 0) autores(orden[1], ntokens);
     else if (strcmp(&orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(&orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
-    else if(strcmp(&orden[0], "fecha") == 0) ;
+    else if(strcmp(&orden[0], "fecha") == 0) fecha(orden[1],ntokens);
     else if(strcmp(&orden[0], "hist") == 0) ;
     else if(strcmp(&orden[0], "comando") == 0) repetir_comando(orden[1],historial);
     else if(strcmp(&orden[0], "infosis") == 0) infosis();
     else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens, &historial);
-    else printf("%s: no es un comando del shell", &orden[0]);
+    else printf("%s: no es un comando del shell\n", &orden[0]);
 
 } //falta bastante
 

@@ -20,7 +20,7 @@ typedef tPosL tList;
 
 bool createList(tList *L);
 bool isEmptyList (tList L);
-bool insertElement (tItemL d , tPosL p, tList *L);
+bool insertElement (tItemL d , tList *L);
 tItemL getItem (tPosL p, tList L);
 tPosL  findItem (posicion num, tList L);
 void deleteList (tList *L);
