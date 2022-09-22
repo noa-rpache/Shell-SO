@@ -14,9 +14,9 @@
 
 //generales
 void procesarEntrada( char *orden[], int ntokens, tList historial);
-bool salir(char *cadena[]);
-void printPrompt();
-int TrocearCadena(char *cadena, char *trozos[]);
+bool salir(char *cadena[]); //check
+void printPrompt(); //check
+int TrocearCadena(char *cadena, char *trozos[]); //check
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
 void new_historial(char *comando, int numero, tList *hist);
 
@@ -64,11 +64,12 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
 void procesarEntrada( char *orden[], int ntokens, tList historial ){
     printf("entró a procesar\n");
+
+    /*
     for (int i=0; i!=ntokens+1; i++){
         printf("[%d] %s\n",i,orden[i]);
     }
-
-    /*
+     */
 
     if (strcmp(&orden[0], "autores") == 0) autores(&orden[1], ntokens);
     else if (strcmp(&orden[0], "pid") == 0) pillar_pid(&orden[1],ntokens);
@@ -80,7 +81,6 @@ void procesarEntrada( char *orden[], int ntokens, tList historial ){
     else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens);
     else printf("%s: no es un comando del shell\n", &orden[0]);
 
-     */
 }
 
 bool salir(char *cadena[]){
@@ -260,7 +260,7 @@ void fecha(char modo[], int ntokens){
 
 void printPrompt(){
     printf(">> ");
-} //check
+}
 
 int TrocearCadena(char *cadena, char *trozos[]){
 
@@ -274,23 +274,24 @@ int TrocearCadena(char *cadena, char *trozos[]){
         return i;
     }
 
-} //check
+}
 
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens){
 
     fgets(*entrada, MAX_LENGHT, stdin);
     *ntokens = TrocearCadena(*entrada, comandos_separados);
 
-} //check
+}
 
 void new_historial(char *comando, int numero, tList *hist){
 
     tItemL nuevo;
-    strcpy(*(nuevo).comando, comando); //ya está separado
+    *nuevo.comando = comando;
+    //strcpy(*nuevo.comando, comando); //ya está separado
     nuevo.puesto = numero; //posición en la lista de
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
 
-} //check
+}
 
 
 
