@@ -49,7 +49,7 @@ tItemL getItem(tPosL p, tList L){
     return p->data;
 }
 
-tPosL findItem (posicion num, tList L){
+tPosL findItem (int num, tList L){
     tPosL p;
     p = LNULL;
     for (p=L; (p != LNULL) && (p->data.puesto != num); p=p->next);
