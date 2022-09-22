@@ -4,6 +4,7 @@
  * Fátima Ansemil - fatima.ansemil
  * */
 
+//quitar las que ya vengan en el list.h para que no sean redundantes
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -13,31 +14,22 @@
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 
 
-void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens ){
+void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens, tList historial);
 
-    perror(orden);
-
-    switch(/*comando principal*/){
-
-        //aquí se introducen las funciones del resto con sus modificadores y eso
-
-        default: printf("%s: no es un comando del shell", orden);
-            break;
-    }
-
-} //falta bastante
-
-bool salir(char *cadena[]){
+bool salir(char *cadena[], tList *historial){
 
     if ( strcmp(*cadena, "fin")  == 0 ){ //si es fin O salir
+        deleteList(historial);
         return true;
     }else{
 
         if (strcmp(*cadena, "salir") == 0){
+            deleteList(historial);
             return true;
         }else{
 
             if( strcmp(*cadena, "bye") == 0 ) { //si es bye
+                deleteList(historial);
                 return true;
             }else{ //si NO ES NINGUNO de los tres
                 return false;
@@ -49,14 +41,14 @@ bool salir(char *cadena[]){
     }
 }//check (?) //devuelve true si hay que salir, false si no
 
-void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
+void ayuda(char *comando, int ntokens, tList *historial){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
 
-    if(ntokens == 0){
+    if(ntokens == 1){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
 
     }else{
-        if(salir(&comando)) printf("%s\tTermina la ejecucion del shell", comando); //creo que no está bonito el printf
+        if(salir(&comando, historial)) printf("%s\tTermina la ejecucion del shell", comando); //creo que no está bonito el printf
         else{
             if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
             else{
@@ -97,11 +89,13 @@ void infosis(){
 
 }//en cuanto lo probemos a ejecutar cambiamos el orden para que coincida con el de la shell
 
-void repetir_comando(int pos, tList hist){
+void repetir_comando(char pos, tList hist){
 
-    tItemL repeticion = getItem(findItem(pos, hist), hist);
+    int posicion = (int)pos;
 
-    procesarEntrada(repeticion.comando, repeticion.tokens);
+    tItemL repeticion = getItem(findItem(posicion, hist), hist);
+    printf("Ejecutando hist (%d): %s\n",posicion, repeticion.comando);
+    procesarEntrada(repeticion.comando, repeticion.tokens, hist);
 
 } //check (?)
 
@@ -109,7 +103,7 @@ void autores( char modo, int ntokens ){
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
     char nombre_fatima[] = {}, login_fatima[] = {};
 
-    if ( ntokens == 0 ){ //no se especifica nada
+    if ( ntokens == 1 ){ //no se especifica nada
         printf("%s: %s\n", nombre_noa, login_noa);
         printf("%s: %s\n", nombre_fatima, login_fatima);
 
@@ -132,16 +126,13 @@ void autores( char modo, int ntokens ){
 
 void pillar_pid( char modo, int ntokens){
 
-    char p;
-    int PID;
-
-    if( ntokens == 0 ){ //no se ha especificado -p
-        PID = getpid();
+    if( ntokens == 1 ){ //no se ha especificado -p
+        int PID = getpid();
         printf("Pid de shell: %d\n", PID);
     }else{
 
-        if( strcmp(&modo, &p) == 0 ){ //hay que sacar el proceso padre de la shell
-            PID = getppid();
+        if( strcmp(&modo, "p") == 0 ){ //hay que sacar el proceso padre de la shell
+            int PID = getppid();
             printf("Pid del padre del shell: %d\n", PID);
         }else{
 
@@ -155,7 +146,7 @@ void pillar_pid( char modo, int ntokens){
 
 void carpeta(char modo, int ntokens){
 
-    if ( ntokens == 0 ){ //no se han recibido argumentos
+    if ( ntokens == 1 ){ //no se han recibido argumentos adicionales
 
         char *get_current_dir_name(void); //así queda guardada aquí la cadena que contiene la ruta al directorio actual
         printf("%s", get_current_dir_name());
@@ -187,21 +178,19 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 } //check
 
-void leerEntrada( char *entrada[], char *comandos_separados[]){
+void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens){
 
 	fgets(*entrada, MAX_LENGHT, stdin);
-
-	TrocearCadena(*entrada, comandos_separados);
+	*ntokens = TrocearCadena(*entrada, comandos_separados);
 
 } //check (?)
 
-void new_historial(char *comando, int numero, tList *hist){ //el comando tiene que llevar los tokens incluidos, así nos ahorramos pensar cómo guardarlos
+void new_historial(char *comando, int numero, tList *hist){
 
     tItemL nuevo;
-    strcpy(nuevo.comando, comando);
-    nuevo.puesto = numero;
+    strcpy(nuevo.comando, comando); //ya está separado
+    nuevo.puesto = numero; //posición en la lista de
     if ( !insertElement(nuevo, LNULL, hist) ) return ; //mensaje error
-
 
 } //check(?)
 
@@ -216,14 +205,16 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
         contador++;
         char *orden_procesada[MAX_LENGHT + 1]; //comandos separados
+        int ntokens = 0;
 
         printPrompt();
-        leerEntrada(arvg,orden_procesada); printf("\n");
+        leerEntrada(arvg,orden_procesada, &ntokens); printf("\n");
         //si a partir de aquí solo se usa orden_procesada no habrá problemas con el resto de funciones porque todas usarán el mismo formato de char[]
+        //ntokens es el número de argumentos que se han recibido
 
-        salida = salir(orden_procesada);
+        salida = salir(orden_procesada, &historial);
         new_historial( *orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
-        procesarEntrada(*orden_procesada, argc);
+        procesarEntrada(*orden_procesada, ntokens, historial);
 
     }
 
@@ -231,7 +222,21 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 }
 
 
+void procesarEntrada( char orden[MAX_LENGHT + 1], int ntokens, tList historial ){
 
+    perror(orden);
+
+    if (strcmp(&orden[0], "autores") == 0) autores(orden[1], ntokens);
+    else if (strcmp(&orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
+    else if(strcmp(&orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
+    else if(strcmp(&orden[0], "fecha") == 0) ;
+    else if(strcmp(&orden[0], "hist") == 0) ;
+    else if(strcmp(&orden[0], "comando") == 0) repetir_comando(orden[1],historial);
+    else if(strcmp(&orden[0], "infosis") == 0) infosis();
+    else if(strcmp(&orden[0], "ayuda") == 0) ayuda(&orden[1], ntokens, &historial);
+    else printf("%s: no es un comando del shell", &orden[0]);
+
+} //falta bastante
 
 
 
