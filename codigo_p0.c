@@ -76,7 +76,10 @@ void procesarEntrada( char *orden[], int ntokens, tList historial ){
     else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
     else if(strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
     //else if(strcmp(&orden[0], "hist") == 0) ;
-    else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial);
+    else if(strcmp(orden[0], "comando") == 0) {
+        printf("switch antes de la función\n");
+        repetir_comando(orden[1],historial);
+    }
     else if(strcmp(orden[0], "infosis") == 0) infosis();
     else if(strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
     else printf("%s: no es un comando del shell\n", orden[0]);
@@ -145,16 +148,15 @@ void infosis(){
 
 }//check
 
-void repetir_comando(char pos[], tList hist){
+void repetir_comando(char *pos, tList hist){
 
-    int posicion = (int)pos;
-    printf("%s\n", pos);
+    int posicion = atoi(pos);
 
     tItemL repeticion = getItem(findItem(posicion, hist), hist);
     printf("Ejecutando hist (%d): %s\n",posicion, *repeticion.comando);
     procesarEntrada(repeticion.comando, repeticion.tokens, hist);
 
-} //check (?)
+}
 
 void autores( char *modo, int ntokens ){
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";

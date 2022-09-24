@@ -24,6 +24,29 @@ bool createList(tList *L){
 
 }
 
+tPosL first(tList L){
+    return L;
+}
+
+tPosL last(tList L){
+    tPosL p;
+    for(p=L; p->next!=LNULL; p=p->next);
+    return p;
+}
+
+tPosL next(tPosL p, tList L){ //tPosL next(tPosL p, tList L)
+    return p->next;
+}
+
+tPosL previous (tPosL p, tList L){
+    tPosL q;
+    if(p==L) return LNULL;
+    else{
+        for(q=L; q->next!=p; q=q->next);
+        return q;
+    }
+}
+
 bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
 
     tPosL q, r;
