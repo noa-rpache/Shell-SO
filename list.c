@@ -24,6 +24,11 @@ bool createList(tList *L){
 
 }
 
+bool isEmptyList (tList L){
+    if(L->next == LNULL) return true; //L->next es el head node
+    else return false;
+}
+
 tPosL first(tList L){
     return L;
 }

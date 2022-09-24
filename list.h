@@ -18,7 +18,7 @@ struct  tNode {
 typedef tPosL tList;
 
 bool createList(tList *L);
-//bool isEmptyList (tList L);
+bool isEmptyList (tList L);
 tPosL first (tList L);
 tPosL primero(tList L); //sirve para saltarte el head node al acceder a la lista
 tPosL last (tList L);
