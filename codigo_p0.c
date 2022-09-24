@@ -19,6 +19,7 @@ void printPrompt(); //check
 int TrocearCadena(char *cadena, char *trozos[]); //check
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
 void new_historial(char *comando, int numero, tList *hist);
+void hist (char *comando, tList *hist, int ntokens);
 
 //comandos
 void ayuda(char *comando, int ntokens);
@@ -63,23 +64,14 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
 
 void procesarEntrada( char *orden[], int ntokens, tList historial ){
-    printf("entró a procesar\n\n");
-
-    /*
-    for (int i=0; i!=ntokens+1; i++){
-        printf("[%d] %s\n",i,orden[i]);
-    }
-     */
+    //printf("entró a procesar\n\n");
 
     if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
     else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
     else if(strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
     //else if(strcmp(&orden[0], "hist") == 0) ;
-    else if(strcmp(orden[0], "comando") == 0) {
-        printf("switch antes de la función\n");
-        repetir_comando(orden[1],historial);
-    }
+    else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial);
     else if(strcmp(orden[0], "infosis") == 0) infosis();
     else if(strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
     else printf("%s: no es un comando del shell\n", orden[0]);
@@ -100,43 +92,18 @@ void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igua
     if(ntokens == 1){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
-
-    }else{
-        if(strcmp(comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
-        else{
-            if(strcmp(comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
-            else{
-                if(strcmp(comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
-                else{
-                    if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
-                    else{
-                        if (strcmp(comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
-                        else{
-                            if (strcmp(comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
-                            else{
-                                if(strcmp(comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
-                                else{
-                                    if(strcmp(comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
-                                    else{
-                                        if(strcmp(comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
-                                        else{
-                                            if( strcmp(comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
-                                            else{
-                                                if( strcmp(comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos\n");
-                                                else{
-                                                    printf("%s no encontrado\n", comando);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    }else if(strcmp(comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
+    else if(strcmp(comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
+    else if(strcmp(comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
+    else if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
+    else if (strcmp(comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
+    else if (strcmp(comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
+    else if(strcmp(comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
+    else if(strcmp(comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
+    else if(strcmp(comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
+    else if( strcmp(comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
+    else if( strcmp(comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos\n");
+    else printf("%s no encontrado\n", comando);
 } //check
 
 void infosis(){
@@ -260,6 +227,55 @@ void fecha(char *modo, int ntokens){
     }
 
 } //check
+
+void hist (char *comando, tList *hist, int ntokens){
+    int i=0;
+    //printf("entra al historial\n");
+
+    if (ntokens == 1){//imprimir la lista
+
+        //printf("entra en el if\n");
+        tPosL LastNode = first(*hist);
+        //printf("(1) %d - %s\n", getItem(LastNode,*hist).puesto, *(getItem(LastNode,*hist).comando) );
+
+        while(LastNode->next != LNULL){
+            //printf("entrar el while\n");
+            printf("%d - %s\n", getItem(LastNode,*hist).puesto, *getItem(LastNode,*hist).comando );
+            LastNode = LastNode->next;
+        }
+        /*
+        do{
+            printf("entra al do\n");
+            printf("%s\n", *getItem(LastNode, *hist).comando);
+            LastNode=next(LastNode,*hist);
+            i++;
+        }while(LastNode->next != NULL); //con el i<ntokens evitas un bucle infinito
+        */
+
+    }else{
+
+        if( strcmp(comando, "-c") == 0 ) {
+            deleteList(hist);
+            createList(hist);
+            //printf("ha borrado la lista\n");
+        }else{ //imprimir N comandos
+            //printf("entra a los N comandos\n");
+            int valor = atoi(comando); //contador
+            int N = 0;
+            tPosL LastNode = first(*hist);
+
+            do{
+                printf("%d_%s\n", i-1, *getItem(LastNode,*hist).comando);
+                LastNode = next(LastNode, *hist);
+                N++;
+            }while(LastNode != NULL && N <valor);
+
+        }
+
+    }
+    printf("\n");
+}
+
 
 void printPrompt(){
     printf(">> ");
