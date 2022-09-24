@@ -57,7 +57,7 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
         q->data = d;
         q->next = LNULL;
 
-        if( (*L)->data.puesto == 0){ //estamos insertando en el head node
+        if( d.puesto == 0){ //estamos insertando en el head node
             (*L)->next = q;
         }else{ //la lista tiene más elementos
             for (r = *L; r->next != LNULL; r = r->next);
