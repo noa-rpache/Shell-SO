@@ -28,6 +28,10 @@ tPosL first(tList L){
     return L;
 }
 
+tPosL primero(tList L){
+    return L->next;
+}
+
 tPosL last(tList L){
     tPosL p;
     for(p=L; p->next!=LNULL; p=p->next);

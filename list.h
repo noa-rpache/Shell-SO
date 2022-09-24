@@ -20,6 +20,7 @@ typedef tPosL tList;
 bool createList(tList *L);
 //bool isEmptyList (tList L);
 tPosL first (tList L);
+tPosL primero(tList L); //sirve para saltarte el head node al acceder a la lista
 tPosL last (tList L);
 tPosL next (tPosL p, tList L);
 tPosL previous (tPosL p, tList L);
