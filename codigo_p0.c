@@ -18,7 +18,7 @@ bool salir(char *cadena[]); //check
 void printPrompt(); //check
 int TrocearCadena(char *cadena, char *trozos[]); //check
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
-void new_historial(char *comando, int numero, tList *hist);
+void new_historial(char *comando, int numero, tList *hist, int ntokens);
 void hist (char *comando, tList *hist, int ntokens);
 
 //comandos
@@ -34,7 +34,7 @@ void fecha(char *modo, int ntokens);
 int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las direcciones a dichos argumentos
 
     tList historial;
-    printf("declaras el historial\n");
+    //printf("declaras el historial\n");
     createList(&historial);
     bool salida = false; //comprobador de condición de salida
     int contador = 0; //número de ítems en el historial
@@ -47,12 +47,12 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
         printPrompt();
         leerEntrada(arvg,orden_procesada, &ntokens);
-        printf("leyó la entrada\n");
+        //printf("leyó la entrada\n");
         salida = salir(orden_procesada);
-        printf("no se sale\n");
+        //printf("no se sale\n");
         if(!salida){
-            new_historial(*orden_procesada,contador, &historial); //se tiene que guardar el comando si no está bien escrito -> SÍ
-            printf("guardó en el historial\n");
+            new_historial(*orden_procesada,contador, &historial, ntokens); //se tiene que guardar el comando si no está bien escrito -> SÍ
+            //printf("guardó en el historial\n");
             procesarEntrada(orden_procesada, ntokens, historial);
         }
 
@@ -70,7 +70,7 @@ void procesarEntrada( char *orden[], int ntokens, tList historial ){
     else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
     else if(strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
-    //else if(strcmp(&orden[0], "hist") == 0) ;
+    else if(strcmp(orden[0], "hist") == 0) hist(orden[1],&historial,ntokens);
     else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial);
     else if(strcmp(orden[0], "infosis") == 0) infosis();
     else if(strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
@@ -121,7 +121,11 @@ void repetir_comando(char *pos, tList hist){
 
     tItemL repeticion = getItem(findItem(posicion, hist), hist);
     printf("Ejecutando hist (%d): %s\n",posicion, *repeticion.comando);
-    procesarEntrada(repeticion.comando, repeticion.tokens, hist);
+
+    char *aux[MAX_LENGHT];
+    strcpy(*aux,*repeticion.comando);
+
+    procesarEntrada(aux, repeticion.tokens, hist);
 
 }
 
@@ -230,19 +234,22 @@ void fecha(char *modo, int ntokens){
 
 void hist (char *comando, tList *hist, int ntokens){
     int i=0;
-    //printf("entra al historial\n");
+    printf("entra al historial\n");
 
     if (ntokens == 1){//imprimir la lista
 
-        //printf("entra en el if\n");
-        tPosL LastNode = first(*hist);
+        printf("entra en el if\n");
+        tPosL LastNode = primero(*hist);
         //printf("(1) %d - %s\n", getItem(LastNode,*hist).puesto, *(getItem(LastNode,*hist).comando) );
 
         while(LastNode->next != LNULL){
-            //printf("entrar el while\n");
-            printf("%d - %s\n", getItem(LastNode,*hist).puesto, *getItem(LastNode,*hist).comando );
+            tItemL objeto = getItem(LastNode,*hist);
+            printf("entrar el while\n\n");
+            //printf("%d - %s ntokens %d\n", objeto.puesto, *objeto.comando, objeto.tokens );
+            printf("%d - %s\n", objeto.puesto, *objeto.comando);
             LastNode = LastNode->next;
         }
+
         /*
         do{
             printf("entra al do\n");
@@ -255,11 +262,13 @@ void hist (char *comando, tList *hist, int ntokens){
     }else{
 
         if( strcmp(comando, "-c") == 0 ) {
+
             deleteList(hist);
             createList(hist);
             //printf("ha borrado la lista\n");
-        }else{ //imprimir N comandos
-            //printf("entra a los N comandos\n");
+            
+        }else{//printf("entra a los N comandos\n");
+
             int valor = atoi(comando); //contador
             int N = 0;
             tPosL LastNode = first(*hist);
@@ -302,12 +311,16 @@ void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens){
 
 }
 
-void new_historial(char *comando, int numero, tList *hist){
+void new_historial(char *comando, int numero, tList *hist, int ntokens){
 
     tItemL nuevo;
+    nuevo.puesto = numero; //orden de entrada en el historial
+    nuevo.tokens = ntokens;
+
+    //char *aux[MAX_LENGHT];
     *nuevo.comando = comando;
     //strcpy(*nuevo.comando, comando); //ya está separado
-    nuevo.puesto = numero; //posición en la lista de
+
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
 
 }
