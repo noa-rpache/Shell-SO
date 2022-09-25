@@ -213,12 +213,9 @@ void hist (char *comando, tList *hist, int ntokens){
 
         //printf("entra en el if\n");
         tPosL LastNode = primero(*hist);
-        //printf("(1) %d - %s\n", getItem(LastNode,*hist).puesto, *(getItem(LastNode,*hist).comando) );
-
         while(LastNode->next != LNULL){
             tItemL objeto = getItem(LastNode,*hist);
             //printf("entrar el while\n\n");
-            //printf("%d - %s ntokens %d\n", objeto.puesto, *objeto.comando, objeto.tokens );
             printf("%d - %s\n", objeto.puesto, objeto.comando);
             LastNode = LastNode->next;
         }
@@ -254,10 +251,7 @@ void procesarEntrada( char *orden[], int ntokens, tList historial ){
     //printf("entró a procesar\n");
 
     if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
-    else if (strcmp(orden[0], "pid") == 0){
-        //printf("entra el if\n\n");
-        pillar_pid(orden[1],ntokens);
-    }
+    else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
     else if(strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
     else if(strcmp(orden[0], "hist") == 0) hist(orden[1],&historial,ntokens);
@@ -298,9 +292,8 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens){
 
-    fgets(*entrada, MAX_LENGHT, stdin);
-    //printf("%s",*entrada);
-    if(strcmp(*entrada,"\n")!=0) *ntokens = TrocearCadena(*entrada, comandos_separados);
+    fgets(*entrada, MAX_LENGHT, stdin); //printf("%s",*entrada);
+    if(strcmp(*entrada,"\n")!=0) *ntokens = TrocearCadena(*entrada, comandos_separados); //así no da problemas con el \n
 
 }
 
@@ -317,6 +310,7 @@ void new_historial(char *comando, int numero, tList *hist, int ntokens){
     //printf("%s\n",nuevo.comando);
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
+    printf("ha guardado bien\n");
 
 }
 
