@@ -6,7 +6,7 @@
 
 typedef struct{
     int puesto;
-    const char *comando[MAX_LENGHT];
+    char comando[MAX_LENGHT];
     int tokens;
 }tItemL;
 typedef struct tNode *tPosL;

@@ -14,7 +14,7 @@ bool createList(tList *L){
     else{
         char *titulo = "\0";
         q->data.puesto = 0;
-        *q->data.comando = titulo;
+        strcpy(q->data.comando, titulo);
         q->data.tokens = 0;
         q->next = LNULL;
         *L = q;
