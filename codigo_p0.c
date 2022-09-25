@@ -206,7 +206,7 @@ void fecha(char *modo, int ntokens){
 } //check
 
 void hist (char *comando, tList *hist, int ntokens){
-    int i=0;
+    //int i=0;
     //printf("entra al historial\n");
 
     if (ntokens == 1){//imprimir la lista
@@ -231,8 +231,9 @@ void hist (char *comando, tList *hist, int ntokens){
             createList(hist);
             //printf("ha borrado la lista\n");
 
-        }else{//printf("entra a los N comandos\n");
-
+        }else{
+            printf("entra a los N comandos\n");
+            /*
             int valor = int_convert(comando);
             int N = 0;
             tPosL LastNode = first(*hist);
@@ -242,7 +243,7 @@ void hist (char *comando, tList *hist, int ntokens){
                 LastNode = next(LastNode, *hist);
                 N++;
             }while(LastNode != NULL && N <valor);
-
+            */
         }
 
     }
@@ -263,6 +264,7 @@ void procesarEntrada( char *orden[], int ntokens, tList historial ){
     else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial);
     else if(strcmp(orden[0], "infosis") == 0) infosis();
     else if(strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
+    else if(strcmp(orden[0], "\0") == 0) ;
     else printf("%s: no es un comando del shell\n", orden[0]);
 
 }
@@ -297,7 +299,8 @@ int TrocearCadena(char *cadena, char *trozos[]){
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens){
 
     fgets(*entrada, MAX_LENGHT, stdin);
-    *ntokens = TrocearCadena(*entrada, comandos_separados);
+    //printf("%s",*entrada);
+    if(strcmp(*entrada,"\n")!=0) *ntokens = TrocearCadena(*entrada, comandos_separados);
 
 }
 
@@ -317,10 +320,11 @@ void new_historial(char *comando, int numero, tList *hist, int ntokens){
 
 }
 
+/*
 int int_convert(char cadena[]){
 
     //quitarle el guión
     return atoi();
 }
-
+*/
 
