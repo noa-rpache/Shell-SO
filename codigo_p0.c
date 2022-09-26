@@ -90,7 +90,6 @@ void infosis(){
 
 void repetir_comando(char *pos, tList hist, int contador){
     int posicion = atoi(pos);
-
     tItemL repeticion = getItem(findItem(posicion, hist), hist);
     printf("Ejecutando hist (%d): %s\n",posicion, repeticion.comando);
 
@@ -205,9 +204,7 @@ void fecha(char *modo, int ntokens){
 
 } //check
 
-void hist (char *comando, tList *hist, int ntokens, int *contador){
-    //int i=0;
-    //printf("entra al historial\n");
+void hist (char *comando, tList *hist, int ntokens, int *contador){ //printf("entra al historial\n");
 
     if (ntokens == 1){//imprimir la lista
 
@@ -230,9 +227,9 @@ void hist (char *comando, tList *hist, int ntokens, int *contador){
             //printf("ha borrado la lista\n");
 
         }else{
-            printf("entra a los N comandos\n");
+            //printf("entra a los N comandos\n");
             int N = int_convert(&comando);
-            printf("tiene que imprimir N = %d entradas del historial\n",N);
+            //printf("tiene que imprimir N = %d entradas del historial\n",N);
             tPosL LastNode = primero(*hist);
             int i = 0;
 
@@ -240,7 +237,7 @@ void hist (char *comando, tList *hist, int ntokens, int *contador){
                 printf("%d - %s\n", i+1, getItem(LastNode,*hist).comando);
                 LastNode = next(LastNode, *hist);
                 i++;
-            }while( i<=N-1 && LastNode != NULL ); //el problema es el i<=N
+            }while( i<=N-1 && LastNode != NULL );
 
         }
 
