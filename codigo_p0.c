@@ -232,18 +232,16 @@ void hist (char *comando, tList *hist, int ntokens, int *contador){
         }else{
             printf("entra a los N comandos\n");
             int N = int_convert(&comando);
-            //printf("tiene que imprimir %d entradas del historial\n",N);
-            /*
-            int valor = int_convert(comando);
-            int N = 0;
-            tPosL LastNode = first(*hist);
+            printf("tiene que imprimir N = %d entradas del historial\n",N);
+            tPosL LastNode = primero(*hist);
+            int i = 0;
 
             do{
-                printf("%d_%s\n", i-1, getItem(LastNode,*hist).comando);
+                printf("%d - %s\n", i+1, getItem(LastNode,*hist).comando);
                 LastNode = next(LastNode, *hist);
-                N++;
-            }while(LastNode != NULL && N <valor);
-            */
+                i++;
+            }while( i<=N-1 && LastNode != NULL ); //el problema es el i<=N
+
         }
 
     }
@@ -313,13 +311,14 @@ void new_historial(char *comando, int numero, tList *hist, int ntokens){
     //printf("%s\n",nuevo.comando);
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
-    printf("ha guardado bien\n");
+    //printf("ha guardado bien\n");
 
 }
 
 
 int int_convert(char *cadena[]){
-    return atoi(*cadena)*(-1);
+    int convertido = atoi(*cadena);
+    return convertido;
 }
 
 
