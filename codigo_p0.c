@@ -13,19 +13,19 @@
 
 
 //generales
-void procesarEntrada( char *orden[], int ntokens, tList historial);
+void procesarEntrada( char *orden[], int ntokens, tList historial, int contador);
 bool salir(char *cadena[]); //check
 void printPrompt(); //check
 int TrocearCadena(char *cadena, char *trozos[]); //check
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
 void new_historial(char *comando, int numero, tList *hist, int ntokens);
-void hist (char *comando, tList *hist, int ntokens);
-int int_convert(char cadena[]);
+void hist (char *comando, tList *hist, int ntokens, int *contador);
+int int_convert(char *cadena[]);
 
 //comandos
 void ayuda(char *comando, int ntokens);
 void infosis();
-void repetir_comando(char *pos, tList hist);
+void repetir_comando(char *pos, tList hist, int contador);
 void autores( char *modo, int ntokens );
 void pillar_pid( char *modo, int ntokens);
 void carpeta(char *modo, int ntokens);
@@ -50,7 +50,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         salida = salir(orden_procesada);
         if(!salida){
             new_historial(*orden_procesada,contador, &historial, ntokens); //printf("guardó en el historial\n");
-            procesarEntrada(orden_procesada, ntokens, historial);
+            procesarEntrada(orden_procesada, ntokens, historial,contador);
         }
 
     }
@@ -88,7 +88,7 @@ void infosis(){
 
 }//check
 
-void repetir_comando(char *pos, tList hist){
+void repetir_comando(char *pos, tList hist, int contador){
     int posicion = atoi(pos);
 
     tItemL repeticion = getItem(findItem(posicion, hist), hist);
@@ -98,7 +98,7 @@ void repetir_comando(char *pos, tList hist){
     //strcpy(aux,repeticion.comando);
     *aux = repeticion.comando;
     //printf("ha hecho el strcpy/asignación\n");
-    procesarEntrada(aux, repeticion.tokens, hist);
+    procesarEntrada(aux, repeticion.tokens, hist, contador);
 
 }
 
@@ -205,7 +205,7 @@ void fecha(char *modo, int ntokens){
 
 } //check
 
-void hist (char *comando, tList *hist, int ntokens){
+void hist (char *comando, tList *hist, int ntokens, int *contador){
     //int i=0;
     //printf("entra al historial\n");
 
@@ -226,10 +226,13 @@ void hist (char *comando, tList *hist, int ntokens){
 
             deleteList(hist);
             createList(hist);
+            *contador = 0;
             //printf("ha borrado la lista\n");
 
         }else{
             printf("entra a los N comandos\n");
+            int N = int_convert(&comando);
+            //printf("tiene que imprimir %d entradas del historial\n",N);
             /*
             int valor = int_convert(comando);
             int N = 0;
@@ -247,15 +250,15 @@ void hist (char *comando, tList *hist, int ntokens){
 }
 
 
-void procesarEntrada( char *orden[], int ntokens, tList historial ){
+void procesarEntrada( char *orden[], int ntokens, tList historial,int contador){
     //printf("entró a procesar\n");
 
     if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
     else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
     else if(strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
-    else if(strcmp(orden[0], "hist") == 0) hist(orden[1],&historial,ntokens);
-    else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial);
+    else if(strcmp(orden[0], "hist") == 0) hist(orden[1],&historial,ntokens,&contador);
+    else if(strcmp(orden[0], "comando") == 0) repetir_comando(orden[1],historial, contador);
     else if(strcmp(orden[0], "infosis") == 0) infosis();
     else if(strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
     else if(strcmp(orden[0], "\0") == 0) ;
@@ -270,7 +273,7 @@ bool salir(char *cadena[]){
     else if( strcmp(*cadena, "bye") == 0 ) return true;
     else return false;
 
-}//check
+}
 
 void printPrompt(){
     printf(">> ");
@@ -314,11 +317,9 @@ void new_historial(char *comando, int numero, tList *hist, int ntokens){
 
 }
 
-/*
-int int_convert(char cadena[]){
 
-    //quitarle el guión
-    return atoi();
+int int_convert(char *cadena[]){
+    return atoi(*cadena)*(-1);
 }
-*/
+
 
