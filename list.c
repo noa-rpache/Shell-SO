@@ -63,13 +63,16 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
     if (!createNode(&q)) return false; //no hay espacio
     else{
         //asignamos valores al nodo
-        q->data = d;
+        //q->data = d;
+        int contador = 1;
         q->next = LNULL;
 
         if( d.puesto == 0){ //estamos insertando en el head node
             (*L)->next = q;
         }else{ //la lista tiene más elementos
-            for (r = *L; r->next != LNULL; r = r->next);
+            for (r = *L; r->next != LNULL; r = r->next) contador++; //meter aquí el contador y asignar q->data = d después
+            d.puesto = contador;
+            q->data = d;
             r->next = q;
         }
 
