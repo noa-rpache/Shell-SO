@@ -41,7 +41,6 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
     while( salida == false ){ //mientras no se cumpla ninguna condición de salida
 
-        contador++;
         char *orden_procesada[MAX_LENGHT]; //comandos separados
         int ntokens=0;
 
@@ -50,7 +49,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         salida = salir(orden_procesada);
         if(!salida){
             new_historial(*orden_procesada,contador, &historial, ntokens); //printf("guardó en el historial\n");
-            procesarEntrada(orden_procesada, ntokens, historial,contador);
+            procesarEntrada(orden_procesada,ntokens,historial,contador);
         }
 
     }
@@ -247,7 +246,7 @@ void hist (char *comando, tList *hist, int ntokens, int *contador){ //printf("en
 
 void procesarEntrada( char *orden[], int ntokens, tList historial,int contador){
     //printf("entró a procesar\n");
-
+    contador++;
     if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
     else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
     else if(strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
