@@ -13,7 +13,7 @@
 
 
 //generales
-void procesarEntrada( char *orden[], int ntokens, tList historial);
+void procesarEntrada( char *orden[], int ntokens, tList *historial);
 bool salir(char *cadena[]);
 void printPrompt();
 int TrocearCadena(char *cadena, char *trozos[]);
@@ -45,7 +45,7 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
         printPrompt();
         leerEntrada(arvg,orden_procesada,&ntokens); //printf("leyó la entrada\n");
         salida = salir(orden_procesada);
-        if(!salida) procesarEntrada(orden_procesada,ntokens,historial);
+        if(!salida) procesarEntrada(orden_procesada,ntokens,&historial);
     }
 
     deleteList(&historial);
@@ -90,7 +90,7 @@ void repetir_comando(char *pos, tList hist){
     //strcpy(aux,repeticion.comando);
     *aux = repeticion.comando;
     //printf("ha hecho el strcpy/asignación\n");
-    printf("%s",repeticion.comando);
+    printf("%s\n",repeticion.comando);
     //procesarEntrada(aux, repeticion.tokens, hist);
 
 }
@@ -200,7 +200,7 @@ void fecha(char *modo, int ntokens){
 
 void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historial\n");
 
-    if (ntokens == 1 && !isEmptyList(*hist)){//imprimir la lista //meto lo de EmptyList para que no de segmentation fault por si acaso
+    if (ntokens == 1 && !isEmptyList(*hist)){//imprimir la lista //meto lo de EmptyList para que no de segmentation fault por si acaso mientras no se arregla
         //printf("entra en el if\n");
         tPosL LastNode = primero(*hist);
         while(LastNode->next != LNULL){
@@ -236,16 +236,16 @@ void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historia
 }
 
 
-void procesarEntrada( char *orden[], int ntokens, tList historial){
+void procesarEntrada( char *orden[], int ntokens, tList *historial){
     //printf("entró a procesar\n");
     if(strcmp(*orden,"\n") != 0 && strcmp(*orden,"\0") != 0) {
-        new_historial(*orden,&historial, ntokens); //printf("guardó en el historial\n");
+        new_historial(*orden,historial, ntokens); //printf("guardó en el historial\n");
         if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
         else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1], ntokens);
         else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1], ntokens);
         else if (strcmp(orden[0], "fecha") == 0) fecha(orden[1], ntokens);
-        else if (strcmp(orden[0], "hist") == 0) hist(orden[1], &historial, ntokens);
-        else if (strcmp(orden[0], "comando") == 0) repetir_comando(orden[1], historial);
+        else if (strcmp(orden[0], "hist") == 0) hist(orden[1], historial, ntokens);
+        else if (strcmp(orden[0], "comando") == 0) repetir_comando(orden[1], *historial);
         else if (strcmp(orden[0], "infosis") == 0) infosis();
         else if (strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
         else if (strcmp(orden[0], "\0") == 0);
