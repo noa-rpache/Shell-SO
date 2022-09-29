@@ -9,7 +9,9 @@
 #include <sys/utsname.h> //esto es para infosis
 #include "list.h"
 #include <time.h>
+#include <errno.h>
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
+//#define MAX_LENGHT_PATH
 
 
 //generales
@@ -76,6 +78,7 @@ void infosis(){
 
     struct utsname informacion;
     uname(&informacion);
+    if( errno == -1 ) perror(sys_errlist[errno]);
 
     printf("%s (%s), OS: %s %s %s\n", informacion.nodename, informacion.machine, informacion.sysname,informacion.release, informacion.version);
 
@@ -145,14 +148,13 @@ void carpeta(char *modo, int ntokens){
 
     if ( ntokens == 1 ){ //no se han recibido argumentos adicionales
         //printf("se ha llegado al if\n");
-        char *get_current_dir_name(void); //así queda guardada aquí la cadena que contiene la ruta al directorio actual
+        char *directorio[MAX_LENGHT];
         //printf("no llega a imprimirlo\n");
-        printf("%s\n", get_current_dir_name());
+        printf("%s\n", getcwd(*directorio,MAX_LENGHT));
 
     }else { //se cambia de directorio
-
-        chdir(modo); //no tengo claro cómo funciona
-
+        chdir(modo);
+        if( errno == -1 ) perror(sys_errlist[errno]);
     }
 
 } //falta que salte un aviso cuando metes un directorio raro
@@ -162,7 +164,8 @@ void fecha(char *modo, int ntokens){
     int horas,minutos,segundos,dia,mes,anho;
 
     time_t now;//tipo de tiempo aritmetico
-    time(&now);//'time()' devuelve la hora actual del sistema como un valor 'time_t'
+    time(&now);
+    if( errno == -1) perror(sys_errlist[errno]); //'time()' devuelve la hora actual del sistema como un valor 'time_t'
 
     //localtime convierte un valor de 'time_t' a la hora del calendario
 
@@ -200,10 +203,10 @@ void fecha(char *modo, int ntokens){
 
 void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historial\n");
 
-    if (ntokens == 1 && !isEmptyList(*hist)){//imprimir la lista //meto lo de EmptyList para que no de segmentation fault por si acaso mientras no se arregla
+    if (ntokens == 1 && !isEmptyList(*hist)){ //imprimir la lista
         //printf("entra en el if\n");
         tPosL LastNode = primero(*hist);
-        while(LastNode->next != LNULL){
+        while(LastNode != LNULL){
             tItemL objeto = getItem(LastNode,*hist);
             //printf("entrar el while\n\n");
             printf("%d - %s\n", objeto.puesto, objeto.comando);
@@ -236,10 +239,10 @@ void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historia
 }
 
 
-void procesarEntrada( char *orden[], int ntokens, tList *historial){
+void procesarEntrada(char *orden[], int ntokens, tList *historial){
     //printf("entró a procesar\n");
     if(strcmp(*orden,"\n") != 0 && strcmp(*orden,"\0") != 0) {
-        new_historial(*orden,historial, ntokens); //printf("guardó en el historial\n");
+        new_historial(*orden,historial,ntokens);
         if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
         else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1], ntokens);
         else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1], ntokens);
