@@ -78,7 +78,7 @@ void infosis(){
 
     struct utsname informacion;
     uname(&informacion);
-    if( errno == -1 ) perror(sys_errlist[errno]);
+    if( errno == -1 ) perror(strerror(errno));
 
     printf("%s (%s), OS: %s %s %s\n", informacion.nodename, informacion.machine, informacion.sysname,informacion.release, informacion.version);
 
@@ -93,7 +93,7 @@ void repetir_comando(char *pos, tList hist){
     //strcpy(aux,repeticion.comando);
     *aux = repeticion.comando;
     //printf("ha hecho el strcpy/asignación\n");
-    printf("%s\n",repeticion.comando);
+    printf("%s\n",&repeticion.comando[1]);
     //procesarEntrada(aux, repeticion.tokens, hist);
 
 }
@@ -154,7 +154,7 @@ void carpeta(char *modo, int ntokens){
 
     }else { //se cambia de directorio
         chdir(modo);
-        if( errno == -1 ) perror(sys_errlist[errno]);
+        if( errno == -1 ) perror(strerror(errno));
     }
 
 } //falta que salte un aviso cuando metes un directorio raro
@@ -165,7 +165,7 @@ void fecha(char *modo, int ntokens){
 
     time_t now;//tipo de tiempo aritmetico
     time(&now);
-    if( errno == -1) perror(sys_errlist[errno]); //'time()' devuelve la hora actual del sistema como un valor 'time_t'
+    if( errno == -1) perror(strerror(errno)); //'time()' devuelve la hora actual del sistema como un valor 'time_t'
 
     //localtime convierte un valor de 'time_t' a la hora del calendario
 
