@@ -9,27 +9,28 @@
 #define MAX_TOKENS 15
 #define MAX 30
 
-typedef char[MAX] tItemL;
-typedef int tPosL;
+
+typedef char tItemT[MAX]; //definición de los elementos que queremos insertar en data
+typedef int tPosT;
 typedef struct {
-    tItemL data [MAX_TOKENS];
-    tPosL lastPos; //última posición con datos
+    char data[MAX_TOKENS][MAX];
+    tPosT lastPos; //última posición con datos
 } TokensList;
 
 /*
  * es una lista de tokens, solo se añade por el final, el campo data es un array de strings
  * */
 
-void createEmptyTokensList(tList *L);
-bool isEmptyTokensList (tList L);
-tPosL firstToken (tList L);
-tPosL lastToken (tList L);
-tPosL nextToken (tPosL p, tList L);
-tPosL previousToken (tPosL p, tList L);
-bool insertToken (tItemL d ,tList *L);
-void deleteAtTokenPosition(tPosL p, tList *L);
-tItemL getToken (tPosL p, tList L);
-void updateToken (tItemL d, tPosL p, tList *L);
-tPosL findToken (tProductId d, tList L)
+void createEmptyTokensList(TokensList *L);
+bool isEmptyTokensList (TokensList L);
+tPosT firstToken (TokensList L);
+tPosT lastToken (TokensList L);
+tPosT nextToken (tPosT p, TokensList L);
+tPosT previousToken (tPosT p, TokensList L);
+bool insertToken (tItemT d ,TokensList *L);
+void deleteAtTokenPosition(tPosT p, TokensList *L);
+void getToken(tPosT p, TokensList L, char *token[MAX]);
+void updateToken (tItemT d, tPosT p, TokensList *L);
+//tPosT findToken (int d, TokensList L)
 
 #endif

@@ -1,33 +1,33 @@
 #include "static_tokens.h"
 
-void createEmptyTokensList(tList *L){
-    L.lastPos = LNULL;
+void createEmptyTokensList(TokensList *L){
+    L.lastPos = TNULL;
 }
 
-bool isEmptyTokensList (tList L){
-    return (L.lastPos==LNULL);
+bool isEmptyTokensList (TokensList L){
+    return (L.lastPos==TNULL);
 }
 
-tPosL firstToken(tList L){
+tPosT firstToken(TokensList L){
     return 0;
 }
 
-tPosL lastToken(tList L){
+tPosT lastToken(TokensList L){
     return L.lastPos;
 }
 
-tPosL previousToken(tPosL p, tList L){
+tPosT previousToken(tPosT p, TokensList L){
     return --p;
 }
 
-tPosL nextToken(tPosL p, tList L){
+tPosT nextToken(tPosT p, TokensList L){
      if (p==L.lastPos)
-         return LNULL;
+         return TNULL;
      else
          return ++p;
 }
 
-bool insertToken (tItemL d, tList *L){
+bool insertToken (tItemT d, TokensList *L){
 
     if(L->lastPos == MAX-1) //ya no hay más sitio en el array
         return false;
@@ -39,38 +39,40 @@ bool insertToken (tItemL d, tList *L){
 
 }
 
-void deleteAtTokenPosition (tPosL p, tList *L){
+void deleteAtTokenPosition (tPosT p, TokensList *L){ //no se va a usar, así que no se ha mirado
     int i;
     L->lastPos--;
-    for(i=p; i<= L->lastPos;i++){
+    for(i=p; i<= L->lastPos; i++){
         L->data[i]= L->data[i+1];
     }
 
 }
 
-tItemL getToken(tPosL p, tList L){
-   return L.data[p];
+void getToken(tPosT p, TokensList L, char *token[MAX]){
+    strcpy(*token, L.data[p]);
+   //return L.data[p];
 }
 
-void updateToken (tItemL d, tPosL p, tList *L){
+void updateToken (tItemT d, tPosT p, TokensList *L){ //tampoco se va a usar
     L->data[p] = d;
 }
-
-tPosL  findToken (tProductId d, tList L) {
-    tPosL p;
-    if(L.lastPos == LNULL)
-        return LNULL;
+/*
+tPosT  findToken (int d, TokensList L) {
+    tPosT p;
+    if(L.lastPos == TNULL)
+        return TNULL;
     else{
-        for(p=0; (p<L.lastPos) && (strcmp(L.data [p].productId,d)!= 0); p++);
+        for(p=0; (p<L.lastPos) && ( ); p++);
         if(strcmp(L.data[p].productId,d)==0)
             return p;
         else
-            return LNULL;
+            return TNULL;
     }
 }
+ */
 
-void deleteTokenList (tList* L){
-     L->lastPos = LNULL;
+void deleteTokenList (TokensList* L){
+     L->lastPos = TNULL;
 }
 
 
