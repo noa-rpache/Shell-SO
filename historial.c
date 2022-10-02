@@ -1,4 +1,4 @@
-#include "list.h"
+#include "historial.h"
 #include <stdio.h>
 
 
@@ -96,7 +96,7 @@ tPosL findItem (int num, tList L){
 void deleteList (tList *L){
     tPosL p;
     while(*L!=LNULL){
-        deleteTokensList((*L).comandos);
+        deleteTokensList(&(*L)->data.comandos);
         p=*L;
         *L = (*L)->next;
         free(p);
