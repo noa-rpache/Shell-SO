@@ -28,9 +28,7 @@ tPosT lastToken (TokensList L);
 tPosT nextToken (tPosT p, TokensList L);
 tPosT previousToken (tPosT p, TokensList L);
 bool insertToken (tItemT d ,TokensList *L);
-void deleteAtTokenPosition(tPosT p, TokensList *L);
 void getToken(tPosT p, TokensList L, char *token[MAX]);
-void updateToken (tItemT d, tPosT p, TokensList *L);
-//tPosT findToken (int d, TokensList L)
+void deleteTokensList (TokensList* L);
 
 #endif
