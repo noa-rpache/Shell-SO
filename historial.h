@@ -1,8 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dynamic_tokens.h"
-//#include "static_tokens.h"
+#include "static_tokens.h"
 #define LNULL NULL
 #define MAX_LENGHT 20 //largo máximo del comando principal
 

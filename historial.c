@@ -12,7 +12,8 @@ bool createList(tList *L){
 
     if (!createNode(&q)) return false; //no hay memoria
     else{
-        char *titulo = "\0"; strcpy(q->data.comando, titulo);
+        char *titulo = "\0";
+        strcpy(q->data.comando, titulo);
         //createEmptyTokensList(&comandos); //no hace falta porque el head node no tiene tokens
         q->data.puesto = 0;
         q->data.tokens = 0;
