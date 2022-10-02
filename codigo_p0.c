@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <unistd.h> //esta venía en el man C de google
 #include <sys/utsname.h> //esto es para infosis
-#include "list.h"
+#include "historial.h"
 #include <time.h>
 #include <errno.h>
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
@@ -38,15 +38,15 @@ int main(int argc, char *arvg[]){ //nº de argumentos recibidos, array con las d
 
     tList historial; //printf("declaras el historial\n");
     createList(&historial);
-    bool salida = false; //comprobador de condición de salida
+    bool salida = false;
 
     while( salida == false ){ //mientras no se cumpla ninguna condición de salida
         char *orden_procesada[MAX_LENGHT]; //comando troceado
         int ntokens=0;
 
         printPrompt();
-        leerEntrada(arvg,orden_procesada,&ntokens); //printf("leyó la entrada\n");
-        salida = salir(orden_procesada);
+        leerEntrada(arvg,orden_procesada,&ntokens); printf("leyó la entrada\n");
+        salida = salir(orden_procesada); printf("no se sale\n");
         if(!salida) procesarEntrada(orden_procesada,ntokens,&historial);
     }
 
@@ -157,7 +157,7 @@ void carpeta(char *modo, int ntokens){
         if( errno == -1 ) perror(strerror(errno));
     }
 
-} //falta que salte un aviso cuando metes un directorio raro
+}
 
 void fecha(char *modo, int ntokens){
 
@@ -240,9 +240,10 @@ void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historia
 
 
 void procesarEntrada(char *orden[], int ntokens, tList *historial){
-    //printf("entró a procesar\n");
+    printf("entró a procesar\n");
     if(strcmp(*orden,"\n") != 0 && strcmp(*orden,"\0") != 0) {
-        new_historial(*orden,historial,ntokens);
+        new_historial(*orden,historial,ntokens); printf("pasó el historial\n");
+        /*
         if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
         else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1], ntokens);
         else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1], ntokens);
@@ -253,15 +254,19 @@ void procesarEntrada(char *orden[], int ntokens, tList *historial){
         else if (strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
         else if (strcmp(orden[0], "\0") == 0);
         else printf("%s: no es un comando del shell\n", orden[0]);
+         */
     }
 }
 
-bool salir(char *cadena[]){
-
+bool salir(char *cadena[MAX_LENGHT]){
+    printf("entra a salir\n");
     if (strcmp(*cadena, "fin") == 0) return true;
     else if (strcmp(*cadena, "salir") == 0) return true;
     else if( strcmp(*cadena, "bye") == 0 ) return true;
-    else return false;
+    else {
+        printf("devuelve falso\n");
+        return false;
+    }
 
 }
 
@@ -294,14 +299,20 @@ void new_historial(char *comando, tList *hist, int ntokens){
 
     tItemL nuevo;
     nuevo.tokens = ntokens;
+    printf("pre-strcpy\n");
     strcpy(nuevo.comando,comando);
+    printf("pasado el strcpy\n");
+    createEmptyTokensList(&nuevo.comandos);
+    int i = 1; //ya se ha copiado el valor del campo 0
 
-    //char *aux[MAX_LENGHT];
-    //*nuevo.comando = comando;
-    //strcpy(*nuevo.comando, comando); //ya está separado
-    //printf("%s\n",nuevo.comando);
+    printf("pre-while\n");
+    while(strcmp(&comando[i], "\0" ) != 0){
+        insertToken(&comando[i],&nuevo.comandos);
+        i++;
+    }
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n"); //mensaje error
+    free(comando); //así hay menos punteros en memoria, que sobran mucho
     //printf("ha guardado bien\n");
 
 }
