@@ -19,7 +19,7 @@ bool procesarEntrada( char *orden[], int ntokens, tList *historial);
 bool salir(char *cadena[]);
 int TrocearCadena(char *cadena, char *trozos[]);
 void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
-void new_historial(char *comando, tList *hist, int ntokens, int argc);
+void new_historial(char *comando[], tList *hist, int ntokens, int argc);
 void hist (char *comando, tList *hist, int ntokens);
 int int_convert(char *cadena[]);
 
@@ -243,14 +243,17 @@ bool procesarEntrada(char *orden[], int ntokens, tList *historial){
     if(strcmp(*orden,"\n") != 0 || strcmp(*orden,"\0") != 0) {
         if(salir(orden)) return true;
         else {
-            printf("sigue procesando\n");
-            new_historial(*orden, historial, ntokens, ntokens);
-
+            new_historial(orden, historial, ntokens, ntokens);
+            /*
             tItemL prueba = getItem(primero(*historial), *historial);
-            tItemT aux;
-            getToken(firstToken(prueba.comandos), prueba.comandos, aux);
+            if(!isEmptyTokensList(prueba.comandos)){
+                tItemT aux;
+                getToken(firstToken(prueba.comandos), prueba.comandos, aux);
+                printf("comando: %s %s\n", prueba.comando, aux);
+            }
 
-            printf("comando: %s %s\n", prueba.comando, aux);
+            printf("comando: %s\n", prueba.comando);
+            */
 
             /*
             if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
@@ -302,15 +305,15 @@ void leerEntrada(char *entrada[], char *comandos_separados[], int *ntokens){
 
 }
 
-void new_historial(char *comando, tList *hist, int ntokens, int argc){
+void new_historial(char *comando[], tList *hist, int ntokens, int argc){
 
     tItemL nuevo;
     nuevo.tokens = ntokens;
-    strcpy(nuevo.comando,comando);
+    strcpy(nuevo.comando,*comando);
     createEmptyTokensList(&nuevo.comandos);
 
     for(int i = 1; i < argc; i++) //empieza en 1 porque ya se copió el valor en 0
-        if( !insertToken(&comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
+        if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
     printf("ha guardado bien\n");
