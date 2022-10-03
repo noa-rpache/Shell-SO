@@ -41,7 +41,7 @@ int main(int argc, char *arvg[]){
     bool salida = false;
 
     while( salida == false ){
-        leerEntrada(arvg,&historial); //printf("leyó la entrada\n");
+        leerEntrada(arvg,&historial);
         salida = procesarEntrada(&historial);
     }
 
@@ -238,9 +238,10 @@ void hist ( tItemL comando, tList *hist){ //char *comando, tList *hist, int ntok
 
 
 bool procesarEntrada(tList *historial){ //char *orden[], int ntokens, tList *historial
-    tItemL peticion = getItem((*historial)->last, *historial);
 
-    if(strcmp(peticion.comando,"\n") != 0 || strcmp(peticion.comando,"\0") != 0) {
+    if( !isEmptyList(*historial)) {
+        tItemL peticion = getItem((*historial)->last, *historial);
+
         if(salir(peticion.comando)) return true;
         else {
             /*
@@ -298,9 +299,12 @@ void leerEntrada(char *entrada[], tList *historial){
     int ntokens = 0;
 
     printf(">> ");
-    fgets(*entrada, MAX_LENGHT, stdin); //printf("%s",*entrada);
-    if(strcmp("\n",*entrada) != 0 ) ntokens = TrocearCadena(*entrada,orden_procesada);
-    new_historial(&orden_procesada[0], historial,ntokens);
+    fgets(*entrada, MAX_LENGHT, stdin);
+    if( strcmp("\n",*entrada) != 0 ) {
+        ntokens = TrocearCadena(*entrada, orden_procesada);
+        new_historial(&orden_procesada[0], historial,ntokens);
+    }
+
 }
 
 void new_historial(char *comando[], tList *hist, int ntokens){
