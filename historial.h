@@ -15,6 +15,7 @@ typedef struct tNode *tPosL;
 struct  tNode {
     tItemL data;
     tPosL next;
+    tPosL last;
 };
 
 typedef tPosL tList;

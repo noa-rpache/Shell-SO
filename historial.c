@@ -39,9 +39,7 @@ tPosL primero(tList L){
 }
 
 tPosL last(tList L){
-    tPosL p;
-    for(p=L; p->next!=LNULL; p=p->next);
-    return p;
+    return L->last;
 }
 
 tPosL next(tPosL p, tList L){ //tPosL next(tPosL p, tList L)
@@ -63,8 +61,6 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
 
     if (!createNode(&q)) return false; //no hay espacio
     else{
-        //asignamos valores al nodo
-        //q->data = d;
         int contador = 1;
         q->next = LNULL;
 
@@ -75,6 +71,7 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
             d.puesto = contador;
             q->data = d;
             r->next = q;
+            (*L)->last = r->next; //puntero al último nodo
         }
 
         return true;
