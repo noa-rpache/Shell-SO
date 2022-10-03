@@ -15,10 +15,10 @@
 
 
 //generales
-void procesarEntrada( char *orden[], int ntokens, tList *historial);
+bool procesarEntrada( char *orden[], int ntokens, tList *historial);
 bool salir(char *cadena[]);
 int TrocearCadena(char *cadena, char *trozos[]);
-void leerEntrada( char *entrada[], char *comandos_separados[], int argc);
+void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
 void new_historial(char *comando, tList *hist, int ntokens, int argc);
 void hist (char *comando, tList *hist, int ntokens);
 int int_convert(char *cadena[]);
@@ -41,10 +41,11 @@ int main(int argc, char *arvg[]){
 
     while( salida == false ){
         char *orden_procesada[MAX_LENGHT];
+        int ntokens = 0;
 
-        leerEntrada(arvg,orden_procesada, argc); //printf("leyó la entrada\n");
-        salida = salir(orden_procesada); //printf("no se sale\n");
-        if(!salida) procesarEntrada(orden_procesada,argc,&historial);
+        leerEntrada(arvg,orden_procesada,&ntokens); //printf("leyó la entrada\n");
+        //salida = salir(orden_procesada); //printf("no se sale\n");
+        salida = procesarEntrada(orden_procesada,ntokens,&historial);
 
     }
 
@@ -237,29 +238,36 @@ void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historia
 }
 
 
-void procesarEntrada(char *orden[], int ntokens, tList *historial){
+bool procesarEntrada(char *orden[], int ntokens, tList *historial){
 
-    if(strcmp(orden[0],"\n") != 0 && strcmp(orden[0],"\0") != 0) {
-        new_historial(*orden,historial,ntokens,ntokens);
+    if(strcmp(*orden,"\n") != 0 || strcmp(*orden,"\0") != 0) {
+        if(salir(orden)) return true;
+        else {
+            printf("sigue procesando\n");
+            new_historial(*orden, historial, ntokens, ntokens);
 
-        tItemL prueba = getItem(primero(*historial),*historial);
-        tItemT aux; getToken(firstToken(prueba.comandos),prueba.comandos, aux);
+            tItemL prueba = getItem(primero(*historial), *historial);
+            tItemT aux;
+            getToken(firstToken(prueba.comandos), prueba.comandos, aux);
 
-        printf("%s %s\n", prueba.comando, aux);
+            printf("comando: %s %s\n", prueba.comando, aux);
 
-        /*
-        if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
-        else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1], ntokens);
-        else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1], ntokens);
-        else if (strcmp(orden[0], "fecha") == 0) fecha(orden[1], ntokens);
-        else if (strcmp(orden[0], "hist") == 0) hist(orden[1], historial, ntokens);
-        else if (strcmp(orden[0], "comando") == 0) repetir_comando(orden[1], *historial);
-        else if (strcmp(orden[0], "infosis") == 0) infosis();
-        else if (strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
-        else if (strcmp(orden[0], "\0") == 0);
-        else printf("%s: no es un comando del shell\n", orden[0]);
-         */
+            /*
+            if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
+            else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1], ntokens);
+            else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1], ntokens);
+            else if (strcmp(orden[0], "fecha") == 0) fecha(orden[1], ntokens);
+            else if (strcmp(orden[0], "hist") == 0) hist(orden[1], historial, ntokens);
+            else if (strcmp(orden[0], "comando") == 0) repetir_comando(orden[1], *historial);
+            else if (strcmp(orden[0], "infosis") == 0) infosis();
+            else if (strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
+            else if (strcmp(orden[0], "\0") == 0);
+            else printf("%s: no es un comando del shell\n", orden[0]);
+             */
+            return false;
+        }
     }
+    return false;
 }
 
 bool salir(char *cadena[]){
@@ -286,12 +294,11 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 }
 
-void leerEntrada(char *entrada[], char *comandos_separados[], int argc){
+void leerEntrada(char *entrada[], char *comandos_separados[], int *ntokens){
 
     printf(">> ");
     fgets(*entrada, MAX_LENGHT, stdin); //printf("%s",*entrada);
-    if(strcmp("\n",*entrada) != 0 && argc != TrocearCadena(*entrada, comandos_separados))
-        //printf("ha ocurrido un error en la entrada de datos\n");
+    if(strcmp("\n",*entrada) != 0 ) *ntokens = TrocearCadena(*entrada,comandos_separados);
 
 }
 
