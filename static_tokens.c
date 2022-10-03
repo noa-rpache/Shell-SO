@@ -40,8 +40,8 @@ bool insertToken (tItemT d, TokensList *L){
 
 }
 
-void getToken(tPosT p, TokensList L, char *token[MAX]){
-    strcpy(*token, L.data[p]);
+void getToken(tPosT p, TokensList L, tItemT token){
+    strcpy(token, L.data[p]);
    //return L.data[p];
 }
 

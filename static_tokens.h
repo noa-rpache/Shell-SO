@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 #define TNULL -1
-#define MAX_TOKENS 15
-#define MAX 30
+#define MAX_TOKENS 15 //máximo nº de tokens
+#define MAX 30 //largo máximo de los tokens
 
 
 typedef char tItemT[MAX]; //definición de los elementos que queremos insertar en data
@@ -28,7 +28,7 @@ tPosT lastToken (TokensList L);
 tPosT nextToken (tPosT p, TokensList L);
 tPosT previousToken (tPosT p, TokensList L);
 bool insertToken (tItemT d ,TokensList *L);
-void getToken(tPosT p, TokensList L, char *token[MAX]);
+void getToken(tPosT p, TokensList L, tItemT token);
 void deleteTokensList (TokensList* L);
 
 #endif
