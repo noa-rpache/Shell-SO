@@ -22,6 +22,7 @@ void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens);
 void new_historial(char *comando[], tList *hist, int ntokens, int argc);
 void hist (char *comando, tList *hist, int ntokens);
 int int_convert(char *cadena[]);
+void printComand(tItemL impresion);
 
 //comandos
 void ayuda(char *comando, int ntokens);
@@ -86,14 +87,11 @@ void infosis(){
 void repetir_comando(char *pos, tList hist){
     int posicion = atoi(pos);
     tItemL repeticion = getItem(findItem(posicion, hist), hist);
-    printf("Ejecutando hist (%d): %s\n",posicion, repeticion.comando);
-
     char *aux[MAX_LENGHT];
-    //strcpy(aux,repeticion.comando);
-    *aux = repeticion.comando;
-    //printf("ha hecho el strcpy/asignación\n");
-    printf("%s\n",&repeticion.comando[1]);
-    //procesarEntrada(aux, repeticion.tokens, hist);
+    strcpy(*aux,repeticion.comando);
+    printf("Ejecutando hist (%d): %s\n",posicion, *aux);
+
+    procesarEntrada(aux,repeticion.tokens, &hist);
 
 }
 
@@ -200,6 +198,16 @@ void fecha(char *modo, int ntokens){
 
 }
 
+void printComand(tItemL impresion){
+    printf("%d: %s", impresion.puesto, impresion.comando);
+    if(impresion.tokens > 1) { //si hay algún token más que el comando ppal
+        for (int i = 0; i < impresion.tokens - 1; i++) { //ntokens -1 == nº de especificadores
+            printf(" %s ", impresion.comandos.data[i]);
+        }
+    }
+    printf("\n");
+}
+
 void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historial\n");
 
     if (ntokens == 1 && !isEmptyList(*hist)){ //imprimir la lista
@@ -207,8 +215,7 @@ void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historia
         tPosL LastNode = primero(*hist);
         while(LastNode != LNULL){
             tItemL objeto = getItem(LastNode,*hist);
-            //printf("entrar el while\n\n");
-            printf("%d - %s\n", objeto.puesto, objeto.comando);
+            printComand(objeto);
             LastNode = LastNode->next;
         }
 
@@ -255,18 +262,17 @@ bool procesarEntrada(char *orden[], int ntokens, tList *historial){
             printf("comando: %s\n", prueba.comando);
             */
 
-            /*
-            if (strcmp(orden[0], "autores") == 0) autores(orden[1], ntokens);
-            else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1], ntokens);
-            else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1], ntokens);
-            else if (strcmp(orden[0], "fecha") == 0) fecha(orden[1], ntokens);
-            else if (strcmp(orden[0], "hist") == 0) hist(orden[1], historial, ntokens);
+            if (strcmp(orden[0], "autores") == 0) autores(orden[1],ntokens);
+            else if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
+            else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
+            else if (strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
+            else if (strcmp(orden[0], "hist") == 0) hist(orden[1],historial, ntokens);
             else if (strcmp(orden[0], "comando") == 0) repetir_comando(orden[1], *historial);
             else if (strcmp(orden[0], "infosis") == 0) infosis();
             else if (strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
             else if (strcmp(orden[0], "\0") == 0);
             else printf("%s: no es un comando del shell\n", orden[0]);
-             */
+
             return false;
         }
     }
@@ -316,7 +322,6 @@ void new_historial(char *comando[], tList *hist, int ntokens, int argc){
         if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
-    printf("ha guardado bien\n");
 
 }
 
