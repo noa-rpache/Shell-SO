@@ -18,20 +18,20 @@
 bool procesarEntrada(tList *historial);
 bool salir(char cadena[]);
 int TrocearCadena(char *cadena, char *trozos[]);
-void leerEntrada( char *entrada[], char *comandos_separados[], int *ntokens, tList *historial);
+void leerEntrada( char *entrada[], tList *historial);
 void new_historial(char *comando[], tList *hist, int ntokens);
-void hist (char *comando, tList *hist, int ntokens);
-int int_convert(char *cadena[]);
+int int_convert(tItemT cadena);
 void printComand(tItemL impresion);
 
 //comandos
-void ayuda(char *comando, int ntokens);
+void ayuda(tItemL comando);
 void infosis();
 void repetir_comando(tItemL entrada, tList *hist);
 void autores( tItemL comando );
-void pillar_pid( char *modo, int ntokens);
-void carpeta(char *modo, int ntokens);
-void fecha(char *modo, int ntokens);
+void pillar_pid( tItemL comando);
+void carpeta( tItemL comando);
+void fecha( tItemL comando);
+void hist (tItemL comando, tList *hist);
 
 
 int main(int argc, char *arvg[]){
@@ -41,10 +41,7 @@ int main(int argc, char *arvg[]){
     bool salida = false;
 
     while( salida == false ){
-        char *orden_procesada[MAX_LENGHT];
-        int ntokens = 0;
-
-        leerEntrada(arvg,orden_procesada,&ntokens,&historial); //printf("leyó la entrada\n");
+        leerEntrada(arvg,&historial); //printf("leyó la entrada\n");
         salida = procesarEntrada(&historial);
     }
 
@@ -53,23 +50,23 @@ int main(int argc, char *arvg[]){
 }
 
 
-void ayuda(char *comando, int ntokens){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
+void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
 
-    if(ntokens == 1){
+    if(comando.tokens == 1){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
-    }else if(strcmp(comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
-    else if(strcmp(comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
-    else if(strcmp(comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
-    else if (strcmp(comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
-    else if (strcmp(comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
-    else if(strcmp(comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
-    else if(strcmp(comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
-    else if(strcmp(comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
-    else if( strcmp(comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
-    else if( strcmp(comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos\n");
-    else printf("%s no encontrado\n", comando);
+    }else if(strcmp(comando.comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
+    else if(strcmp(comando.comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
+    else if(strcmp(comando.comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
+    else if (strcmp(comando.comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
+    else if (strcmp(comando.comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
+    else if (strcmp(comando.comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
+    else if(strcmp(comando.comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
+    else if(strcmp(comando.comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
+    else if(strcmp(comando.comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
+    else if( strcmp(comando.comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
+    else if( strcmp(comando.comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos\n");
+    else printf("%s no encontrado\n", comando.comando);
 }
 
 void infosis(){
@@ -126,42 +123,43 @@ void autores( tItemL comando ){ //char *modo, int ntokens
 
 }
 
-void pillar_pid( char *modo, int ntokens){
+void pillar_pid( tItemL comando ){ //char *modo, int ntokens
     //printf("entra en pid\n");
-    if( ntokens == 1 ){ //no se ha especificado -p
+    if( comando.tokens == 1 ){ //no se ha especificado -p
         int PID = getpid();
         printf("Pid de shell: %d\n", PID);
     }else{
-
+        tItemT modo;
+        getToken(0,comando.comandos,modo);
         if( strcmp(modo, "-p") == 0 ){ //hay que sacar el proceso padre de la shell
             int PID = getppid();
             printf("Pid del padre del shell: %d\n", PID);
         }else{
-
             printf("no ha introducido un especificador válido\n");
-
         }
 
     }
 
 }
 
-void carpeta(char *modo, int ntokens){
+void carpeta( tItemL comando ){ //char *modo, int ntokens
 
-    if ( ntokens == 1 ){ //no se han recibido argumentos adicionales
-        //printf("se ha llegado al if\n")
-        char directorio[MAX_LENGHT];
+    if ( comando.tokens == 1 ){ //no se han recibido argumentos adicionales
+        //printf("se ha llegado al if\n");
+        char *directorio[MAX_LENGHT];
         //printf("no llega a imprimirlo\n");
-        printf("%s\n", getcwd(directorio,MAX_LENGHT));
+        printf("%s\n", getcwd(*directorio,sizeof(directorio)) );
 
     }else { //se cambia de directorio
+        tItemT modo;
+        getToken(0,comando.comandos,modo);
         chdir(modo);
         if( errno == -1 ) perror(strerror(errno));
     }
 
 }
 
-void fecha(char *modo, int ntokens){
+void fecha( tItemL comando){
 
     int horas,minutos,segundos,dia,mes,anho;
 
@@ -189,23 +187,28 @@ void fecha(char *modo, int ntokens){
 
     //ya tenemos hechas todas las variables
 
-    if(ntokens==1){//tiene que imprimir la fecha y la hora
+    if(comando.tokens == 1){//tiene que imprimir la fecha y la hora
 
         printf("%02d:%02d:%02d \n",horas,minutos,segundos);
         printf("%02d/%02d/%d\n",dia,mes,anho);
 
-    }else if(strcmp(modo,"-d")==0){//imprime solo la fecha actual
-        printf("%02d/%02d/%d\n",dia,mes,anho);
+    }else {
+        tItemT modo;
+        getToken(0,comando.comandos,modo);
 
-    }else if(strcmp(modo,"-h")==0){//imprime solo la hora actual
-        printf("%02d:%02d:%02d \n",horas,minutos,segundos);
+        if (strcmp(modo, "-d") == 0) {//imprime solo la fecha actual
+            printf("%02d/%02d/%d\n", dia, mes, anho);
+
+        } else if (strcmp(modo, "-h") == 0) {//imprime solo la hora actual
+            printf("%02d:%02d:%02d \n", horas, minutos, segundos);
+        }
     }
 
 }
 
-void hist (char *comando, tList *hist, int ntokens){
+void hist ( tItemL comando, tList *hist){ //char *comando, tList *hist, int ntokens
 
-    if (ntokens == 1 && !isEmptyList(*hist)){ //imprimir la lista
+    if (comando.tokens == 1 && !isEmptyList(*hist)){ //imprimir la lista
         tPosL LastNode = primero(*hist);
         while(LastNode != LNULL){
             tItemL objeto = getItem(LastNode,*hist);
@@ -213,15 +216,16 @@ void hist (char *comando, tList *hist, int ntokens){
             LastNode = LastNode->next;
         }
     }else{
+        tItemT modo;
+        getToken(0,comando.comandos, modo);
 
-        if( strcmp(comando, "-c") == 0 ) {
+        if( strcmp(modo, "-c") == 0 ) {
             deleteList(hist);
             createList(hist);
         }else{
-            int N = int_convert(&comando);
+            int N = int_convert(modo);
             tPosL LastNode = primero(*hist);
             int i = 0;
-
             do{
                 tItemL objeto = getItem(LastNode,*hist);
                 printComand(objeto);
@@ -251,13 +255,14 @@ bool procesarEntrada(tList *historial){ //char *orden[], int ntokens, tList *his
             */
             if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
             else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion,historial);
-            else /*if (strcmp(orden[0], "pid") == 0) pillar_pid(orden[1],ntokens);
-            else if (strcmp(orden[0], "carpeta") == 0) carpeta(orden[1],ntokens);
-            else if (strcmp(orden[0], "fecha") == 0) fecha(orden[1],ntokens);
-            else  if (strcmp(orden[0], "infosis") == 0) infosis();
-            else if (strcmp(orden[0], "ayuda") == 0) ayuda(orden[1], ntokens);
-            else if (strcmp(orden[0], "\0") == 0);
-            else */printf("%s: no es un comando del shell\n", peticion.comando);
+            else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
+            else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
+            else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
+            else if (strcmp(peticion.comando, "infosis") == 0) infosis();
+            else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
+            else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
+            else if (strcmp(peticion.comando, "\0") == 0); //no sé qué va aquí
+            else printf("%s: no es un comando del shell\n", peticion.comando);
 
             return false;
         }
@@ -288,11 +293,14 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 }
 
-void leerEntrada(char *entrada[], char *comandos_separados[], int *ntokens, tList *historial){
+void leerEntrada(char *entrada[], tList *historial){
+    char *orden_procesada[MAX_LENGHT];
+    int ntokens = 0;
+
     printf(">> ");
     fgets(*entrada, MAX_LENGHT, stdin); //printf("%s",*entrada);
-    if(strcmp("\n",*entrada) != 0 ) *ntokens = TrocearCadena(*entrada,comandos_separados);
-    new_historial(&comandos_separados[0], historial,*ntokens);
+    if(strcmp("\n",*entrada) != 0 ) ntokens = TrocearCadena(*entrada,orden_procesada);
+    new_historial(&orden_procesada[0], historial,ntokens);
 }
 
 void new_historial(char *comando[], tList *hist, int ntokens){
@@ -309,8 +317,8 @@ void new_historial(char *comando[], tList *hist, int ntokens){
 
 }
 
-int int_convert(char *cadena[]){
-    int convertido = atoi(*cadena);
+int int_convert(tItemT cadena){
+    int convertido = atoi(cadena);
     return convertido*(-1);
 }
 
