@@ -234,7 +234,8 @@ void hist (char *comando, tList *hist, int ntokens){ //printf("entra al historia
             int i = 0;
 
             do{
-                printf("%d - %s\n", i+1, getItem(LastNode,*hist).comando);
+                tItemL objeto = getItem(LastNode,*hist);
+                printComand(objeto);
                 LastNode = next(LastNode, *hist);
                 i++;
             }while( i<=N-1 && LastNode != NULL );
