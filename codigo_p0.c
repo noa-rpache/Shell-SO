@@ -244,16 +244,15 @@ bool procesarEntrada(tList *historial){ //char *orden[], int ntokens, tList *his
 
         if(salir(peticion.comando)) return true;
         else {
-            /*
-            tItemL prueba = getItem(primero(*historial), *historial);
-            if(!isEmptyTokensList(prueba.comandos)){
-                tItemT aux;
-                getToken(firstToken(prueba.comandos), prueba.comandos, aux);
-                printf("comando: %s %s\n", prueba.comando, aux);
+            
+            tPosL LastNode = primero(*hist);
+            while(LastNode != LNULL){
+                tItemL objeto = getItem(LastNode,*hist);
+                printComand(objeto);
+                LastNode = LastNode->next;
             }
-
-            printf("comando: %s\n", prueba.comando);
-            */
+            
+           /*
             if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
             else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion,historial);
             else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
@@ -262,9 +261,14 @@ bool procesarEntrada(tList *historial){ //char *orden[], int ntokens, tList *his
             else if (strcmp(peticion.comando, "infosis") == 0) infosis();
             else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "\0") == 0); //no sé qué va aquí
+            else if (strcmp(peticion.comando, "create") == 0); 
+            else if (strcmp(peticion.comando, "stat") == 0); 
+            else if (strcmp(peticion.comando, "list") == 0); 
+            else if (strcmp(peticion.comando, "delete") == 0); 
+            else if (strcmp(peticion.comando, "deltree") == 0); 
             else printf("%s: no es un comando del shell\n", peticion.comando);
-
+            */
+            
             return false;
         }
     }
