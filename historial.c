@@ -1,5 +1,4 @@
 #include "historial.h"
-#include <stdio.h>
 
 
 bool createNode(tPosL* p){
