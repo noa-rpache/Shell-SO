@@ -37,7 +37,7 @@ void carpeta( tItemL comando);
 void fecha( tItemL comando);
 void hist (tItemL comando, tList *hist);
 void status(tItemL comando);
-
+void listar(tItemL comando);
 
 int main(int argc, char *arvg[]){
 
@@ -154,7 +154,7 @@ void carpeta( tItemL comando ){
         //printf("se ha llegado al if\n");
         char *directorio[MAX_LENGHT];
         //printf("no llega a imprimirlo\n");
-        printf("%s\n", getcwd(*directorio,MAX_LENGHT) );
+        printf("%s\n", getcwd(*directorio,sizeof(directorio) ) );
 
     }else { //se cambia de directorio
         tItemT modo;
@@ -243,13 +243,13 @@ void hist ( tItemL comando, tList *hist){
 }
 
 void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
-
     if(comando.tokens == 1){
         //imprimir ruta al directorio actual
     }else{
         int controlador=0, i=0;
         for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
-            if( strcmp("-long",comando.comandos[i])!=0 || strcmp("-link",comando.comandos[i])!=0 || strcmp("-acc",comando.comandos[i])!=0 ){ //entra si alguna vez es distinto de alguna de estas opciones
+            tItemT aux; getToken(i,comando.comandos,aux);
+            if( strcmp("-long",aux)!=0 || strcmp("-link",aux)!=0 || strcmp("-acc",aux)!=0 ){ //entra si alguna vez es distinto de alguna de estas opciones
                 i = comando.tokens-2;
             }else{
                 controlador++; //así no añade nada cuando queramos salir del bucle
@@ -261,6 +261,31 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
         }else{
             //si no es path/file-> no existe path/file
             //si lo es-> llamada
+        }
+
+    }
+}
+
+void listar(tItemL comando){
+    if(comando.tokens == 1){
+        //imprimir ruta al directorio actual
+    }else{
+        int controlador=0, i=0;
+        for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
+            tItemT aux; getToken(i,comando.comandos,aux);
+            if( strcmp("-long",aux)!=0 || strcmp("-link",aux)!=0 || strcmp("-acc",aux)!=0 || strcmp("-hid",aux)!=0 || strcmp("-reca",aux)!=0 || strcmp("-recb",aux)!=0){
+                //entra si alguna vez es distinto de alguna de estas opciones
+                i = comando.tokens-2;
+            }else{
+                controlador++; //así no añade nada cuando queramos salir del bucle
+            }
+        }
+
+        if(i==controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
+
+        }else{
+            //si no es path/file-> no existe path/file
+            //si lo es-> llamada + tipo de recorrido (nada, reca, recb)
         }
 
     }
@@ -293,8 +318,8 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
             else if (strcmp(peticion.comando, "create") == 0) ; //no sé qué va aquí
-            else if (strcmp(peticion.comando, "stat") == 0) ; //no sé qué va aquí
-            else if (strcmp(peticion.comando, "list") == 0) ; //no sé qué va aquí
+            else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
+            else if (strcmp(peticion.comando, "list") == 0) listar(peticion); //no sé qué va aquí
             else if (strcmp(peticion.comando, "delete") == 0) ; //no sé qué va aquí
             else if (strcmp(peticion.comando, "deltree") == 0) ; //no sé qué va aquí
             else printf("%s: no es un comando del shell\n", peticion.comando);
