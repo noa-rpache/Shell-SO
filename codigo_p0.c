@@ -14,7 +14,7 @@
 //#include <sys/dir.h> //utilidades sobre directorios
 #include "historial.h"
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
-#define MAX_LENGHT_PATH 50
+#define MAX_LENGHT_PATH 50 //para cuando se quieran arrays de nombres de directorios
 
 
 //generales
@@ -26,6 +26,7 @@ void new_historial(char *comando[], tList *hist, int ntokens);
 int int_convert(tItemT cadena);
 void printComand(tItemL impresion);
 char LetraTF (mode_t m);
+void getDir();
 
 //comandos
 void ayuda(tItemL comando);
@@ -152,18 +153,7 @@ void pillar_pid( tItemL comando ){ //char *modo, int ntokens
 void carpeta( tItemL comando ){
 
     if ( comando.tokens == 1 ){ //no se han recibido argumentos adicionales
-        //printf("se ha llegado al if\n");
-        char directorio[MAX_LENGHT_PATH];
-        //printf("arrray declarado\n");
-        getcwd(directorio,sizeof(directorio) );
-        //printf("pre-ifs\n");
-        if( errno == -1 ){ //se ha dado un error
-            printf("\terrno = -1\n");
-            perror(strerror(errno));
-        }else{
-            //printf("\tno hubo errores\n");
-            printf("%s\n", directorio );
-        }
+        getDir();
 
     }else { //se cambia de directorio
         tItemT modo;
@@ -253,23 +243,43 @@ void hist ( tItemL comando, tList *hist){
 
 void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
     if(comando.tokens == 1){
-        //imprimir ruta al directorio actual
+        getDir();
     }else{
-        int controlador=0, i=0;
+        int controlador=0, i=0; //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
+        int largo=0, link=0, acc=0;
+
         for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
             tItemT aux; getToken(i,comando.comandos,aux);
-            if( strcmp("-long",aux)!=0 || strcmp("-link",aux)!=0 || strcmp("-acc",aux)!=0 ){ //entra si alguna vez es distinto de alguna de estas opciones
-                i = comando.tokens-2;
+            if(strcmp("-long",aux)==0){
+                largo=1; //se ha detectado long
+                controlador++;
+            }else if(strcmp("-link",aux)==0){
+                link=1;
+                controlador++;
+            }else if(strcmp("-acc",aux)==0){
+                acc=1;
+                controlador++;
             }else{
-                controlador++; //así no añade nada cuando queramos salir del bucle
+                i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
             }
         }
 
         if(i==controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
-
+            getDir();
         }else{
-            //si no es path/file-> no existe path/file
-            //si lo es-> llamada
+            printf("\tbucle en proceso\n");
+            for(int i = controlador; i<=comando.comandos.lastPos-1; nextToken(i,comando.comandos) ) {
+                tItemT path;
+                getToken(controlador, comando.comandos, path);
+                struct stat *contenido;
+                if (stat(path, contenido) == -1){
+                    printf("%s no es un directorio o archivo\n", path);
+                    perror(strerror(errno));
+                }else {
+                    printf("\timprimir información\n");
+                }
+            }
+
         }
 
     }
@@ -277,7 +287,7 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
 
 void listar(tItemL comando){
     if(comando.tokens == 1){
-        //imprimir ruta al directorio actual
+        getDir();
     }else{
         int controlador=0, i=0;
         for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
@@ -291,7 +301,7 @@ void listar(tItemL comando){
         }
 
         if(i==controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
-
+            getDir();
         }else{
             //si no es path/file-> no existe path/file
             //si lo es-> llamada + tipo de recorrido (nada, reca, recb)
@@ -415,5 +425,17 @@ char LetraTF (mode_t m){//devuelve el tipo de algo
         case S_IFCHR: return 'c'; /*char device*/
         case S_IFIFO: return 'p'; /*pipe*/
         default: return '?'; /*desconocido, no deberia aparecer*/
+    }
+}
+
+void getDir(){
+    char directorio[MAX_LENGHT_PATH];
+    getcwd(directorio,sizeof(directorio) );
+    if( errno == -1 ){ //se ha dado un error
+        printf("\terrno = -1\n");
+        perror(strerror(errno));
+    }else{
+        //printf("\tno hubo errores\n");
+        printf("%s\n", directorio );
     }
 }
