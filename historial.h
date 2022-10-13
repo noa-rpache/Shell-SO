@@ -9,7 +9,7 @@
 #include <string.h>
 #include "static_tokens.h"
 #define LNULL NULL
-#define MAX_LENGHT 20 //largo máximo del comando principal
+#define MAX_LENGHT 80 //largo máximo del comando principal
 
 typedef struct{
     char comando[MAX_LENGHT];
