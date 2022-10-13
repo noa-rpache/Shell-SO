@@ -246,45 +246,66 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
         getDir();
     }else{
         int controlador=0, i=0; //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
-        int largo=0, link=0, acc=0;
+        bool largo=false, link=false, acc=false;
 
+        //saber qué es lo que se ha introducido
         for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
             tItemT aux; getToken(i,comando.comandos,aux);
             if(strcmp("-long",aux)==0){
-                largo=1; //se ha detectado long
+                largo = true; //se ha detectado long
                 controlador++;
             }else if(strcmp("-link",aux)==0){
-                link=1;
+                link = true;
                 controlador++;
             }else if(strcmp("-acc",aux)==0){
-                acc=1;
+                acc = true;
                 controlador++;
             }else{
                 i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
             }
         }
 
-        if(i==controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
+        //imprimir petición
+        if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
         }else{
-            printf("\tbucle en proceso\n");
-            for(int i = controlador; i<=comando.comandos.lastPos-1; nextToken(i,comando.comandos) ) {
-                tItemT path;
-                getToken(controlador, comando.comandos, path);
-                struct stat *contenido;
-                if (stat(path, contenido) == -1){
-                    printf("%s no es un directorio o archivo\n", path);
+            for(int j = controlador; j != TNULL; nextToken(j,comando.comandos)){
+                tItemT path; getToken(controlador, comando.comandos, path);
+                struct stat *contenido = malloc(sizeof(struct stat));
+
+                if (stat(path, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
+                    printf("path: %s", path);
                     perror(strerror(errno));
                 }else {
                     printf("\timprimir información\n");
                 }
-            }
 
+                free(contenido); //probar a meterlo
+                j = nextToken(j,comando.comandos);
+                //if( j == TNULL) break; //evitamos un bucle infinito
+            }
+            /*
+            while( i!= TNULL ){ //TNULL se devuelve cuando haces el next() del último
+                tItemT path; getToken(controlador, comando.comandos, path);
+                struct stat *contenido = malloc(sizeof(struct stat));
+
+                if (stat(path, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
+                    printf("%s", path);
+                    perror(strerror(errno));
+                }else {
+                    printf("\timprimir información\n");
+                }
+
+                free(contenido); //probar a meterlo
+                i = nextToken(i,comando.comandos);
+                if( i == TNULL) break; //evitamos un bucle infinito
+            }
+            */
         }
 
     }
 }
-
+/*
 void listar(tItemL comando){
     if(comando.tokens == 1){
         getDir();
@@ -309,7 +330,7 @@ void listar(tItemL comando){
 
     }
 }
-
+*/
 //funciones generales
 bool procesarEntrada(tList *historial){
 
@@ -336,11 +357,11 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "infosis") == 0) infosis();
             else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "create") == 0) ; //no sé qué va aquí
+            else if (strcmp(peticion.comando, "create") == 0) printf("create en construcción\n"); //no sé qué va aquí
             else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) listar(peticion); //no sé qué va aquí
-            else if (strcmp(peticion.comando, "delete") == 0) ; //no sé qué va aquí
-            else if (strcmp(peticion.comando, "deltree") == 0) ; //no sé qué va aquí
+            else if (strcmp(peticion.comando, "list") == 0) printf("list en construcción\n");//listar(peticion);
+            else if (strcmp(peticion.comando, "delete") == 0) printf("delete en construcción\n"); //no sé qué va aquí
+            else if (strcmp(peticion.comando, "deltree") == 0) printf("deltree en construcción\n"); //no sé qué va aquí
             else printf("%s: no es un comando del shell\n", peticion.comando);
 
             //printf("fuera del los else-if\n");
@@ -359,19 +380,6 @@ bool salir(char cadena[]){
 
 }
 
-int TrocearCadena(char *cadena, char *trozos[]){
-
-    int i=1;
-
-    if ((trozos[0]=strtok(cadena," \n\t"))==NULL)
-        return 0;
-    else{
-        while ((trozos[i]=strtok(NULL," \n\t"))!=NULL)
-            i++;
-        return i;
-    }
-
-}
 
 void leerEntrada(char *entrada[], tList *historial){
     char *orden_procesada[MAX_LENGHT];
@@ -399,7 +407,21 @@ void new_historial(char *comando[], tList *hist, int ntokens){
 
 }
 
-//generales-auxiliares
+//generales-auxiliares/específicas
+int TrocearCadena(char *cadena, char *trozos[]){
+
+    int i=1;
+
+    if ((trozos[0]=strtok(cadena," \n\t"))==NULL)
+        return 0;
+    else{
+        while ((trozos[i]=strtok(NULL," \n\t"))!=NULL)
+            i++;
+        return i;
+    }
+
+}
+
 int int_convert(tItemT cadena){
     int convertido = atoi(cadena);
     return convertido*(-1);
@@ -435,7 +457,6 @@ void getDir(){
         printf("\terrno = -1\n");
         perror(strerror(errno));
     }else{
-        //printf("\tno hubo errores\n");
         printf("%s\n", directorio );
     }
 }
