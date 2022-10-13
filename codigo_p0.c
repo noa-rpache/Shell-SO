@@ -11,10 +11,10 @@
 #include <errno.h> //para errores
 #include <sys/types.h>
 #include <sys/stat.h> //para struct stat
-#include <sys/dir.h> //utilidades sobre directorios
+//#include <sys/dir.h> //utilidades sobre directorios
 #include "historial.h"
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
-//#define MAX_LENGHT_PATH
+#define MAX_LENGHT_PATH 50
 
 
 //generales
@@ -48,8 +48,9 @@ int main(int argc, char *arvg[]){
     while( salida == false ){
         leerEntrada(arvg,&historial);
         salida = procesarEntrada(&historial);
+        //printf("antes de salir del while\n");
     }
-
+    //printf("antes de borrar el historial\n");
     deleteList(&historial);
     return 0;
 }
@@ -152,15 +153,23 @@ void carpeta( tItemL comando ){
 
     if ( comando.tokens == 1 ){ //no se han recibido argumentos adicionales
         //printf("se ha llegado al if\n");
-        char *directorio[MAX_LENGHT];
-        //printf("no llega a imprimirlo\n");
-        printf("%s\n", getcwd(*directorio,sizeof(directorio) ) );
+        char directorio[MAX_LENGHT_PATH];
+        //printf("arrray declarado\n");
+        getcwd(directorio,sizeof(directorio) );
+        //printf("pre-ifs\n");
+        if( errno == -1 ){ //se ha dado un error
+            printf("\terrno = -1\n");
+            perror(strerror(errno));
+        }else{
+            //printf("\tno hubo errores\n");
+            printf("%s\n", directorio );
+        }
 
     }else { //se cambia de directorio
         tItemT modo;
         getToken(0,comando.comandos,modo);
-        chdir(modo);
-        if( errno == -1 ) perror(strerror(errno));
+        int error = chdir(modo);
+        if( error == -1 ) perror(strerror(errno));
     }
 
 }
@@ -324,6 +333,7 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "deltree") == 0) ; //no sé qué va aquí
             else printf("%s: no es un comando del shell\n", peticion.comando);
 
+            //printf("fuera del los else-if\n");
             return false;
         }
     }
@@ -355,12 +365,11 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 void leerEntrada(char *entrada[], tList *historial){
     char *orden_procesada[MAX_LENGHT];
-    int ntokens = 0;
 
     printf(">> ");
     fgets(*entrada, MAX_LENGHT, stdin);
     if( strcmp("\n",*entrada) != 0 ) {
-        ntokens = TrocearCadena(*entrada, orden_procesada);
+        int ntokens = TrocearCadena(*entrada, orden_procesada);
         new_historial(&orden_procesada[0],historial,ntokens);
     }
 
@@ -396,7 +405,7 @@ void printComand(tItemL impresion){
     printf("\n");
 }
 
-char LetraTF (mode_t m){//devuleve el tipo de algo
+char LetraTF (mode_t m){//devuelve el tipo de algo
     switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
         case S_IFSOCK: return 's'; /*socket */
         case S_IFLNK: return 'l'; /*symbolic link*/
