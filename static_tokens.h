@@ -1,3 +1,9 @@
+/*
+ * Grupo 2.2
+ * Noa Rodríguez Pache - noa.rpache
+ * Fátima Ansemil - fatima.ansemil
+ * */
+
 #ifndef STATIC_TOKENS_H
 #define STATIC_TOKENS_H
 

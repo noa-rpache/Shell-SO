@@ -1,3 +1,9 @@
+/*
+ * Grupo 2.2
+ * Noa Rodríguez Pache - noa.rpache
+ * Fátima Ansemil - fatima.ansemil
+ * */
+
 #include "static_tokens.h"
 
 void createEmptyTokensList(TokensList *L){

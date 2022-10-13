@@ -1,3 +1,9 @@
+/*
+ * Grupo 2.2
+ * Noa Rodríguez Pache - noa.rpache
+ * Fátima Ansemil - fatima.ansemil
+ * */
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
