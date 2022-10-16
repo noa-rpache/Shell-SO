@@ -57,6 +57,136 @@ int main(int argc, char *arvg[]){
 }
 
 
+//funciones generales
+bool procesarEntrada(tList *historial){
+
+    if( !isEmptyList(*historial)) {
+        tItemL peticion = getItem((*historial)->last, *historial);
+
+        if(salir(peticion.comando)) return true;
+        else {
+            /*
+            tItemL prueba = getItem(primero(*historial), *historial);
+            if(!isEmptyTokensList(prueba.comandos)){
+                tItemT aux;
+                getToken(firstToken(prueba.comandos), prueba.comandos, aux);
+                printf("comando: %s %s\n", prueba.comando, aux);
+            }
+
+            printf("comando: %s\n", prueba.comando);
+            */
+            if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
+            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion,historial);
+            else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
+            else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
+            else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
+            else if (strcmp(peticion.comando, "infosis") == 0) infosis();
+            else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
+            else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
+            else if (strcmp(peticion.comando, "create") == 0) printf("create en construcción\n"); //no sé qué va aquí
+            else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
+            else if (strcmp(peticion.comando, "list") == 0) printf("list en construcción\n");//listar(peticion);
+            else if (strcmp(peticion.comando, "delete") == 0) printf("delete en construcción\n"); //no sé qué va aquí
+            else if (strcmp(peticion.comando, "deltree") == 0) printf("deltree en construcción\n"); //no sé qué va aquí
+            else printf("%s: no es un comando del shell\n", peticion.comando);
+
+            //printf("fuera del los else-if\n");
+            return false;
+        }
+    }
+    return false;
+}
+
+bool salir(char cadena[]){
+
+    if (strcmp(cadena, "fin") == 0) return true;
+    else if (strcmp(cadena, "salir") == 0) return true;
+    else if( strcmp(cadena, "bye") == 0 ) return true;
+    else return false;
+
+}
+
+
+void leerEntrada(char *entrada[], tList *historial){
+    char *orden_procesada[MAX_LENGHT];
+
+    printf(">> ");
+    fgets(*entrada, MAX_LENGHT, stdin);
+    if( strcmp("\n",*entrada) != 0 ) {
+        int ntokens = TrocearCadena(*entrada, orden_procesada);
+        new_historial(&orden_procesada[0],historial,ntokens);
+    }
+
+}
+
+void new_historial(char *comando[], tList *hist, int ntokens){
+
+    tItemL nuevo;
+    nuevo.tokens = ntokens;
+    strcpy(nuevo.comando,*comando);
+    createEmptyTokensList(&nuevo.comandos);
+
+    for(int i = 1; i < ntokens; i++) //empieza en 1 porque ya se copió el valor en 0
+        if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
+
+    if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
+
+}
+
+//generales-auxiliares/específicas
+int TrocearCadena(char *cadena, char *trozos[]){
+
+    int i=1;
+
+    if ((trozos[0]=strtok(cadena," \n\t"))==NULL)
+        return 0;
+    else{
+        while ((trozos[i]=strtok(NULL," \n\t"))!=NULL)
+            i++;
+        return i;
+    }
+
+}
+
+int int_convert(tItemT cadena){
+    int convertido = atoi(cadena);
+    return convertido*(-1);
+}
+
+void printComand(tItemL impresion){
+    printf("%d: %s", impresion.puesto, impresion.comando);
+    if(impresion.tokens > 1) { //si hay algún token más que el comando ppal
+        for (int i = 0; i < impresion.tokens - 1; i++) { //ntokens -1 == nº de especificadores
+            printf(" %s", impresion.comandos.data[i]);
+        }
+    }
+    printf("\n");
+}
+
+char LetraTF (mode_t m){//devuelve el tipo de algo
+    switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
+        case S_IFSOCK: return 's'; /*socket */
+        case S_IFLNK: return 'l'; /*symbolic link*/
+        case S_IFREG: return '-'; /* fichero normal*/
+        case S_IFBLK: return 'b'; /*block device*/
+        case S_IFDIR: return 'd'; /*directorio */
+        case S_IFCHR: return 'c'; /*char device*/
+        case S_IFIFO: return 'p'; /*pipe*/
+        default: return '?'; /*desconocido, no deberia aparecer*/
+    }
+}
+
+void getDir(){
+    char directorio[MAX_LENGHT_PATH];
+    getcwd(directorio,sizeof(directorio) );
+    if( errno == -1 ){ //se ha dado un error
+        printf("\terrno = -1\n");
+        perror(strerror(errno));
+    }else{
+        printf("%s\n", directorio );
+    }
+}
+
 //comandos
 void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
 
@@ -331,132 +461,3 @@ void listar(tItemL comando){
     }
 }
 */
-//funciones generales
-bool procesarEntrada(tList *historial){
-
-    if( !isEmptyList(*historial)) {
-        tItemL peticion = getItem((*historial)->last, *historial);
-
-        if(salir(peticion.comando)) return true;
-        else {
-            /*
-            tItemL prueba = getItem(primero(*historial), *historial);
-            if(!isEmptyTokensList(prueba.comandos)){
-                tItemT aux;
-                getToken(firstToken(prueba.comandos), prueba.comandos, aux);
-                printf("comando: %s %s\n", prueba.comando, aux);
-            }
-
-            printf("comando: %s\n", prueba.comando);
-            */
-            if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
-            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion,historial);
-            else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
-            else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
-            else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
-            else if (strcmp(peticion.comando, "infosis") == 0) infosis();
-            else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
-            else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "create") == 0) printf("create en construcción\n"); //no sé qué va aquí
-            else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) printf("list en construcción\n");//listar(peticion);
-            else if (strcmp(peticion.comando, "delete") == 0) printf("delete en construcción\n"); //no sé qué va aquí
-            else if (strcmp(peticion.comando, "deltree") == 0) printf("deltree en construcción\n"); //no sé qué va aquí
-            else printf("%s: no es un comando del shell\n", peticion.comando);
-
-            //printf("fuera del los else-if\n");
-            return false;
-        }
-    }
-    return false;
-}
-
-bool salir(char cadena[]){
-
-    if (strcmp(cadena, "fin") == 0) return true;
-    else if (strcmp(cadena, "salir") == 0) return true;
-    else if( strcmp(cadena, "bye") == 0 ) return true;
-    else return false;
-
-}
-
-
-void leerEntrada(char *entrada[], tList *historial){
-    char *orden_procesada[MAX_LENGHT];
-
-    printf(">> ");
-    fgets(*entrada, MAX_LENGHT, stdin);
-    if( strcmp("\n",*entrada) != 0 ) {
-        int ntokens = TrocearCadena(*entrada, orden_procesada);
-        new_historial(&orden_procesada[0],historial,ntokens);
-    }
-
-}
-
-void new_historial(char *comando[], tList *hist, int ntokens){
-
-    tItemL nuevo;
-    nuevo.tokens = ntokens;
-    strcpy(nuevo.comando,*comando);
-    createEmptyTokensList(&nuevo.comandos);
-
-    for(int i = 1; i < ntokens; i++) //empieza en 1 porque ya se copió el valor en 0
-        if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
-
-    if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
-
-}
-
-//generales-auxiliares/específicas
-int TrocearCadena(char *cadena, char *trozos[]){
-
-    int i=1;
-
-    if ((trozos[0]=strtok(cadena," \n\t"))==NULL)
-        return 0;
-    else{
-        while ((trozos[i]=strtok(NULL," \n\t"))!=NULL)
-            i++;
-        return i;
-    }
-
-}
-
-int int_convert(tItemT cadena){
-    int convertido = atoi(cadena);
-    return convertido*(-1);
-}
-
-void printComand(tItemL impresion){
-    printf("%d: %s", impresion.puesto, impresion.comando);
-    if(impresion.tokens > 1) { //si hay algún token más que el comando ppal
-        for (int i = 0; i < impresion.tokens - 1; i++) { //ntokens -1 == nº de especificadores
-            printf(" %s ", impresion.comandos.data[i]);
-        }
-    }
-    printf("\n");
-}
-
-char LetraTF (mode_t m){//devuelve el tipo de algo
-    switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
-        case S_IFSOCK: return 's'; /*socket */
-        case S_IFLNK: return 'l'; /*symbolic link*/
-        case S_IFREG: return '-'; /* fichero normal*/
-        case S_IFBLK: return 'b'; /*block device*/
-        case S_IFDIR: return 'd'; /*directorio */
-        case S_IFCHR: return 'c'; /*char device*/
-        case S_IFIFO: return 'p'; /*pipe*/
-        default: return '?'; /*desconocido, no deberia aparecer*/
-    }
-}
-
-void getDir(){
-    char directorio[MAX_LENGHT_PATH];
-    getcwd(directorio,sizeof(directorio) );
-    if( errno == -1 ){ //se ha dado un error
-        printf("\terrno = -1\n");
-        perror(strerror(errno));
-    }else{
-        printf("%s\n", directorio );
-    }
-}
