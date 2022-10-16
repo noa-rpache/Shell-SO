@@ -266,7 +266,7 @@ void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los espec
 
     if(comando.tokens == 1){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
-        printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
+        printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda create delete deltree stat list\n");
     }else if(strcmp(comando.comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
     else if(strcmp(comando.comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
     else if(strcmp(comando.comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
@@ -277,8 +277,22 @@ void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los espec
     else if(strcmp(comando.comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
     else if(strcmp(comando.comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
     else if( strcmp(comando.comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
-    else if( strcmp(comando.comando, "ayuda") == 0 ) printf("ayuda [cmd]\tMuestra ayuda sobre los comandos\n");
-    else printf("%s no encontrado\n", comando.comando);
+    else if( strcmp(comando.comando, "create") == 0 ) printf("create [-f] [name]\tCrea un directorio o un fichero (-f)\n");
+    else if( strcmp(comando.comando, "delete") == 0 ) printf("delete [name1 name2 ..]\tBorra ficheros o directorios vacios\n");
+    else if( strcmp(comando.comando, "deltree") == 0 ) printf("deltree [name1 name2 ..]\tBorra ficheros o directorios no vacios recursivamente\n");
+    else if( strcmp(comando.comando, "stat") == 0 ){
+        printf("stat [-long][-link][-acc] name1 name2 ..\tlista ficheros;\n");
+        printf("\t\t-long: listado largo\n");
+        printf("\t\t-acc: acesstime\n");
+        printf("\t\t-link: si es enlace simbolico, el path contenido\n");
+    }else if( strcmp(comando.comando, "list") == 0 ){
+        printf("list [-reca] [-recb] [-hid][-long][-link][-acc] n1 n2 ..\tlista contenidos de directorios\n");
+        printf("\t\t-hid: incluye los ficheros ocultos\n");
+        printf("\t\t-reca: recursivo (antes)\n");
+        printf("\t\t-recb: recursivo (despues)\n");
+        printf("\t\tresto parametros como stat\n");
+
+    }else printf("%s no encontrado\n", comando.comando);
 }
 
 void infosis(){
@@ -487,7 +501,7 @@ void listar(tItemL comando){
     }else{
         int controlador=0;
         bool largo=false, link=false, hid = false, reca = false, recb = false;
-
+        //saber lo que ha entrado
         for(int i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
             tItemT aux; getToken(i,comando.comandos,aux);
 
@@ -506,6 +520,7 @@ void listar(tItemL comando){
             else i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
         }
 
+        //impresión de la petición
         if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
         }else{
@@ -517,9 +532,7 @@ void listar(tItemL comando){
                 printInfo(/*path*/,controlador, largo,link);
                 //pasar al siguiente
             }
-
-
-
+            
         }
 
     }
