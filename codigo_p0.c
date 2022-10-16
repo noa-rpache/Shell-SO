@@ -15,6 +15,7 @@
 #include "historial.h"
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 #define MAX_LENGHT_PATH 50 //para cuando se quieran arrays de nombres de directorios
+#define MAX_PERMISOS 10
 
 
 //generales
@@ -27,6 +28,7 @@ int int_convert(tItemT cadena);
 void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
+char * ConvierteModo (mode_t m, char *permisos);
 
 //comandos
 void ayuda(tItemL comando);
@@ -186,6 +188,27 @@ void getDir(){
         printf("%s\n", directorio );
     }
 }
+
+char * ConvierteModo (mode_t m, char *permisos){
+    strcpy (permisos,"---------- ");
+
+    permisos[0]=LetraTF(m);
+    if (m&S_IRUSR) permisos[1]='r';    /*propietario*/
+    if (m&S_IWUSR) permisos[2]='w';
+    if (m&S_IXUSR) permisos[3]='x';
+    if (m&S_IRGRP) permisos[4]='r';    /*grupo*/
+    if (m&S_IWGRP) permisos[5]='w';
+    if (m&S_IXGRP) permisos[6]='x';
+    if (m&S_IROTH) permisos[7]='r';    /*resto*/
+    if (m&S_IWOTH) permisos[8]='w';
+    if (m&S_IXOTH) permisos[9]='x';
+    if (m&S_ISUID) permisos[3]='s';    /*setuid, setgid y stickybit*/
+    if (m&S_ISGID) permisos[6]='s';
+    if (m&S_ISVTX) permisos[9]='t';
+
+    return permisos;
+}
+
 
 //comandos
 void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
@@ -404,33 +427,62 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                 struct stat *contenido = malloc(sizeof(struct stat));
 
                 if (stat(path, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
-                    printf("path: %s", path);
+                    printf("path: %s\n", path);
                     perror(strerror(errno));
                 }else {
                     printf("\timprimir información\n");
+
+                    if(controlador == 0){
+                        int tam = (int)contenido->st_size;
+                        printf("\t%d %s\n",tam,path); //st_size, path
+                    }else{
+                        if(controlador == 1){
+                            printf("\t hay 1 especificador\n");
+                            if(largo){
+                                /*
+                                struct tm *local = localtime(contenido->st_atim);
+                                printf("%02d/%02d/%d\n", local->tm_mday, local->tm_mon+1, local->tm_year + 1900); //días
+                                printf("%02d:%02d:%02d ",local->tm_hour,local->tm_min,local->tm_sec); //horas
+                                 */
+                                printf("\túltimo acceso ");
+
+                                //printf("valores raros");+
+
+                                /*
+                                char *prop,*grupo; strcpy(prop,*contenido->st_uid); strcpy(grupo,*contenido->st_gid);
+                                printf("%s %s",prop, grupo); //user, grupo
+                                */
+                                printf("UID=%ld GID=%ld ", (long) contenido->st_uid, (long) contenido->st_gid);
+
+                                printf("%c", LetraTF(contenido->st_mode));
+                                char *permisos = malloc(sizeof(MAX_PERMISOS));ConvierteModo(contenido->st_mode,permisos);
+                                printf("%s",permisos); //permisos -> st_mode
+
+                                int tam = (int)contenido->st_size;
+                                printf("%d %s\n",tam,path);
+
+                            }else{
+                                if(link){
+                                    printf("-link\n");
+                                }else{
+                                    printf("-acc\n");
+                                }
+                            }
+                        }else{
+                            if(controlador == 2){
+                                printf("\t hay 2 especificadores");
+                            }else{ //contador == 3
+                                printf("\t hay 3 especificadores");
+                            }
+                        }
+                    }
+
                 }
 
                 free(contenido); //probar a meterlo
                 j = nextToken(j,comando.comandos);
                 //if( j == TNULL) break; //evitamos un bucle infinito
             }
-            /*
-            while( i!= TNULL ){ //TNULL se devuelve cuando haces el next() del último
-                tItemT path; getToken(controlador, comando.comandos, path);
-                struct stat *contenido = malloc(sizeof(struct stat));
-
-                if (stat(path, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
-                    printf("%s", path);
-                    perror(strerror(errno));
-                }else {
-                    printf("\timprimir información\n");
-                }
-
-                free(contenido); //probar a meterlo
-                i = nextToken(i,comando.comandos);
-                if( i == TNULL) break; //evitamos un bucle infinito
-            }
-            */
         }
 
     }
