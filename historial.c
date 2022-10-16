@@ -60,6 +60,7 @@ tPosL previous (tPosL p, tList L){
     }
 }
 
+
 bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
 
     tPosL q, r;
@@ -78,6 +79,7 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
             r->next = q;
             (*L)->last = r->next; //puntero al último nodo
         }
+        //printf("puesto: %d\ninserción check!!\n\n",(*L)->last->data.puesto);
 
         return true;
     }
@@ -85,6 +87,7 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
 }
 
 tItemL getItem(tPosL p, tList L){
+    //printf("getItem check!!\n");
     return p->data;
 }
 
