@@ -4,6 +4,8 @@
  * Fátima Ansemil - fatima.ansemil
  * */
 
+#include <limits.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h> //esta venía en el man C de google
 #include <sys/utsname.h> //esto es para infosis
@@ -12,7 +14,8 @@
 #include <sys/types.h>
 #include <sys/stat.h> //para struct stat
 #include <grp.h> //utilidades sobre grupos
-//#include <sys/dir.h> //utilidades sobre directorios
+#include <pwd.h> //utilidades fichero password -> para gid y uid
+#include <sys/dir.h> //utilidades sobre directorios
 #include "historial.h"
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 #define MAX_LENGHT_PATH 50 //para cuando se quieran arrays de nombres de directorios
@@ -29,7 +32,7 @@ void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
 char * ConvierteModo (mode_t m, char *permisos);
-void printInfo(tItemL input, int control, bool largo, bool link);
+void printInfo(tItemT path, int control, bool largo, bool link);
 
 //comandos
 void ayuda(tItemL comando);
@@ -108,7 +111,6 @@ bool salir(char cadena[]){
     else return false;
 
 }
-
 
 void leerEntrada(char *entrada[], tList *historial){
     char *orden_procesada[MAX_LENGHT];
@@ -210,53 +212,52 @@ char * ConvierteModo (mode_t m, char *permisos){
     return permisos;
 }
 
-void printInfo(tItemL input, int control, bool largo, bool link){
+void printInfo(tItemT path, int control, bool largo, bool link){
+    char *ruta[];
+    realpath(path,ruta);
+    struct stat *contenido = malloc(sizeof(struct stat));
 
-    for(int j = control; j != TNULL; nextToken(j,input.comandos)){ //recorrer todos los archivos
-        tItemT path; getToken(control, input.comandos, path);
-        struct stat *contenido = malloc(sizeof(struct stat));
+    if (stat(ruta, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
+        printf("path: %s\n", ruta);
+        perror(strerror(errno));
+    }else {
+        printf("\timprimir información\n");
+        int tam = (int)contenido->st_size;
 
-        if (stat(path, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
-            printf("path: %s\n", path);
-            perror(strerror(errno));
-        }else {
-            printf("\timprimir información\n");
-            int tam = (int)contenido->st_size;
+        if(control == 1){
+            if(largo){
+                printf("Last file access:         %s", ctime(&sb.st_atime));
+                localtime(contenido->st_atim);
+                printf("Link count:               %ld\n", (long) sb.st_nlink);
 
-            if(control == 1){
-                if(largo){
-                    printf("Last file access:         %s", ctime(&sb.st_atime));
-                    localtime(contenido->st_atim);
-                    printf("Link count:               %ld\n", (long) sb.st_nlink);
+                //contenido->st_giu -> comprobar en etc/group
+                //contenido->st_uid -> comprobar en /passwd
 
-                    //printf("UID=%ld GID=%ld ", (long) contenido->st_uid, (long) contenido->st_gid);
+                printf("%c", LetraTF(contenido->st_mode));
+                char *permisos = malloc(sizeof(10));ConvierteModo(contenido->st_mode,permisos);
+                printf("%s",permisos); //permisos -> st_mode
 
-                    printf("%c", LetraTF(contenido->st_mode));
-                    char *permisos = malloc(sizeof(10));ConvierteModo(contenido->st_mode,permisos);
-                    printf("%s",permisos); //permisos -> st_mode
-
-                }else{
-                    if(link){
-                        printf("-link\n");
-                    }else{
-                        printf("-acc\n");
-                    }
-                }
             }else{
-                if(control == 2){
-                    printf("\t hay 2 especificadores");
-                }else{ //contador == 3
-                    printf("\t hay 3 especificadores");
+                if(link){
+                    printf("-link\n");
+                }else{
+                    printf("-acc\n");
                 }
             }
-
-            printf("\t%d %s\n",tam,path); //st_size, path
-
+        }else{
+            if(control == 2){
+                printf("\t hay 2 especificadores");
+            }else{ //contador == 3
+                printf("\t hay 3 especificadores");
+            }
         }
 
-        free(contenido);
+        printf("\t%d ",tam); //st_size, path
+        getDir();
+
     }
 
+    free(contenido);
 }
 
 
@@ -448,11 +449,11 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
     if(comando.tokens == 1){
         getDir();
     }else{
-        int controlador=0, i=0; //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
-        bool largo=false, link=false, acc=false;
+        int controlador=0; //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
+        bool largo=false, link=false;
 
         //saber qué es lo que se ha introducido
-        for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
+        for(int i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
             tItemT aux; getToken(i,comando.comandos,aux);
             if(strcmp("-long",aux)==0){
                 largo = true; //se ha detectado long
@@ -461,7 +462,6 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                 link = true;
                 controlador++;
             }else if(strcmp("-acc",aux)==0){
-                acc = true;
                 controlador++;
             }else{
                 i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
@@ -472,34 +472,55 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
         if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
         }else{
-            printInfo(comando, controlador, largo, link);
+            for(int j = controlador; j != TNULL; nextToken(j,comando.comandos)){ //recorrer todos los archivos
+                tItemT path; getToken(control, input.comandos, path);
+                printInfo(path,controlador,largo,link);
+            }
         }
 
     }
 }
-/*
+
 void listar(tItemL comando){
     if(comando.tokens == 1){
         getDir();
     }else{
-        int controlador=0, i=0;
-        for(i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
+        int controlador=0;
+        bool largo=false, link=false, hid = false, reca = false, recb = false;
+
+        for(int i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
             tItemT aux; getToken(i,comando.comandos,aux);
-            if( strcmp("-long",aux)!=0 || strcmp("-link",aux)!=0 || strcmp("-acc",aux)!=0 || strcmp("-hid",aux)!=0 || strcmp("-reca",aux)!=0 || strcmp("-recb",aux)!=0){
-                //entra si alguna vez es distinto de alguna de estas opciones
-                i = comando.tokens-2;
-            }else{
-                controlador++; //así no añade nada cuando queramos salir del bucle
-            }
+
+            if(strcmp("-long",aux)==0){
+                largo = true; //se ha detectado long
+                controlador++;
+            }else if(strcmp("-link",aux)==0){
+                link = true;
+                controlador++;
+            }else if(strcmp("-acc",aux)==0){
+                controlador++;
+            }else if(strcmp("-hid",aux)==0){
+                hid = true;
+            }else if(strcmp("-reca",aux)==0) reca = true;
+            else if(strcmp("-recb",aux)!=0) recb = true;
+            else i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
         }
 
-        if(i==controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
+        if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
         }else{
-            //si no es path/file-> no existe path/file
-            //si lo es-> llamada + tipo de recorrido (nada, reca, recb)
+            //falta incluir ficheros ocultos
+            //llamada sin ocultos
+
+            while(){
+                //conseguir el path del fichero -> no hace falta realpath porque ya se aplica dentro de la función
+                printInfo(/*path*/,controlador, largo,link);
+                //pasar al siguiente
+            }
+
+
+
         }
 
     }
 }
-*/
