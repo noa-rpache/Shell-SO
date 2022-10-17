@@ -107,3 +107,16 @@ void deleteList (tList *L){
         free(p);
     }
 }
+
+void deleteItem(tPosL p, tList *L){ //siempre será al final
+
+    tPosL q;
+
+    if(p->next==LNULL){ //está al final de la lista
+        for(q=*L; q->next!=p; q=q->next);
+        q->next=LNULL;
+        free(p);
+    }else{
+        printf("no se puede borrar porque no es el último");
+    }
+}
