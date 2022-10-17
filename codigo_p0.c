@@ -16,6 +16,7 @@
 #include <grp.h> //utilidades sobre grupos
 #include <pwd.h> //utilidades fichero password -> para gid y uid
 #include <sys/dir.h> //utilidades sobre directorios
+#include <dirent.h> //para opendir()
 #include "historial.h"
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 #define MAX_LENGHT_PATH 50 //para cuando se quieran arrays de nombres de directorios
@@ -32,7 +33,7 @@ void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
 char * ConvierteModo (mode_t m, char *permisos);
-void printInfo(tItemT path, int control, bool largo, bool link);
+void printInfo(char *ruta[], int control, bool largo, bool link);
 
 //comandos
 void ayuda(tItemL comando);
@@ -212,13 +213,11 @@ char * ConvierteModo (mode_t m, char *permisos){
     return permisos;
 }
 
-void printInfo(tItemT path, int control, bool largo, bool link){
-    char *ruta[];
-    realpath(path,ruta);
+void printInfo(char *ruta[], int control, bool largo, bool link){
     struct stat *contenido = malloc(sizeof(struct stat));
 
-    if (stat(ruta, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
-        printf("path: %s\n", ruta);
+    if (stat(*ruta, contenido) == -1){ //esto ya da error cuando metes algo que no es un path/file
+        printf("path: %s\n", *ruta);
         perror(strerror(errno));
     }else {
         printf("\timprimir información\n");
@@ -267,15 +266,15 @@ void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los espec
     if(comando.tokens == 1){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda create delete deltree stat list\n");
-    }else if(strcmp(comando.comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
-    else if(strcmp(comando.comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
-    else if(strcmp(comando.comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando.comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
-    else if (strcmp(comando.comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
-    else if (strcmp(comando.comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
-    else if(strcmp(comando.comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
-    else if(strcmp(comando.comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
-    else if(strcmp(comando.comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
+    }else if( strcmp(comando.comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
+    else if( strcmp(comando.comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
+    else if( strcmp(comando.comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
+    else if( strcmp(comando.comando, "autores") == 0) printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
+    else if( strcmp(comando.comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
+    else if( strcmp(comando.comando, "carpeta") == 0) printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
+    else if( strcmp(comando.comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
+    else if( strcmp(comando.comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
+    else if( strcmp(comando.comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
     else if( strcmp(comando.comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
     else if( strcmp(comando.comando, "create") == 0 ) printf("create [-f] [name]\tCrea un directorio o un fichero (-f)\n");
     else if( strcmp(comando.comando, "delete") == 0 ) printf("delete [name1 name2 ..]\tBorra ficheros o directorios vacios\n");
@@ -488,7 +487,10 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
         }else{
             for(int j = controlador; j != TNULL; nextToken(j,comando.comandos)){ //recorrer todos los archivos
                 tItemT path; getToken(control, input.comandos, path);
-                printInfo(path,controlador,largo,link);
+                char *ruta[];
+                realpath(path,ruta); //comprobar si error
+                printInfo(ruta,controlador,largo,link);
+
             }
         }
 
@@ -525,14 +527,29 @@ void listar(tItemL comando){
             getDir();
         }else{
             //falta incluir ficheros ocultos
-            //llamada sin ocultos
 
-            while(){
-                //conseguir el path del fichero -> no hace falta realpath porque ya se aplica dentro de la función
-                printInfo(/*path*/,controlador, largo,link);
-                //pasar al siguiente
+            //recorrido normal sin reca ni recb, sin pensar en los hid
+            printf("nombre directorio y tal\n");
+            opendir(/*nombre directorio*/);
+
+            struct dirent *directorio = readdir();
+            while(directorio != NULL){ //entonces está vacío
+                errno = 0; //resetear por si acaso
+                if(directorio != NULL){
+                    //realpath() -> comprobar error
+                    //dar información del directorio -> printInfo
+
+                    telldir();//para pasarle un valor a seekdir() //con errno a -1
+                    seekdir(); //sig directorio al que tiene que llamar readdir ¿directorios o entradas? ¿qué pasa con los ficheros? //no tiene retorno
+                    //falta un free y un malloc
+                    *directorio = readdir(); //ya se comprueba en el while
+                }
+                if(errno != 0){
+                    //ha ocurrido un error en el de fuera o el del if (!=NULL)
+                }
             }
-            
+            //se ha llegado al final del las entradas
+            closedir(/*mismo nombre pasado a opendir()*/);
         }
 
     }
