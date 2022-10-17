@@ -33,7 +33,7 @@ void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
 char * ConvierteModo (mode_t m, char *permisos);
-void printInfo(char ruta[MAX_LENGHT_PATH], int control, bool largo, bool link);
+void printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc);
 
 //comandos
 void ayuda(tItemL comando);
@@ -102,7 +102,6 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "deltree") == 0) printf("deltree en construcción\n");
             else printf("%s: no es un comando del shell\n", peticion.comando);
 
-            //printf("fuera del los else-if\n");
             return false;
         }
     }
@@ -131,7 +130,6 @@ void leerEntrada(char *entrada[], tList *historial){
 }
 
 void new_historial(char *comando[], tList *hist, int ntokens){
-
     tItemL nuevo;
     nuevo.tokens = ntokens;
     strcpy(nuevo.comando,*comando);
@@ -144,7 +142,7 @@ void new_historial(char *comando[], tList *hist, int ntokens){
 
 }
 
-//generales-auxiliares/específicas
+//generales, auxiliares
 int TrocearCadena(char *cadena, char *trozos[]){
 
     int i=1;
@@ -174,7 +172,7 @@ void printComand(tItemL impresion){
     printf("\n");
 }
 
-char LetraTF (mode_t m){//devuelve el tipo de algo
+char LetraTF (mode_t m){//devuelve el tipo de un fichero
     switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
         case S_IFSOCK: return 's'; /*socket */
         case S_IFLNK: return 'l'; /*symbolic link*/
@@ -183,7 +181,7 @@ char LetraTF (mode_t m){//devuelve el tipo de algo
         case S_IFDIR: return 'd'; /*directorio */
         case S_IFCHR: return 'c'; /*char device*/
         case S_IFIFO: return 'p'; /*pipe*/
-        default: return '?'; /*desconocido, no deberia aparecer*/
+        default: return '?'; /*desconocido, no debería aparecer*/
     }
 }
 
@@ -191,7 +189,6 @@ void getDir(){
     char directorio[MAX_LENGHT_PATH];
     getcwd(directorio,sizeof(directorio) );
     if( errno == -1 ){ //se ha dado un error
-        printf("\terrno = -1\n");
         perror(strerror(errno));
     }else{
         printf("%s\n", directorio );
@@ -218,72 +215,61 @@ char * ConvierteModo (mode_t m, char *permisos){
     return permisos;
 }
 
-void printInfo(char ruta[MAX_LENGHT_PATH], int control, bool largo, bool link){
+void printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc){
     struct stat contenido;
     int salir = stat(ruta, &contenido);
 
     if ( salir == -1){ //esto ya da error cuando metes algo que no es un path/file
         printf("path: %s\n", ruta);
         perror(strerror(errno));
-    }else {
+    }else{
         printf("imprimir información\n");
         printf("\t");
-        if(control != 0) {
-            if (control == 1) {
-                if (largo) { //si hay error en uno el resto se sigue imprimiendo -> revisar
-                    /*
-                    struct tm *time = localtime(contenido.st_atim); //revisar esto
-                    char ultacceso[15];
-                    if(time == NULL){
-                        perror(strerror(errno));
-                    }else{
-                        if(strftime(ultacceso, sizeof(ultacceso), "%Y-%m-%d %H:%M", time) == 0){
-                            perror(strerror(errno));
-                        }
-                    }
-                    */
-                    printf("\nLink count: %ld ", (long) contenido.st_nlink);
-                    printf("Inode count: %ld\n", (long) contenido.st_ino);
 
-                    struct group *grupinho = malloc(sizeof(struct group));
-                    printf("post-malloc de group\n");
-                    char *buffer[MAX_LENGHT];
-                    struct group *error;
-                    getgrgid_r(contenido.st_gid, grupinho, *buffer, sizeof(MAX_LENGHT), &error);
-                    printf("post getgrgid_r\n");
-
-                    if (error == NULL) {
-                        if (errno != 0) perror(strerror(errno));
-                        else printf("El id %d no tiene grupo asociado.\n", contenido.st_gid);
-                    } else {
-                        printf("%s", grupinho->gr_name);
-                    }
-
-                    //contenido.st_uid -> comprobar en /passwd
-
-                    printf("%c", LetraTF(contenido.st_mode));
-                    char *permisos = malloc(sizeof(10));
-                    ConvierteModo(contenido.st_mode, permisos);
-                    printf("%s", permisos); //permisos -> st_mode
-
-                } else {
-                    if (link) {
-                        printf("-link\n");
-                    } else {
-                        printf("-acc\n");
-                    }
-                }
-            } else {
-                if (control == 2) {
-                    printf("\t hay 2 especificadores");
-                } else { //contador == 3
-                    printf("\t hay 3 especificadores");
-                }
+        if(largo || acc){
+            /*
+        struct tm *time = localtime(contenido.st_atim); //revisar esto
+        char ultacceso[15];
+        if(time == NULL){
+            perror(strerror(errno));
+        }else{
+            if(strftime(ultacceso, sizeof(ultacceso), "%Y-%m-%d %H:%M", time) == 0){
+                perror(strerror(errno));
             }
         }
-        printf("%ld ",(long)contenido.st_size); //st_size
-        printf("%s\n",ruta); //path al que has llamado
+        */
+            printf("AAAA/MM/DD - HH:mm ");
+        }
+        if(largo && errno == 0){
+            printf("AAAA/MM/DD - HH:mm ");
+            printf("%ld ", (long) contenido.st_nlink);
+            printf("(%ld) ", (long) contenido.st_ino);
 
+            struct group *grupinho = malloc(sizeof(struct group));
+            char buffer[MAX_LENGHT_PATH]; //Compila, pero no es tamaño suficiente o adecuado
+            struct group *error;
+            getgrgid_r(contenido.st_gid, grupinho, buffer, sizeof(MAX_LENGHT), &error);
+
+            if (error == NULL) {
+            if (errno != 0) perror(strerror(errno));
+            else printf("El id %d no tiene grupo asociado.\n", contenido.st_gid);
+            } else {
+            printf("%s", grupinho->gr_name);
+            }
+
+            //contenido.st_uid -> comprobar en /passwd
+
+            printf("%c", LetraTF(contenido.st_mode));
+            char *permisos = malloc(sizeof(10));
+            ConvierteModo(contenido.st_mode, permisos);
+            printf("%s", permisos);
+        }
+
+        printf("%ld ",(long)contenido.st_size); //st_size
+        if(largo && link){
+            printf("%s -> ",enlazada);
+        }
+        printf("%s\n",ruta); //ya tiene los enlaces simbólicos incluidos
     }
 }
 
@@ -491,7 +477,7 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
         getDir();
     }else{
         int controlador=0; //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
-        bool largo=false, link=false;
+        bool largo=false, link=false,acc=false;
 
         //saber qué es lo que se ha introducido
         for(int i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
@@ -503,6 +489,7 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                 link = true;
                 controlador++;
             }else if(strcmp("-acc",aux)==0){
+                acc = true
                 controlador++;
             }else{
                 i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
@@ -517,20 +504,20 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                 tItemT path; getToken(j+1, comando.comandos, path);
                 char ruta[MAX_LENGHT_PATH];
                 if( realpath(path,ruta) == NULL) perror(strerror(errno));
-                else printInfo(ruta,controlador,largo,link);
+                else printInfo(ruta,path,largo,link,acc);
             }
         }
 
     }
 }
 
-/*
+
 void listar(tItemL comando){
     if(comando.tokens == 1){
         getDir();
     }else{
         int controlador=0;
-        bool largo=false, link=false, hid = false, reca = false, recb = false;
+        bool largo=false, link=false, acc = false, hid = false, reca = false, recb = false;
         //saber lo que ha entrado
         for(int i = 0; i<=comando.tokens-2; i++){ //tokens es el total de tokens, incluido el ppal
             tItemT aux; getToken(i,comando.comandos,aux);
@@ -542,6 +529,7 @@ void listar(tItemL comando){
                 link = true;
                 controlador++;
             }else if(strcmp("-acc",aux)==0){
+                acc= = true;
                 controlador++;
             }else if(strcmp("-hid",aux)==0){
                 hid = true;
@@ -558,7 +546,7 @@ void listar(tItemL comando){
 
             //recorrido normal sin reca ni recb, sin pensar en los hid
             printf("nombre directorio y tal\n");
-            opendir(nombre directorio);
+            opendir(/*nombre directorio*/);
 
             struct dirent *directorio = readdir();
             while(directorio != NULL){ //entonces está vacío
@@ -577,9 +565,9 @@ void listar(tItemL comando){
                 }
             }
             //se ha llegado al final del las entradas
-            closedir(/ismo nombre pasado a opendir());
+            closedir(/*mismo nombre pasado a opendir()*/);
         }
 
     }
 }
-*/
+
