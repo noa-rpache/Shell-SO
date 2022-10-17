@@ -16,10 +16,10 @@
 #include <grp.h> //utilidades sobre grupos
 //#include <pwd.h> //utilidades fichero password -> para gid y uid
 //#include <sys/dir.h> //utilidades sobre directorios
-//#include <dirent.h> //para opendir()
+#include <dirent.h> //para opendir()
 #include "historial.h"
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
-#define MAX_LENGHT_PATH 50 //para cuando se quieran arrays de nombres de directorios
+#define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
 
 
 //generales
@@ -45,7 +45,7 @@ void carpeta( tItemL comando);
 void fecha( tItemL comando);
 void hist (tItemL comando, tList *hist);
 void status(tItemL comando);
-//void listar(tItemL comando);
+void listar(tItemL comando);
 
 int main(int argc, char *arvg[]){
 
@@ -68,53 +68,46 @@ int main(int argc, char *arvg[]){
 bool procesarEntrada(tList *historial){
 
     if( !isEmptyList(*historial)) {
-        tItemL peticion = getItem((*historial)->last, *historial);
+        tItemL peticion = getItem(last(*historial), *historial);
 
-        if(salir(peticion.comando)) return true;
-        else {
-            /*
-            tItemL prueba = getItem(primero(*historial), *historial);
-            if(!isEmptyTokensList(prueba.comandos)){
-                tItemT aux;
-                getToken(firstToken(prueba.comandos), prueba.comandos, aux);
-                printf("comando: %s %s\n", prueba.comando, aux);
+        if(strcmp(peticion.comando,"vacia") == 0) deleteItem(last(*historial), historial); //peticion.tokens == 0
+        else{
+            if (salir(peticion.comando)) return true;
+            else{
+                /*
+                tItemL prueba = getItem(primero(*historial), *historial);
+                if(!isEmptyTokensList(prueba.comandos)){
+                    tItemT aux;
+                    getToken(firstToken(prueba.comandos), prueba.comandos, aux);
+                    printf("comando: %s %s\n", prueba.comando, aux);
+                }
+
+                printf("comando: %s\n", prueba.comando);
+                */
+                if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
+                else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial);
+                else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
+                else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
+                else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
+                else if (strcmp(peticion.comando, "infosis") == 0) infosis();
+                else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
+                else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
+                else if (strcmp(peticion.comando, "create") == 0) printf("*create en construcción*\n");
+                else if (strcmp(peticion.comando, "stat") == 0) {
+                    printf("*stat en construcción*\n");
+                    status(peticion);
+                } else if (strcmp(peticion.comando, "list") == 0) {
+                    printf("*list en construcción*\n");
+                    listar(peticion);
+                } else if (strcmp(peticion.comando, "delete") == 0) printf("*delete en construcción*\n");
+                else if (strcmp(peticion.comando, "deltree") == 0) printf("*deltree en construcción*\n");
+                else printf("%s: no es un comando del shell\n", peticion.comando);
+
+                return false;
             }
-
-            printf("comando: %s\n", prueba.comando);
-            */
-            if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
-            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion,historial);
-            else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
-            else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
-            else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
-            else if (strcmp(peticion.comando, "infosis") == 0) infosis();
-            else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
-            else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "create") == 0) printf("create en construcción\n");
-            else if (strcmp(peticion.comando, "stat") == 0) {
-                printf("stat en construcción\n");
-                status(peticion);
-            }else if (strcmp(peticion.comando, "list") == 0){
-                printf("list en construcción\n");
-                //listar(peticion);
-            }
-            else if (strcmp(peticion.comando, "delete") == 0) printf("delete en construcción\n");
-            else if (strcmp(peticion.comando, "deltree") == 0) printf("deltree en construcción\n");
-            else printf("%s: no es un comando del shell\n", peticion.comando);
-
-            return false;
         }
     }
     return false;
-}
-
-bool salir(char cadena[]){
-
-    if (strcmp(cadena, "fin") == 0) return true;
-    else if (strcmp(cadena, "salir") == 0) return true;
-    else if( strcmp(cadena, "bye") == 0 ) return true;
-    else return false;
-
 }
 
 void leerEntrada(char *entrada[], tList *historial){
@@ -125,6 +118,9 @@ void leerEntrada(char *entrada[], tList *historial){
     if( strcmp("\n",*entrada) != 0 ) {
         int ntokens = TrocearCadena(*entrada, orden_procesada);
         new_historial(&orden_procesada[0],historial,ntokens);
+    }else{
+        char *n = "vacia";
+        new_historial(&n,historial,0);
     }
 
 }
@@ -139,6 +135,15 @@ void new_historial(char *comando[], tList *hist, int ntokens){
         if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
+
+}
+
+bool salir(char cadena[]){
+
+    if (strcmp(cadena, "fin") == 0) return true;
+    else if (strcmp(cadena, "salir") == 0) return true;
+    else if( strcmp(cadena, "bye") == 0 ) return true;
+    else return false;
 
 }
 
@@ -217,7 +222,7 @@ char * ConvierteModo (mode_t m, char *permisos){
 
 void printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc){
     struct stat contenido;
-    int salir = stat(ruta, &contenido);
+    int salir = stat(ruta,&contenido);
 
     if ( salir == -1){ //esto ya da error cuando metes algo que no es un path/file
         printf("path: %s\n", ruta);
@@ -240,8 +245,7 @@ void printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool 
         */
             printf("AAAA/MM/DD - HH:mm ");
         }
-        if(largo && errno == 0){
-            printf("AAAA/MM/DD - HH:mm ");
+        if(largo && errno != -1){
             printf("%ld ", (long) contenido.st_nlink);
             printf("(%ld) ", (long) contenido.st_ino);
 
@@ -251,8 +255,8 @@ void printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool 
             getgrgid_r(contenido.st_gid, grupinho, buffer, sizeof(MAX_LENGHT), &error);
 
             if (error == NULL) {
-            if (errno != 0) perror(strerror(errno));
-            else printf("El id %d no tiene grupo asociado.\n", contenido.st_gid);
+                if (errno != 0) perror(strerror(errno));
+                else printf("El id %d no tiene grupo asociado.\n", contenido.st_gid);
             } else {
             printf("%s", grupinho->gr_name);
             }
@@ -355,7 +359,7 @@ void autores( tItemL comando ){ //char *modo, int ntokens
                 printf("%s\n", nombre_noa);
                 printf("%s\n", nombre_fatima);
             } else {
-                printf("no ha introducido un especificador válido\n");
+                printf("%s no es un especificador válido\n",modo);
             }
         }
     }
@@ -374,7 +378,7 @@ void pillar_pid( tItemL comando ){ //char *modo, int ntokens
             int PID = getppid();
             printf("Pid del padre del shell: %d\n", PID);
         }else{
-            printf("no ha introducido un especificador válido\n");
+            printf("%s no es un especificador válido\n",modo);
         }
 
     }
@@ -434,9 +438,12 @@ void fecha( tItemL comando){
 
         if (strcmp(modo, "-d") == 0) {//imprime solo la fecha actual
             printf("%02d/%02d/%d\n", dia, mes, anho);
-
-        } else if (strcmp(modo, "-h") == 0) {//imprime solo la hora actual
-            printf("%02d:%02d:%02d \n", horas, minutos, segundos);
+        } else {
+            if (strcmp(modo, "-h") == 0) {//imprime solo la hora actual
+                printf("%02d:%02d:%02d \n", horas, minutos, segundos);
+            }else{
+                printf("%s no es un especificador válido\n",modo);
+            }
         }
     }
 
@@ -489,7 +496,7 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                 link = true;
                 controlador++;
             }else if(strcmp("-acc",aux)==0){
-                acc = true
+                acc = true;
                 controlador++;
             }else{
                 i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
@@ -504,13 +511,12 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                 tItemT path; getToken(j+1, comando.comandos, path);
                 char ruta[MAX_LENGHT_PATH];
                 if( realpath(path,ruta) == NULL) perror(strerror(errno));
-                else printInfo(ruta,path,largo,link,acc);
+                else printInfo(ruta,path,largo,link,acc); //hay incoherencias con algunos tamaños
             }
         }
 
     }
 }
-
 
 void listar(tItemL comando){
     if(comando.tokens == 1){
@@ -529,13 +535,14 @@ void listar(tItemL comando){
                 link = true;
                 controlador++;
             }else if(strcmp("-acc",aux)==0){
-                acc= = true;
+                acc = true;
                 controlador++;
             }else if(strcmp("-hid",aux)==0){
                 hid = true;
             }else if(strcmp("-reca",aux)==0) reca = true;
             else if(strcmp("-recb",aux)!=0) recb = true;
             else i = comando.tokens-2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
+
         }
 
         //impresión de la petición
@@ -545,27 +552,38 @@ void listar(tItemL comando){
             //falta incluir ficheros ocultos
 
             //recorrido normal sin reca ni recb, sin pensar en los hid
-            printf("nombre directorio y tal\n");
-            opendir(/*nombre directorio*/);
+            char path[MAX_LENGHT_PATH];
+            getToken(controlador,comando.comandos,path);
+            printf("************%s\n",path);
+            struct dirent *directorio = readdir( opendir(path) );
+            struct dirent **namelist;
+            int total_entradas = scandir(directorio->d_name,&namelist,NULL,alphasort);
 
-            struct dirent *directorio = readdir();
-            while(directorio != NULL){ //entonces está vacío
-                errno = 0; //resetear por si acaso
-                if(directorio != NULL){
-                    //realpath() -> comprobar error
-                    //dar información del directorio -> printInfo
+            if(total_entradas > -1) {
+                printf("hay entradas en el directorio\n");
 
-                    telldir();//para pasarle un valor a seekdir() //con errno a -1
-                    seekdir(); //sig directorio al que tiene que llamar readdir ¿directorios o entradas? ¿qué pasa con los ficheros? //no tiene retorno
-                    //falta un free y un malloc
-                    *directorio = readdir(); //ya se comprueba en el while
-                }
-                if(errno != 0){
+                /* int i = 0;
+                   while (directorio != NULL && i == 0) { //entonces está vacío -> puede ser por opendir() o por readdir()
+                    printf("while jejej\n");
+
+                    errno = 0;
+                    char rutareal[MAX_LENGHT_PATH];
+
+                    if (realpath(path, rutareal) != NULL) { //seguir con el código
+                        printf("sin errores\n");
+                        printInfo(rutareal, NULL, largo, link, acc); //dar información del directorio -> printInfo
+                        seekdir(opendir(rutareal), directorio->d_off); //avanzar en el directory stream
+                        directorio = readdir(opendir(path)); //ya se comprueba en el while
+                    }
                     //ha ocurrido un error en el de fuera o el del if (!=NULL)
-                }
+                    i++;
+                } */
+            }
+            if(errno != 0){
+                //ha ocurrido un error -> se ha salido del if por la comprobación del while
             }
             //se ha llegado al final del las entradas
-            closedir(/*mismo nombre pasado a opendir()*/);
+            closedir(opendir(path));
         }
 
     }
