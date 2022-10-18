@@ -557,45 +557,52 @@ void listar(tItemL comando){
         //impresión de la petición
         if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
-        }else{
-            //falta incluir ficheros ocultos
+        }else{ //falta incluir ficheros ocultos
 
             //recorrido normal sin reca ni recb, sin pensar en los hid
             char path[MAX_LENGHT_PATH];
             getToken(controlador,comando.comandos,path);
             printf("************%s\n",path);
-            struct dirent *directorio = readdir(opendir(path) ); //readdir te apunta al primer directorio dentro del path que le pasas
+            //¿qué se le pasa a scandir()??
+            //printf("nombre directorio pre scandir: %s\n",directorio->d_name);
             struct dirent **namelist;
-            printf("nombre directorio pre scandir: %s\n",directorio->d_name);
-            int total_entradas = scandir(directorio->d_name,&namelist,NULL,alphasort);
-            printf("nombre directorio post scandir: %s\n",directorio->d_name);
+            int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist
             printf("total entradas: %d\n",total_entradas);
-            if(total_entradas > 0) {
-                printf("hay entradas en el directorio\n");
 
-                /* int i = 0;
-                   while (directorio != NULL && i == 0) { //entonces está vacío -> puede ser por opendir() o por readdir()
-                    printf("while jejej\n");
-
-                    errno = 0;
-                    char rutareal[MAX_LENGHT_PATH];
-
-                    if (realpath(path, rutareal) != NULL) { //seguir con el código
-                        printf("sin errores\n");
-                        printInfo(rutareal, NULL, largo, link, acc); //dar información del directorio -> printInfo
-                        seekdir(opendir(rutareal), directorio->d_off); //avanzar en el directory stream
-                        directorio = readdir(opendir(path)); //ya se comprueba en el while
-                    }
-                    //ha ocurrido un error en el de fuera o el del if (!=NULL)
-                    i++;
-                } */
+            if(total_entradas == -1){
+                perror(strerror(errno));
+                //return -1;
             }
-            if(errno != 0){
-                //ha ocurrido un error -> se ha salido del if por la comprobación del while
-                //return -1
-            }
-            //se ha llegado al final del las entradas
-            closedir(opendir(path));
+
+            /*for(int i = 0; i <= total_entradas-1; i++){ //recorrer el directorio para mostrar el contenido
+                //printf("nombre: %s\n tipo: %c\n",(**namelist).d_name, (**namelist).d_type );
+                // /home/noa/Paradigmas_de_la_programación
+                DIR *directory_stream = opendir(path);
+                DIR *next_stream;
+                struct dirent *directorio = readdir(directory_stream ); //readdir te apunta al primer directorio dentro del path que le pasas
+                printf("nombre readdir:\n\tnombre: %s\n\ttipo: %c\n",(*directorio).d_name,(*directorio).d_type); //este es el bueno
+
+                seekdir(next_stream,telldir(directory_stream) ); //seekdir(opendir(path),(*directorio).d_off);
+
+                printf("nombre seekdir:\n\tnombre: %s\n\ttipo: %c\n",(*).d_name,(*directorio).d_type);
+
+
+                realpath();
+                printInfo(ruta real,ruta con enlaces,largo,link,acc);
+                seekdir();
+
+            }*/
+
+            // /home/noa/Paradigmas_de_la_programación
+            DIR *directory_stream = opendir(path);
+            struct dirent *directorio1 = readdir(directory_stream ); //readdir te apunta al primer directorio dentro del path que le pasas
+            printf("nombre readdir:\n\tnombre: %s\n\ttipo: %c\n",(*directorio1).d_name,(*directorio1).d_type); //este es el bueno
+
+            seekdir(directory_stream,telldir(directory_stream) ); //seekdir(opendir(path),(*directorio).d_off);
+            struct dirent *directorio2 = readdir(directory_stream);
+            printf("nombre seekdir:\n\tnombre: %s\n\ttipo: %c\n",(*directorio2).d_name,(*directorio2).d_type);
+
+            closedir(directory_stream);
         }
 
     }
