@@ -79,7 +79,6 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
             r->next = q;
             (*L)->last = r->next; //puntero al último nodo
         }
-        //printf("puesto: %d\ninserción check!!\n\n",(*L)->last->data.puesto);
 
         return true;
     }
@@ -108,7 +107,7 @@ void deleteList (tList *L){
     }
 }
 
-void deleteItem(tPosL p, tList *L){ //siempre será al final
+bool deleteLast(tPosL p, tList *L){ //siempre será al final
 
     tPosL q;
 
@@ -116,7 +115,9 @@ void deleteItem(tPosL p, tList *L){ //siempre será al final
         for(q=*L; q->next!=p; q=q->next);
         q->next=LNULL;
         free(p);
+        return true;
     }else{
         printf("no se puede borrar porque no es el último");
+        return false;
     }
 }
