@@ -595,12 +595,14 @@ void listar(tItemL comando){
 
             // /home/noa/Paradigmas_de_la_programación
             DIR *directory_stream = opendir(path);
-            struct dirent *directorio1 = readdir(directory_stream ); //readdir te apunta al primer directorio dentro del path que le pasas
-            printf("nombre readdir:\n\tnombre: %s\n\ttipo: %c\n",(*directorio1).d_name,(*directorio1).d_type); //este es el bueno
 
-            seekdir(directory_stream,telldir(directory_stream) ); //seekdir(opendir(path),(*directorio).d_off);
-            struct dirent *directorio2 = readdir(directory_stream);
-            printf("nombre seekdir:\n\tnombre: %s\n\ttipo: %c\n",(*directorio2).d_name,(*directorio2).d_type);
+            for(int i = 0; i <= total_entradas-1; i++) {
+                struct dirent *directorio1 = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
+                printf("nombre readdir:\n\tnombre: %s\n\ttipo: %c\n", (*directorio1).d_name, (*directorio1).d_type);
+                seekdir(directory_stream, telldir(directory_stream));
+            }
+
+
 
             closedir(directory_stream);
         }
