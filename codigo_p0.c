@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h> //para struct stat
 #include <grp.h> //utilidades sobre grupos
-//#include <pwd.h> //utilidades fichero password -> para gid y uid
+#include <pwd.h> //utilidades fichero password -> para gid y uid
 //#include <sys/dir.h> //utilidades sobre directorios
 #include <dirent.h> //para opendir()
 #include "historial.h"
@@ -35,7 +35,6 @@ void getDir();
 char * ConvierteModo (mode_t m, char *permisos);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc);
 int printContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
-bool EmpiezaPorPunto(char cadena);
 
 //comandos
 void ayuda(tItemL comando);
@@ -455,77 +454,59 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
         if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
         }else{
-            for(int j = controlador-1; j <= comando.comandos.lastPos-1 ; j++){ //recorrer todos los archivos
+            for(int j = controlador-1; j <= comando.comandos.lastPos-1 ; j++){ //recorrer todos los archivos que han entrado por terminal
                 char path[MAX_LENGHT_PATH]; getToken(j+1, comando.comandos, path);
                 char ruta[MAX_LENGHT_PATH];
                 if( realpath(path,ruta) == NULL) perror(strerror(errno));
-                else printInfo(ruta,path,largo,link,acc); //hay incoherencias con algunos tamaños
+                else {
+                    if ( printInfo(ruta,path,largo,link,acc) == -1) perror(strerror(errno));
+                }
             }
         }
 
     }
 }
-int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc) {
+int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc) { //ruta -> resolved path, enlazada -> sin resolver
     struct stat contenido;
     int salir = stat(ruta, &contenido);
 
-    if (salir == -1) { //esto ya da error cuando metes algo que no es un path/file
-        printf("\tpath: %s\n", ruta);
-        perror(strerror(errno));
-        return -1;
-    } else {
-        //printf("imprimir información\n\t");
 
-        if (largo || acc) { //imprimir la hora de último acceso
-            /*
-            struct tm *time;
-            char ultacceso[15];
-            if ((time = localtime(contenido.st_atim)) == NULL) {
-                perror(strerror(errno));
-                return -1;
-            }
-            if (strftime(ultacceso, sizeof(ultacceso), "%Y-%m-%d %H:%M", time) == 0) {
-                perror(strerror(errno));
-                return -1;
-            }
-            */
+    if (salir == -1) return -1; //esto ya da error cuando metes algo que no es un path/file
 
-            printf("AAAA/MM/DD - HH:mm "); //printf("%s", ultacceso);
-
-        }
-
-        if (largo) {
-            printf("%ld ", (long) contenido.st_nlink);
-            printf("(%ld) ", (long) contenido.st_ino);
-
-            struct group *grupinho = malloc(sizeof(struct group));
-            char buffer[MAX_LENGHT_PATH]; //Compila, pero no es tamaño suficiente o adecuado
-            struct group *error;
-            getgrgid_r(contenido.st_gid, grupinho, buffer, sizeof(MAX_LENGHT), &error);
-
-            if (error == NULL) {
-                if (errno != 0) perror(strerror(errno));
-                else printf("El id %d no tiene grupo asociado.\n", contenido.st_gid);
-                return -1;
-            } else {
-                printf("%s", grupinho->gr_name);
-            }
-
-            //contenido.st_uid -> comprobar en /passwd
-
-            printf("%c", LetraTF(contenido.st_mode));
-            char *permisos = malloc(sizeof(10));
-            ConvierteModo(contenido.st_mode, permisos);
-            printf("%s", permisos);
-        }
-
-        printf("%ld ", (long) contenido.st_size); //st_size
-        if (largo && link) {
-            printf("%s -> ", enlazada);
-        }
-        printf("%s\n", ruta); //ya tiene los enlaces simbólicos incluidos
-        return 0;
+    if (largo || acc) { //imprimir la hora de último acceso
+        /*
+        struct tm *time;
+        char ultacceso[15];
+        if ((time = localtime(contenido.st_atim)) == NULL) return -1;
+        if (strftime(ultacceso, sizeof(ultacceso), "%Y-%m-%d %H:%M", time) == 0) return -1;
+        printf("AAAA/MM/DD - HH:mm \n"); //printf("%s", ultacceso);
+         */
     }
+
+    if (largo) {
+        struct group *grupinho = getgrgid(contenido.st_gid);
+        if ( grupinho == NULL) return -1;
+
+        struct passwd *user = getpwuid(contenido.st_uid);
+        if(user == NULL) return -1;
+
+        char *permisos = malloc(sizeof(10)); ConvierteModo(contenido.st_mode, permisos);
+
+        printf("%10ld", (long) contenido.st_nlink);
+        printf(" (%10ld)", (long) contenido.st_ino);
+        printf("%10s", grupinho->gr_name);
+        printf("%10s",user->pw_name);
+        printf("%3c", LetraTF(contenido.st_mode));
+        printf("%s", permisos);
+    }
+
+    printf("%10ld", (long) contenido.st_size);
+    if (largo && link) {
+        printf(" %s -> ", enlazada);
+    }
+    printf(" %s\n", ruta); //ya tiene los enlaces simbólicos incluidos
+    return 0;
+
 
 }
 
@@ -568,12 +549,19 @@ void listar(tItemL comando){
         }else{
             char path[MAX_LENGHT_PATH];
             getToken(controlador,comando.comandos,path);
-            if(!reca && !recb){
-                printContent(path,largo,link,acc,hid);
-            }else{
-                if(reca) printf("recorrido reca\n");
-                if(recb) printf("recorrido recb\n");
-            }
+            printContent(path,largo,link,acc,hid);
+            //coger los directorios ppales, sus direcciones -> pasarlas a los recorridos
+            //if(guardarDirectorios() == -1) perror(strerror(errno));
+            //else{
+                /*
+                if(!reca && !recb){
+                    printContent(path,largo,link,acc,hid);
+                }else{
+                    if(reca) printf("recorrido reca\n");
+                    if(recb) printf("recorrido recb\n");
+                }
+             */
+            //}
 
         }
 
@@ -598,7 +586,7 @@ int printContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bo
         return -1;
     }
 
-    for(int i = 0; i <= total_entradas-1; i++) { //inlcuir detectar errores y no mostrar hidd
+    for(int i = 0; i <= total_entradas-1; i++) {
         struct dirent *directorio = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
         if(directorio == NULL && errno != 0){
             perror(strerror(errno));
@@ -607,8 +595,6 @@ int printContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bo
 
         if (hid) printInfo((*directorio).d_name,NULL,largo,link,acc); //enseñar todos los ficheros
         else if ( (*directorio).d_name[0] != '.' ) printInfo((*directorio).d_name,NULL,largo,link,acc);
-
-
 
         long sig = telldir(directory_stream);
         if(sig == -1){
@@ -626,4 +612,46 @@ int printContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bo
     return 0;
 }
 
+int printReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+    errno = 0;
+    printf("************%s\n",path);
 
+    struct dirent **namelist;
+    int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
+
+    if(total_entradas == -1){
+        perror(strerror(errno));
+        return -1;
+    }
+
+    DIR *directory_stream = opendir(path);
+    if(directory_stream == NULL){
+        perror(strerror(errno));
+        return -1;
+    }
+
+    for(int i = 0; i <= total_entradas-1; i++) { //incluir detectar errores y no mostrar hidd
+        struct dirent *directorio = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
+        if(directorio == NULL && errno != 0){
+            perror(strerror(errno));
+            return -1;
+        }
+
+        if (hid) printInfo((*directorio).d_name,NULL,largo,link,acc); //enseñar todos los ficheros
+        else if ( (*directorio).d_name[0] != '.' ) printInfo((*directorio).d_name,NULL,largo,link,acc);
+
+        long sig = telldir(directory_stream);
+        if(sig == -1){
+            perror(strerror(errno));
+            return -1;
+        }
+        seekdir(directory_stream, sig);
+    }
+
+    if( closedir(directory_stream) == -1){
+        perror(strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
