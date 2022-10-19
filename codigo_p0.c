@@ -188,7 +188,8 @@ void getDir(){
     char directorio[MAX_LENGHT_PATH];
     getcwd(directorio,sizeof(directorio) );
     if( errno == -1 ){ //se ha dado un error
-        perror(strerror(errno));
+        perror("no se ha podido conseguir la ruta actual");
+        strerror(errno);
     }else{
         printf("%s\n", directorio );
     }
@@ -262,7 +263,10 @@ void infosis(){
 
     struct utsname informacion;
     uname(&informacion);
-    if( errno == -1 ) perror(strerror(errno));
+    if( errno == -1 ) {
+        perror("no se ha conseguido la información del sistema");
+        strerror(errno);
+    }
 
     printf("%s (%s), OS: %s %s %s\n", informacion.nodename, informacion.machine, informacion.sysname,informacion.release, informacion.version);
 
@@ -341,7 +345,8 @@ void carpeta( tItemL comando ){
         getToken(0,comando.comandos,modo);
         int error = chdir(modo);
         if( error == -1 ){
-            perror(strerror(errno));
+            perror("no se ha podido cambiar de directorio");
+            strerror(errno);
         }
     }
 
@@ -353,7 +358,10 @@ void fecha( tItemL comando){
 
     time_t now;//tipo de tiempo aritmetico
     time(&now);
-    if( errno == -1) perror(strerror(errno)); //'time()' devuelve la hora actual del sistema como un valor 'time_t'
+    if( errno == -1) {
+        perror("no se ha podido conseguir la fecha actual"); //'time()' devuelve la hora actual del sistema como un valor 'time_t'
+        strerror(errno);
+    }
 
     //localtime convierte un valor de 'time_t' a la hora del calendario
 
@@ -535,6 +543,7 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
 
     struct dirent **namelist;
     int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
+    free(namelist);
 
     if(total_entradas == -1){
         perror("error en scandir");
@@ -578,7 +587,7 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
         perror("error al cerrar el directorio");
         return -1;
     }
-
+    free(directory_stream);
     return 0;
 }
 
