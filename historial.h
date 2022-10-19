@@ -9,13 +9,13 @@
 #include <string.h>
 #include "static_tokens.h"
 #define LNULL NULL
-#define MAX_LENGHT 80 //largo máximo del comando principal
+#define MAX_LENGHT 100 //largo máximo del comando principal
 
 typedef struct{
     char comando[MAX_LENGHT];
     TokensList comandos;
     int tokens;
-    int puesto;
+    int puesto; //el puesto del último indica el número total de elementos en la lista
 }tItemL;
 typedef struct tNode *tPosL;
 struct  tNode {
@@ -38,4 +38,5 @@ tItemL getItem (tPosL p, tList L);
 tPosL  findItem (int num, tList L);
 //el ítem esta al final de la lista
 bool deleteLast(tPosL p, tList *L);
+void deleteFirst(tList *L);
 void deleteList (tList *L);
