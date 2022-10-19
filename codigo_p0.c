@@ -37,6 +37,7 @@ void getDir();
 char * ConvierteModo (mode_t m, char *permisos);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc);
 int printContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
+int EntrarAlDirectorioRECA(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
 
 //comandos
 void ayuda(tItemL comando);
@@ -59,9 +60,8 @@ int main(int argc, char *arvg[]){
     while( salida == false ){
         leerEntrada(arvg,&historial);
         salida = procesarEntrada(&historial);
-        //printf("antes de salir del while\n");
     }
-    //printf("antes de borrar el historial\n");
+
     deleteList(&historial);
     return 0;
 }
@@ -75,17 +75,7 @@ bool procesarEntrada(tList *historial){
 
         if (salir(peticion.comando)) return true;
         else{
-            /*
-            tItemL prueba = getItem(primero(*historial), *historial);
-            if(!isEmptyTokensList(prueba.comandos)){
-                tItemT aux;
-                getToken(firstToken(prueba.comandos), prueba.comandos, aux);
-                printf("comando: %s %s\n", prueba.comando, aux);
-            }
-
-            printf("comando: %s\n", prueba.comando);
-            */
-            if(strcmp(peticion.comando,"vacia") == 0) deleteLast(last(*historial), historial); //peticion.tokens == 0
+            if (peticion.tokens == 0) deleteLast(last(*historial), historial); //peticion.tokens == 0
             else if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
             else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial);
             else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
@@ -96,10 +86,10 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
             else if (strcmp(peticion.comando, "create") == 0) printf("*create en construcción*\n");
             else if (strcmp(peticion.comando, "stat") == 0) {
-                printf("*stat en construcción*\n");
+                printf("\t*stat en construcción*\n");
                 status(peticion);
             } else if (strcmp(peticion.comando, "list") == 0) {
-                printf("*list en construcción*\n");
+                printf("\t*list en construcción*\n");
                 listar(peticion);
             } else if (strcmp(peticion.comando, "delete") == 0) printf("*delete en construcción*\n");
             else if (strcmp(peticion.comando, "deltree") == 0) printf("*deltree en construcción*\n");
@@ -470,7 +460,7 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
 }
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc) { //ruta -> resolved path, enlazada -> sin resolver
     struct stat contenido;
-    int salir = stat(ruta, &contenido);
+    int salir = stat(enlazada, &contenido);
 
 
     if (salir == -1) return -1; //esto ya da error cuando metes algo que no es un path/file
@@ -479,10 +469,10 @@ int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool l
         /*
         struct tm *time;
         char ultacceso[15];
-        if ((time = localtime(contenido.st_atim)) == NULL) return -1;
-        if (strftime(ultacceso, sizeof(ultacceso), "%Y-%m-%d %H:%M", time) == 0) return -1;
-        printf("AAAA/MM/DD - HH:mm \n"); //printf("%s", ultacceso);
-         */
+        if ( (time = localtime_r(*contenido.st_atim,time) ) == NULL) return -1;
+        if (strftime(ultacceso,strlen(ultacceso), "%Y-%m-%d %H:%M", time) == 0) return -1;*/
+        printf("AAAA/MM/DD - HH:mm "); //printf("%s", ultacceso);
+
     }
 
     if (largo) {
@@ -503,7 +493,7 @@ int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool l
     }
 
     printf("%10ld", (long) contenido.st_size);
-    if (largo && link) {
+    if ( largo && link && strcmp(ruta,enlazada)!=0 ) { //solo si es un enlace simbólico
         printf(" %s -> ", enlazada);
     }
     printf(" %s\n", ruta); //ya tiene los enlaces simbólicos incluidos
@@ -555,15 +545,19 @@ void listar(tItemL comando){
             //coger los directorios ppales, sus direcciones -> pasarlas a los recorridos
             //if(guardarDirectorios() == -1) perror(strerror(errno));
             //else{
-                /*
-                if(!reca && !recb){
-                    printContent(path,largo,link,acc,hid);
-                }else{
-                    if(reca) printf("recorrido reca\n");
-                    if(recb) printf("recorrido recb\n");
+
+            if(!reca && !recb){
+                printContent(path,largo,link,acc,hid);
+            }else{
+                if(reca){
+                    printf("recorrido reca\n");
+                    if ( EntrarAlDirectorioRECA(/*path*/,largo,link,acc,hid) == -1 ) perror(strerror(errno));
                 }
-             */
+                if(recb) printf("recorrido recb\n");
+            }
+
             //}
+
 
         }
 
@@ -614,47 +608,47 @@ int printContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bo
     return 0;
 }
 
-int printReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int EntrarAlDirectorioRECA(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     printf("************%s\n",path);
 
+    //imprimir contenido
     struct dirent **namelist;
-    int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
-
-    if(total_entradas == -1){
-        perror(strerror(errno));
-        return -1;
-    }
+    tList DirRecord;
+    createList(&DirRecord);
+    int total_records=0, total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
+    if(total_entradas == -1) return -1;
 
     DIR *directory_stream = opendir(path);
-    if(directory_stream == NULL){
-        perror(strerror(errno));
-        return -1;
-    }
+    if(directory_stream == NULL) return -1;
 
     for(int i = 0; i <= total_entradas-1; i++) { //incluir detectar errores y no mostrar hidd
         struct dirent *directorio = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
-        if(directorio == NULL && errno != 0){
-            perror(strerror(errno));
-            return -1;
-        }
+        if(directorio == NULL && errno != 0) return -1;
 
         if (hid) printInfo((*directorio).d_name,NULL,largo,link,acc); //enseñar todos los ficheros
-        else if ( (*directorio).d_name[0] != '.' ) printInfo((*directorio).d_name,NULL,largo,link,acc);
+        else if ( (*directorio).d_name[0] != '.' ) printInfo((*directorio).d_name,NULL,largo,link,acc); //enseñar los que no empiecen por '.'
+
+        if(/*es directorio*/){
+            tItemL nuevo;
+            nuevo.comando = /*path directorio con el que llamaremos posteriormente a opendir() en la llamada recursiva*/;
+            insertElement(nuevo,&DirRecord);
+        }
 
         long sig = telldir(directory_stream);
-        if(sig == -1){
-            perror(strerror(errno));
-            return -1;
-        }
+        if(sig == -1) return -1;
+
         seekdir(directory_stream, sig);
     }
+    if(closedir(directory_stream) == -1) return -1;
 
-    if( closedir(directory_stream) == -1){
-        perror(strerror(errno));
-        return -1;
+    //llamada recursiva
+    total_records = getItem(last(DirRecord),DirRecord).puesto;
+    for(int j = total_records; 0<= j; j--){
+        tItemL nextdir = getItem(last(DirRecord),DirRecord);
+        EntrarAlDirectorioRECA(nextdir.comando,largo,link,acc,hid);
+        deleteFirst(&DirRecord);
     }
-
     return 0;
 }
 
