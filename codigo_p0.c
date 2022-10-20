@@ -16,8 +16,10 @@
 #include <grp.h> //utilidades sobre grupos
 #include <pwd.h> //utilidades fichero password -> para gid y uid
 //#include <sys/dir.h> //utilidades sobre directorios
+#include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include "historial.h"
+
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 #define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
 
