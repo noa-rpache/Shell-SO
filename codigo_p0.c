@@ -29,7 +29,7 @@ typedef struct {
     bool hid;
     bool reca;
     bool recb;
-    bool listar;
+    bool listar; //el struct lo pasa list y no stat
 }modo;
 
 //generales
@@ -45,9 +45,9 @@ void getDir();
 char * ConvierteModo (mode_t m, char *permisos);
 int isDirectory(const char *path);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], modo opciones);
-int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
-int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
-int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
+int ListContent(char path[MAX_LENGHT_PATH], modo opciones);
+int ListReca(char path[MAX_LENGHT_PATH], modo opciones);
+int ListRecb(char path[MAX_LENGHT_PATH], modo opciones);
 int opciones(tItemL entrada,modo *opciones);
 int extraerNombre(char *rutacompleta, char *nombreFichero[]);
 
@@ -98,10 +98,8 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
             else if (strcmp(peticion.comando, "create") == 0) printf("*create en construcción*\n");
             else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) {
-                printf("\t*list en construcción*\n");
-                //listar(peticion);
-            } else if (strcmp(peticion.comando, "delete") == 0) printf("*delete en construcción*\n");
+            else if (strcmp(peticion.comando, "list") == 0) listar(peticion);
+            else if (strcmp(peticion.comando, "delete") == 0) printf("*delete en construcción*\n");
             else if (strcmp(peticion.comando, "deltree") == 0) printf("*deltree en construcción*\n");
             else printf("%s: no es un comando del shell\n", peticion.comando);
 
@@ -473,12 +471,18 @@ int opciones(tItemL entrada,modo *opciones) {
 }
 
 void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
-    modo *modo = malloc(sizeof(*modo));
     if(comando.tokens == 1){
         getDir();
     }else{
-        (*modo).listar = false;
-        int controlador = opciones(comando,modo); //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
+        modo modo;
+        modo.largo = false;
+        modo.acc = false;
+        modo.link = false;
+        modo.reca = false;
+        modo.recb = false;
+        modo.hid = false;
+        modo.listar = false;
+        int controlador = opciones(comando,&modo); //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
 
         if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
             getDir();
@@ -490,21 +494,26 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                     perror("error al obtener el path");
                     strerror(errno);
                 }else {
-                    if ( printInfo(ruta,path,*modo) == -1) strerror(errno);
+                    if ( printInfo(ruta,path,modo) == -1) strerror(errno);
                 }
             }
         }
-        free(*modo);
     }
 }
-/*
+
 void listar(tItemL comando){
     if(comando.tokens == 1){
         getDir();
     }else{
-        int controlador=0;
-        bool largo=false, link=false, acc = false, hid = false, reca = false, recb = false;
-        //saber lo que ha entrado
+        modo modo;
+        modo.largo = false;
+        modo.acc = false;
+        modo.link = false;
+        modo.reca = false;
+        modo.recb = false;
+        modo.hid = false;
+        modo.listar = true;
+        int controlador = opciones(comando,&modo);
 
         //impresión de la petición
         if(comando.tokens-1 == controlador){ //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
@@ -513,15 +522,15 @@ void listar(tItemL comando){
             char path[MAX_LENGHT_PATH];
             getToken(controlador,comando.comandos,path);
 
-            if(!reca && !recb){
-                //if( ListContent(path,largo,link,acc,hid) == -1 ) strerror(errno);
+            if(!modo.reca && !modo.recb){
+                if( ListContent(path,modo) == -1 ) strerror(errno);
             }else{
-                if(reca){
-                    //if ( ListReca(path,largo,link,acc,hid) == -1 ) strerror(errno);
+                if(modo.reca){
+                    if ( ListReca(path,modo) == -1 ) strerror(errno);
                 }
-                if(recb){
+                if(modo.recb){
                     printf("recorrido recb\n");
-                    //if ( ListRecb(path,largo,link,acc,hid) == -1 ) strerror(errno);
+                    if ( ListRecb(path,modo) == -1 ) strerror(errno);
                 }
             }
 
@@ -529,10 +538,10 @@ void listar(tItemL comando){
 
     }
 }
- */
-/*
+
+
 // /home/noa/Paradigmas_de_la_programación
-int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     printf("************%s\n",path);
 
@@ -563,11 +572,11 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
         char rutaDir[tam];
         sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
 
-        if (hid) {
-            printInfo(NULL,rutaDir,largo,link,acc); //enseñar todos los ficheros
+        if (opciones.hid) {
+            printInfo(NULL,rutaDir,opciones); //enseñar todos los ficheros
         }else{
             if ((*directorio).d_name[0] != '.') {
-                if (printInfo(NULL,rutaDir, largo, link, acc) == -1) return -1;
+                if (printInfo(NULL,rutaDir, opciones) == -1) return -1;
             }
 
         }
@@ -587,7 +596,6 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
 
     return 0;
 }
-*/
 
 int extraerNombre(char *rutacompleta, char *nombreFichero[]){
     int i=1;
@@ -600,6 +608,7 @@ int extraerNombre(char *rutacompleta, char *nombreFichero[]){
         return i; //posición del nombre del fichero en el array
     }
 }
+
 int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], modo opciones) { //ruta -> resolved path, enlazada -> sin resolver
     struct stat contenido;
 
@@ -630,7 +639,7 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
         printf("%s ",tiempo);
     }
 
-    if (opciones.largo == true) {
+    if (opciones.largo) {
         struct group *grupinho = getgrgid(contenido.st_gid);
         if ( grupinho == NULL) {
             perror("error al acceder al nombre del grupo");
@@ -660,10 +669,12 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
     }else{
         if(opciones.listar){
             //resolver el nombre del fichero
-            printf("%s","nombre del fichero");
+            char *nombre[MAX_LENGHT_PATH];
+            int pos = extraerNombre(enlazada,nombre);
+            printf("%s",nombre[pos]);
         }else printf("%s", enlazada); //se imprime siempre
 
-        if ( opciones.largo && opciones.link && strcmp(rutaReal,enlazada) != 0 ) { //imprimir la ruta real a la que apunta
+        if ( opciones.largo && ( opciones.link && strcmp(rutaReal,enlazada) != 0 ) ) { //imprimir la ruta real a la que apunta
             printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
         }
     }
@@ -671,8 +682,8 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
 
     return 0;
 }
-/*
-int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+
+int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     printf("************%s\n",path);
 
@@ -682,6 +693,7 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
     createList(&DirRecord);
     int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
     if(total_entradas == -1) return -1;
+    free(namelist);
     DIR *directory_stream = opendir(path);
     if(directory_stream == NULL) return -1;
 
@@ -693,8 +705,8 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
         char rutaDir[tam];
         sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
 
-        if (hid) {
-            if (printInfo(rutaDir, NULL, largo, link, acc) == -1) strerror(errno); //enseñar todos los ficheros
+        if (opciones.hid) {
+            if (printInfo(NULL, rutaDir, opciones) == -1) strerror(errno); //enseñar todos los ficheros
             if( isDirectory(rutaDir) == 1 ){ //falta obviar a  . y ..
                 tItemL nuevo;
                 strcpy(nuevo.comando,rutaDir);
@@ -703,7 +715,7 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
             }
         }else{
             if ( (*directorio).d_name[0] != '.' ){
-                if( printInfo(NULL,rutaDir,largo,link,acc) == -1) strerror(errno); //enseñar los que no empiecen por '.'
+                if( printInfo(NULL,rutaDir,opciones) == -1) strerror(errno); //enseñar los que no empiecen por '.'
                 if( isDirectory(rutaDir) == 1 ){
                     tItemL nuevo;
                     strcpy(nuevo.comando,rutaDir);
@@ -726,7 +738,7 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
         for (int j = 1; j <= total_records; j++) {
             tItemL nextdir = getItem(primero(DirRecord), DirRecord);
             printf("%s\n",nextdir.comando);
-            if (ListReca(nextdir.comando, largo, link, acc, hid) == -1 ){
+            if (ListReca(nextdir.comando, opciones) == -1 ){
                 perror("error en la recursividad");
                 return -1;
             }
@@ -738,8 +750,9 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
     return 0;
 }
 
+
 // list -recb /home/noa/Sistemas_Operativos
-int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     //printf("************%s\n",path);
 
@@ -749,6 +762,7 @@ int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
     createList(&DirRecord);
     int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
     if(total_entradas == -1) return -1;
+    free(namelist);
     DIR *directory_stream = opendir(path);
     if(directory_stream == NULL) return -1;
 
@@ -760,14 +774,14 @@ int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
         char rutaDir[tam];
         sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
 
-        if (hid) {
+        if (opciones.hid) {
             if( isDirectory(rutaDir) == 1 ){ //falta obviar a  . y ..
-                ListRecb(rutaDir,largo,link,acc,hid);
+                ListRecb(rutaDir,opciones);
             }
         }else{
             if ( (*directorio).d_name[0] != '.' ){
                 if( isDirectory(rutaDir) == 1 ){
-                    ListRecb(rutaDir,largo,link,acc,hid);
+                    ListRecb(rutaDir,opciones);
                 }
             }
         }
@@ -778,14 +792,14 @@ int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
         seekdir(directory_stream, sig);
     }
 
-    if (ListContent(path,largo,link,acc,hid) == -1) {
+    if (ListContent(path,opciones) == -1) {
         return -1;
     }
 
     if(closedir(directory_stream) == -1) return -1;
     return 0;
 }
-*/
+
 /*
 void create (tItemL comando){
 
