@@ -529,7 +529,6 @@ void listar(tItemL comando){
                     if ( ListReca(path,modo) == -1 ) strerror(errno);
                 }
                 if(modo.recb){
-                    printf("recorrido recb\n");
                     if ( ListRecb(path,modo) == -1 ) strerror(errno);
                 }
             }
@@ -664,18 +663,22 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
 
     printf("%10ld ", (long) contenido.st_size);
 
-    if(rutaReal == NULL){
-        printf("%s",enlazada);
-    }else{
-        if(opciones.listar){
-            //resolver el nombre del fichero
-            char *nombre[MAX_LENGHT_PATH];
-            int pos = extraerNombre(enlazada,nombre);
-            printf("%s",nombre[pos]);
-        }else printf("%s", enlazada); //se imprime siempre
+    if(opciones.listar == true){
+        char *nombre[MAX_LENGHT_PATH];
+        char aux[MAX_LENGHT_PATH]; strcpy(aux,enlazada);
+        int pos = extraerNombre(aux,nombre);
+        printf("%s",nombre[pos-1]);
+        //printf("printfINfo con listar activado ");
+    }else {
+        if (rutaReal == NULL) {
+            printf("%s", enlazada);
+        } else {
+            printf("%s", enlazada); //se imprime siempre
 
-        if ( opciones.largo && ( opciones.link && strcmp(rutaReal,enlazada) != 0 ) ) { //imprimir la ruta real a la que apunta
-            printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
+            if (opciones.largo &&
+                (opciones.link && strcmp(rutaReal, enlazada) != 0)) { //imprimir la ruta real a la que apunta
+                printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
+            }
         }
     }
     printf("\n");
@@ -687,64 +690,80 @@ int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerid
     errno = 0;
     printf("************%s\n",path);
 
-    //imprimir contenido
     struct dirent **namelist;
     tList DirRecord;
-    createList(&DirRecord);
+    if(!createList(&DirRecord)){
+        perror("no hay espacio para la recursividad");
+        return -1;
+    }
+
     int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
-    if(total_entradas == -1) return -1;
     free(namelist);
-    DIR *directory_stream = opendir(path);
-    if(directory_stream == NULL) return -1;
+    if(total_entradas == -1) return -1;
+    else {
+        if(total_entradas > 0) {
+            DIR *directory_stream = opendir(path);
+            if (directory_stream == NULL) return -1;
 
-    for(int i = 0; i <= total_entradas-1; i++) { //incluir detectar errores y no mostrar hidd
-        struct dirent *directorio = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
-        if(directorio == NULL && errno != 0) return -1;
+            for (int i = 0; i <= total_entradas - 1; i++) { //incluir detectar errores y no mostrar hidd
+                struct dirent *directorio = readdir(
+                        directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
+                if (directorio == NULL && errno != 0) return -1;
 
-        int tam = 2*MAX_LENGHT_PATH;
-        char rutaDir[tam];
-        sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
+                int tam = 2 * MAX_LENGHT_PATH;
+                char rutaDir[tam];
+                sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
 
-        if (opciones.hid) {
-            if (printInfo(NULL, rutaDir, opciones) == -1) strerror(errno); //enseñar todos los ficheros
-            if( isDirectory(rutaDir) == 1 ){ //falta obviar a  . y ..
-                tItemL nuevo;
-                strcpy(nuevo.comando,rutaDir);
-                nuevo.puesto = 1;
-                insertElement(nuevo,&DirRecord);
+                if (opciones.hid) {
+                    if (printInfo(NULL, rutaDir, opciones) == -1) strerror(errno); //enseñar todos los ficheros
+                    if (isDirectory(rutaDir) == 1) { //falta obviar a  . y ..
+                        if (strcmp((*directorio).d_name, ".") != 0 && strcmp((*directorio).d_name, "..") != 0) {
+                            tItemL nuevo;
+                            strcpy(nuevo.comando, rutaDir);
+                            nuevo.puesto = 1;
+                            if (!insertElement(nuevo, &DirRecord)) {
+                                perror("no hay sitio para la recursividad");
+                                return -1;
+                            }
+                        }
+                    }
+                } else {
+                    if ((*directorio).d_name[0] != '.') {
+                        if (printInfo(NULL, rutaDir, opciones) == -1)
+                            strerror(errno); //enseñar los que no empiecen por '.'
+                        if (isDirectory(rutaDir) == 1) {
+                            tItemL nuevo;
+                            strcpy(nuevo.comando, rutaDir);
+                            nuevo.puesto = 1;
+                            if(!insertElement(nuevo, &DirRecord)) {
+                                perror("no hay sitio para la recursividad");
+                                return -1;
+                            }
+                        }
+                    }
+                }
+
+                long sig = telldir(directory_stream);
+                if (sig == -1) return -1;
+
+                seekdir(directory_stream, sig);
             }
-        }else{
-            if ( (*directorio).d_name[0] != '.' ){
-                if( printInfo(NULL,rutaDir,opciones) == -1) strerror(errno); //enseñar los que no empiecen por '.'
-                if( isDirectory(rutaDir) == 1 ){
-                    tItemL nuevo;
-                    strcpy(nuevo.comando,rutaDir);
-                    nuevo.puesto = 1;
-                    insertElement(nuevo,&DirRecord);
+            if (closedir(directory_stream) == -1) return -1;
+
+            //llamada recursiva para los siguientes directorios
+            if (!isEmptyList(DirRecord)) {
+                int total_records = getItem(last(DirRecord), DirRecord).puesto;
+                for (int j = 0; j <= total_records - 1; j++) {
+                    tItemL nextdir = getItem(primero(DirRecord), DirRecord);
+                    if (ListReca(nextdir.comando, opciones) == -1) {
+                        perror("error en la recursividad ");
+                        return -1;
+                    }
+                    deletePrimero(&DirRecord);
                 }
             }
+            deleteList(&DirRecord);
         }
-
-        long sig = telldir(directory_stream);
-        if(sig == -1) return -1;
-
-        seekdir(directory_stream, sig);
-    }
-    if(closedir(directory_stream) == -1) return -1;
-
-    //llamada recursiva para los siguientes directorios
-    if(!isEmptyList(DirRecord)) {
-        int total_records = getItem(last(DirRecord), DirRecord).puesto;
-        for (int j = 1; j <= total_records; j++) {
-            tItemL nextdir = getItem(primero(DirRecord), DirRecord);
-            printf("%s\n",nextdir.comando);
-            if (ListReca(nextdir.comando, opciones) == -1 ){
-                perror("error en la recursividad");
-                return -1;
-            }
-            deletePrimero(&DirRecord);
-        }
-        deleteList(&DirRecord);
     }
 
     return 0;
@@ -758,17 +777,19 @@ int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requeri
 
     //imprimir contenido
     struct dirent **namelist;
-    tList DirRecord;
-    createList(&DirRecord);
     int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
     if(total_entradas == -1) return -1;
     free(namelist);
+
     DIR *directory_stream = opendir(path);
     if(directory_stream == NULL) return -1;
 
     for(int i = 0; i <= total_entradas-1; i++) { //incluir detectar errores y no mostrar hidd
         struct dirent *directorio = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
-        if(directorio == NULL && errno != 0) return -1;
+        if(directorio == NULL && errno != 0){
+            perror("error en readdir ");
+            return -1;
+        }
 
         int tam = 2*MAX_LENGHT_PATH;
         char rutaDir[tam];
@@ -776,7 +797,7 @@ int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requeri
 
         if (opciones.hid) {
             if( isDirectory(rutaDir) == 1 ){ //falta obviar a  . y ..
-                ListRecb(rutaDir,opciones);
+                if(strcmp((*directorio).d_name,".") != 0 && strcmp((*directorio).d_name,"..") != 0) ListRecb(rutaDir,opciones);
             }
         }else{
             if ( (*directorio).d_name[0] != '.' ){
