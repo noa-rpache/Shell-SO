@@ -680,24 +680,25 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
         int tam = 2*MAX_LENGHT_PATH;
         char rutaDir[tam];
         sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
-        printf("rutadDir: %s\n",rutaDir);
 
         if (hid) {
-            if (printInfo(rutaDir, NULL, largo, link, acc) == -1)
-                strerror(errno); //enseñar todos los ficheros
-        }else if ( (*directorio).d_name[0] != '.' ) if( printInfo(rutaDir,NULL,largo,link,acc) == -1) strerror(errno); //enseñar los que no empiecen por '.'
-
-        char rutaDirectorio[MAX_LENGHT_PATH];
-        if (realpath((*directorio).d_name,rutaDirectorio) == NULL) {
-            perror("no se obtuvo bien la ruta con realpath");
-            return -1;
-        }
-
-        if( isDirectory(rutaDirectorio) == 1 ){ //falta obviar a  . y ..
-            tItemL nuevo;
-            strcpy(nuevo.comando,rutaDirectorio);
-            nuevo.puesto = 1;
-            insertElement(nuevo,&DirRecord);
+            if (printInfo(rutaDir, NULL, largo, link, acc) == -1) strerror(errno); //enseñar todos los ficheros
+            if( isDirectory(rutaDir) == 1 ){ //falta obviar a  . y ..
+                tItemL nuevo;
+                strcpy(nuevo.comando,rutaDir);
+                nuevo.puesto = 1;
+                insertElement(nuevo,&DirRecord);
+            }
+        }else{
+            if ( (*directorio).d_name[0] != '.' ){
+                if( printInfo(NULL,rutaDir,largo,link,acc) == -1) strerror(errno); //enseñar los que no empiecen por '.'
+                if( isDirectory(rutaDir) == 1 ){
+                    tItemL nuevo;
+                    strcpy(nuevo.comando,rutaDir);
+                    nuevo.puesto = 1;
+                    insertElement(nuevo,&DirRecord);
+                }
+            }
         }
 
         long sig = telldir(directory_stream);
@@ -708,11 +709,19 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
     if(closedir(directory_stream) == -1) return -1;
 
     //llamada recursiva para los siguientes directorios
-    int total_records = getItem(last(DirRecord),DirRecord).puesto;
-    for(int j = total_records; 0<= j; j--){
-        tItemL nextdir = getItem(last(DirRecord),DirRecord);
-        ListReca(nextdir.comando,largo,link,acc,hid);
-        deleteFirst(&DirRecord);
+    if(!isEmptyList(DirRecord)) {
+        int total_records = getItem(last(DirRecord), DirRecord).puesto;
+        // list -reca /home/noa/Paradigmas_de_la_programación
+        for (int j = 1; j <= total_records; j++) {
+            //printf("/////\n");
+            tItemL nextdir = getItem(primero(DirRecord), DirRecord);
+            printf("%s\n",nextdir.comando);
+            if (ListReca(nextdir.comando, largo, link, acc, hid) == -1 ){
+                perror("error en la recursividad");
+                return -1;
+            }
+            deletePrimero(&DirRecord);
+        }
     }
     return 0;
 }
