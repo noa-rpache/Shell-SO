@@ -34,6 +34,9 @@ int int_convert(tItemT cadena);
 void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
+void getDir();
+int isDirectory(const char *path);
+int isDirEmpty(char *dirname);   //ver si un directorio esta o no vacio
 char * ConvierteModo (mode_t m, char *permisos);
 int isDirectory(const char *path);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc);
@@ -52,6 +55,13 @@ void fecha( tItemL comando);
 void hist (tItemL comando, tList *hist);
 void status(tItemL comando);
 void listar(tItemL comando);
+void create (tItemL comando);
+int borrar_dir(char *dir) ;//funcion recursiva para borrar directorios
+int delete(tItemL comando) ;//borra documentos o directorios vacios
+int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
+
+
+
 
 int main(int argc, char *arvg[]){
 
@@ -86,13 +96,19 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "infosis") == 0) infosis();
             else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "create") == 0) printf("*create en construcción*\n");
+            else if (strcmp(peticion.comando, "crear") == 0)create(peticion);
             else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) {
+     ;
+void create (tItemL comando);
+int borrar_dir(char *dir) ;//funcion recursiva para borrar directorios
+int delete(tItemL comando) ;//borra documentos o directorios vacios
+int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
+
+       else if (strcmp(peticion.comando, "list") == 0) {
                 printf("\t*list en construcción*\n");
                 listar(peticion);
-            } else if (strcmp(peticion.comando, "delete") == 0) printf("*delete en construcción*\n");
-            else if (strcmp(peticion.comando, "deltree") == 0) printf("*deltree en construcción*\n");
+                else if (strcmp(peticion.comando, "delete") == 0)delete(peticion);
+                else if (strcmp(peticion.comando, "deltree") == 0)deleteTree(peticion);
             else printf("%s: no es un comando del shell\n", peticion.comando);
 
             return false;
