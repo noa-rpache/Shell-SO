@@ -38,7 +38,7 @@ char * ConvierteModo (mode_t m, char *permisos);
 int isDirectory(const char *path);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc);
 int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
-int EntrarAlDirectorioRECA(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
+int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
 
 //comandos
 void ayuda(tItemL comando);
@@ -523,7 +523,7 @@ void listar(tItemL comando){
             }else{
                 if(reca){
                     printf("recorrido reca\n");
-                    if ( EntrarAlDirectorioRECA(path,largo,link,acc,hid) == -1 ) strerror(errno);
+                    if ( ListReca(path,largo,link,acc,hid) == -1 ) strerror(errno);
                 }
                 if(recb) printf("recorrido recb\n");
             }
@@ -543,12 +543,13 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
 
     struct dirent **namelist;
     int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
-    free(namelist);
 
     if(total_entradas == -1){
         perror("error en scandir");
         return -1;
     }
+
+    free(namelist);
 
     DIR *directory_stream = opendir(path);
     if(directory_stream == NULL){
@@ -567,9 +568,11 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
             printInfo((*directorio).d_name,NULL,largo,link,acc); //enseñar todos los ficheros
         }else{
             if ((*directorio).d_name[0] != '.') {
-                char rutaDir[MAX_LENGHT_PATH];
-                realpath((*directorio).d_name,rutaDir); //fallitos al pillar esta ruta
-                printf("%s\n",rutaDir);
+                int tam = 2*MAX_LENGHT_PATH;
+                char rutaDir[tam];
+                sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
+                //realpath((*directorio).d_name,rutaDir); //fallitos al pillar esta ruta
+                printf("rutadDir: %s\n",rutaDir);
                 if (printInfo(NULL,rutaDir, largo, link, acc) == -1) return -1;
             }
 
@@ -587,17 +590,35 @@ int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, boo
         perror("error al cerrar el directorio");
         return -1;
     }
-    free(directory_stream);
+
     return 0;
 }
 
-int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc) { //ruta -> resolved path, enlazada -> sin resolver
-    //printf("%s\n",enlazada);
-    struct stat contenido;
-    if (stat(enlazada, &contenido) == -1) {
-        perror("error al acceder al los datos del archivo/directorio ");
-        return -1;
+int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc) { //ruta -> resolved path, enlazada -> sin resolver
+    bool simbolico;
+    if(strcmp(rutaReal,enlazada) == 0) {
+        simbolico = false;
     }
+
+    //printf("rutaReal: %s\n",rutaReal);
+    //printf("ruta con enlaces: %s\n",enlazada);
+    struct stat contenido;
+    if(simbolico){
+        printf("se usa el enlace simbólico\n");
+        if (lstat(enlazada, &contenido) == -1) {
+            perror("error al acceder al los datos del archivo/directorio ");
+            perror(enlazada);
+            return -1;
+        }
+    }else{
+        if (stat(rutaReal, &contenido) == -1) {
+            perror("error al acceder al los datos del archivo/directorio ");
+            perror(enlazada);
+            return -1;
+        }
+    }
+
+
 
     struct tm *time;
     if (acc || largo) {
@@ -610,13 +631,13 @@ int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool l
             return -1;
         }
 
-        char tiempo[15];
-        if (strftime(tiempo, sizeof(time), "%Y-%m-%d %H:%M", time) == 0) return -1;
+        //char tiempo[15];
+        //if (strftime(tiempo, sizeof(time), "%Y-%m-%d %H:%M", time) == 0) {
+        //  printf("el string no cabe el el tamaño proporcionado\n");
+        //  return 0; //no hace falta que salte strerror(errno);
 
         printf("AAAA/MM/DD - HH:mm ");
     }
-
-
 
     if (largo) {
         struct group *grupinho = getgrgid(contenido.st_gid);
@@ -641,16 +662,23 @@ int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool l
         printf("%s", permisos);
     }
 
-    printf("%10ld", (long) contenido.st_size);
-    if ( largo && link && strcmp(ruta,enlazada)!=0 ) { //solo si es un enlace simbólico
-        printf(" %s -> ", enlazada);
+    printf("%10ld ", (long) contenido.st_size);
+
+    if(rutaReal == NULL){
+        printf("%s",enlazada);
+    }else{
+        printf("%s", enlazada); //se imprime siempre
+
+        if ( largo && link && simbolico ) { //imprimir la ruta real a la que apunta
+            printf(" -> %s", rutaReal);
+        }
     }
-    printf(" %s\n", ruta); //ya tiene los enlaces simbólicos incluidos
+    printf("\n");
 
     return 0;
 }
 
-int EntrarAlDirectorioRECA(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     printf("************%s\n",path);
 
@@ -694,7 +722,7 @@ int EntrarAlDirectorioRECA(char path[MAX_LENGHT_PATH], bool largo, bool link, bo
     int total_records = getItem(last(DirRecord),DirRecord).puesto;
     for(int j = total_records; 0<= j; j--){
         tItemL nextdir = getItem(last(DirRecord),DirRecord);
-        EntrarAlDirectorioRECA(nextdir.comando,largo,link,acc,hid);
+        ListReca(nextdir.comando,largo,link,acc,hid);
         deleteFirst(&DirRecord);
     }
     return 0;
