@@ -38,5 +38,5 @@ tItemL getItem (tPosL p, tList L);
 tPosL  findItem (int num, tList L);
 //el ítem esta al final de la lista
 bool deleteLast(tPosL p, tList *L);
-void deleteFirst(tList *L);
+void deletePrimero(tList *L);
 void deleteList (tList *L);
