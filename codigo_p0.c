@@ -655,3 +655,175 @@ int printReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool 
 
     return 0;
 }
+
+void create (tItemL comando){
+
+    if(comando.tokens !=0) {
+
+char path[MAX_LENGHT_PATH];
+char error[MAX_LENGHT_PATH] = "Error, imposible de crear";
+
+    getcwd(path,sizeof (path));
+    strcat(path,"/");
+
+    tItemT modo;
+    getToken(0, comando.comandos, modo);
+
+    if (strcmp("-f", modo) == 0) {//crear un archivo
+        getToken(1, comando.comandos, modo);
+        char *name_folder = modo ;//(ns si va bien)
+
+
+        if (creat(strcat(path, name_folder), 0666) == -1) {//creamos el documento y le pasamos el permiso
+            perror(error);//salta error si no se puede crear
+        }
+    }else {
+
+        getToken(0, comando.comandos, modo);
+        char *name_folder = modo;
+
+        if(mkdir(strcat(path,name_folder),0755)==-1){//creamos el directorio y le pasamos el permiso
+            perror(error);//en el caso de que no se pueda crear salta el error
+        }
+
+    }
+
+}
+}
+
+
+
+
+int isDirectory(const char *path) {
+
+    struct stat x;
+    stat(path, &x);
+    int aux = S_ISDIR(x.st_mode);
+    return aux;
+
+}
+
+int borrarrec_dir(char *dir) {//funcion recursiva para borrar directorios
+
+    DIR *dirp;
+    struct dirent *tlist;
+    char aux[MAX];
+
+    if((dirp= opendir(dir))==NULL){
+        return -1;}
+
+    while ((tlist = readdir(dirp))!=NULL){
+        strcpy(aux,dir);
+        strcat(strcat(aux,"/"),tlist->d_name);
+
+        //comprobamos que sea un directorio valido
+        if(strcmp(tlist->d_name,"..")==0|| strcmp(tlist->d_name,".")==0){
+            //no vuelve a comenzar la recursividad si es el direcotrio actual o el anterior
+            continue;
+        }
+
+        if(isDirectory(aux)){//aqui se comprueba que sea un directorio
+
+            borrarrec_dir(aux);//aqui repetimos recursivamente la funcion
+        }
+
+        if(remove(aux)){//aqui se borra
+            return -1;
+        }
+        closedir(dirp);
+    }
+
+}
+
+
+int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
+    int n = 0;
+    struct dirent *p;
+    DIR *dir = opendir(dirname);
+    if (dir == NULL)
+        return 1;
+    while ((p = readdir(dir)) != NULL) {
+        if(++n > 2)break;
+    }
+    closedir(dir);
+    if (n <= 2) //direcotorio vacio
+        return 1;
+    else
+        return 0;
+}
+
+
+
+//para ver si es o no un directorio
+/* if ((dp = opendir(argv[1])) == NULL) {
+        switch (errno) {
+            case EACCES: printf("Permission denied\n"); break;
+            case ENOENT: printf("Directory does not exist\n"); break;
+            case ENOTDIR: printf("'%s' is not a directory\n", argv[1]); break;*/
+
+
+
+int delete(tItemL comando) {//borra documentos o directorios vacios
+
+    char error[MAX_LENGHT_PATH] = "Error, imposible de borrar";
+
+    if (comando.tokens != 0) {
+        tItemT aux;
+        for (int i = 0; i < comando.tokens; i++) {//aqui recorremos todos los tokens ns si hay que poner -2
+
+            getToken(i, comando.comandos, aux);
+
+            if (isDirectory(aux) != 0 && isDirEmpty(aux) == 1) {//si es directorio y esta vacio lo borra
+
+                rmdir(aux);
+
+                if (rmdir(aux) == -1) {//si no ha sido posible borrarlo salta error
+
+                    perror(error);
+
+                }
+            }
+            else {
+
+                remove(aux);
+
+                if (remove(aux) != 0) {
+
+                    perror(error);
+
+                }
+            }
+        }}}
+
+
+    int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios no vacios
+
+        char error[MAX_LENGHT_PATH] = "no se ha podido borrar";
+
+        if (comando.tokens != 0) {
+
+            tItemT aux;
+
+            for (int i = 0; i < comando.tokens; i++) {//ns si hay que poner el -2
+
+                getToken(i, comando.comandos, aux);
+
+                if (isDirectory(aux) && isDirEmpty(aux) == 0) {
+
+                    borrarrec_dir(aux);//aqui lo borra recursivamente
+
+                    if (borrarrec_dir(aux) == -1) {
+                        perror(error);
+                    }
+
+                } else {
+
+                    remove(aux);
+                    //sino es directorio lo borra con remove}
+
+                }
+            }
+        }
+    }
+
+
