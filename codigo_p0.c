@@ -39,6 +39,7 @@ int isDirectory(const char *path);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], bool largo, bool link, bool acc);
 int ListContent(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
 int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
+int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid);
 
 //comandos
 void ayuda(tItemL comando);
@@ -520,10 +521,13 @@ void listar(tItemL comando){
                 if( ListContent(path,largo,link,acc,hid) == -1 ) strerror(errno);
             }else{
                 if(reca){
-                    printf("recorrido reca\n");
                     if ( ListReca(path,largo,link,acc,hid) == -1 ) strerror(errno);
                 }
-                if(recb) printf("recorrido recb\n");
+                if(recb){
+                    printf("recorrido recb\n");
+                    if ( ListRecb(path,largo,link,acc,hid) == -1 ) strerror(errno);
+
+                }
             }
 
             //}
@@ -711,7 +715,6 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
     //llamada recursiva para los siguientes directorios
     if(!isEmptyList(DirRecord)) {
         int total_records = getItem(last(DirRecord), DirRecord).puesto;
-        // list -reca /home/noa/Paradigmas_de_la_programación
         for (int j = 1; j <= total_records; j++) {
             //printf("/////\n");
             tItemL nextdir = getItem(primero(DirRecord), DirRecord);
@@ -722,7 +725,76 @@ int ListReca(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool h
             }
             deletePrimero(&DirRecord);
         }
+        deleteList(&DirRecord);
     }
+
+    return 0;
+}
+
+int ListRecb(char path[MAX_LENGHT_PATH], bool largo, bool link, bool acc, bool hid){ //pasar el path requerido con las opciones pedidas y mostrarlo
+    errno = 0;
+    printf("************%s\n",path);
+
+    //imprimir contenido
+    struct dirent **namelist;
+    tList DirRecord;
+    createList(&DirRecord);
+    int total_entradas = scandir(path,&namelist,NULL,alphasort); //guarda las entradas del directorio en namelist //printf("total entradas: %d\n",total_entradas);
+    if(total_entradas == -1) return -1;
+    DIR *directory_stream = opendir(path);
+    if(directory_stream == NULL) return -1;
+
+    for(int i = 0; i <= total_entradas-1; i++) { //incluir detectar errores y no mostrar hidd
+        struct dirent *directorio = readdir(directory_stream); //readdir te apunta al primer directorio dentro del path que le pasas
+        if(directorio == NULL && errno != 0) return -1;
+
+        int tam = 2*MAX_LENGHT_PATH;
+        char rutaDir[tam];
+        sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
+
+        if (hid) {
+            if( isDirectory(rutaDir) == 1 ){ //falta obviar a  . y ..
+                tItemL nuevo;
+                strcpy(nuevo.comando,rutaDir);
+                nuevo.puesto = 1;
+                insertElement(nuevo,&DirRecord);
+            }
+        }else{
+            if ( (*directorio).d_name[0] != '.' ){
+                if( isDirectory(rutaDir) == 1 ){
+                    tItemL nuevo;
+                    strcpy(nuevo.comando,rutaDir);
+                    nuevo.puesto = 1;
+                    insertElement(nuevo,&DirRecord);
+                }
+            }
+        }
+
+        long sig = telldir(directory_stream);
+        if(sig == -1) return -1;
+
+        seekdir(directory_stream, sig);
+    }
+    if(closedir(directory_stream) == -1) return -1;
+
+    //llamada recursiva para los siguientes directorios
+    if(!isEmptyList(DirRecord)) {
+        int total_records = getItem(last(DirRecord), DirRecord).puesto;
+        for (int j = 1; j <= total_records; j++) {
+            //printf("/////\n");
+            tItemL nextdir = getItem(primero(DirRecord), DirRecord);
+            printf("%s\n",nextdir.comando);
+            if (ListReca(nextdir.comando, largo, link, acc, hid) == -1 ){
+                perror("error en la recursividad");
+                return -1;
+            }
+            deletePrimero(&DirRecord);
+        }
+        deleteList(&DirRecord);
+    }
+
+    if (printInfo(rutaDir, NULL, largo, link, acc) == -1) strerror(errno); //enseñar todos los ficheros
+
     return 0;
 }
 
