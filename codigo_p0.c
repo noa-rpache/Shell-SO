@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include "historial.h"
+
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 #define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
 
@@ -42,6 +43,8 @@ int int_convert(tItemT cadena);
 void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
+int isDirectory(const char *path);
+int isDirEmpty(char *dirname);   //ver si un directorio esta o no vacio
 char * ConvierteModo (mode_t m, char *permisos);
 int isDirectory(const char *path);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], modo opciones);
@@ -62,6 +65,13 @@ void fecha( tItemL comando);
 void hist (tItemL comando, tList *hist);
 void status(tItemL comando);
 void listar(tItemL comando);
+void create (tItemL comando);
+int borrar_dir(char *dir) ;//funcion recursiva para borrar directorios
+int delete(tItemL comando) ;//borra documentos o directorios vacios
+int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
+
+
+
 
 int main(int argc, char *arvg[]){
 
@@ -96,11 +106,19 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "infosis") == 0) infosis();
             else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
             else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "create") == 0) printf("*create en construcción*\n");
+            else if (strcmp(peticion.comando, "crear") == 0)create(peticion);
             else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) listar(peticion);
-            else if (strcmp(peticion.comando, "delete") == 0) printf("*delete en construcción*\n");
-            else if (strcmp(peticion.comando, "deltree") == 0) printf("*deltree en construcción*\n");
+     ;
+void create (tItemL comando);
+int borrar_dir(char *dir) ;//funcion recursiva para borrar directorios
+int delete(tItemL comando) ;//borra documentos o directorios vacios
+int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
+
+       else if (strcmp(peticion.comando, "list") == 0) {
+                printf("\t*list en construcción*\n");
+                listar(peticion);
+                else if (strcmp(peticion.comando, "delete") == 0)delete(peticion);
+                else if (strcmp(peticion.comando, "deltree") == 0)deleteTree(peticion);
             else printf("%s: no es un comando del shell\n", peticion.comando);
 
             return false;
@@ -221,7 +239,7 @@ char * ConvierteModo (mode_t m, char *permisos){
     return permisos;
 }
 
-int isDirectory(const char *path) {
+int isDirectory(const char *path){
 
     struct stat x;
     stat(path, &x);
@@ -804,8 +822,12 @@ int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requeri
     return 0;
 }
 
-/*
+
 void create (tItemL comando){
+
+ if(comando.tokens==1){
+     getDir();
+ }
 
     if(comando.tokens !=0) {
 
@@ -819,8 +841,10 @@ char error[MAX_LENGHT_PATH] = "Error, imposible de crear";
     getToken(0, comando.comandos, modo);
 
     if (strcmp("-f", modo) == 0) {//crear un archivo
+
         getToken(1, comando.comandos, modo);
-        char *name_folder = modo ;//(ns si va bien)
+
+        char *name_folder = modo;
 
 
         if (creat(strcat(path, name_folder), 0666) == -1) {//creamos el documento y le pasamos el permiso
@@ -828,7 +852,7 @@ char error[MAX_LENGHT_PATH] = "Error, imposible de crear";
         }
     }else {
 
-        getToken(0, comando.comandos, modo);
+
         char *name_folder = modo;
 
         if(mkdir(strcat(path,name_folder),0755)==-1){//creamos el directorio y le pasamos el permiso
@@ -837,9 +861,9 @@ char error[MAX_LENGHT_PATH] = "Error, imposible de crear";
 
     }
 
-}
-}
 
+}
+}
 
 
 
@@ -852,7 +876,8 @@ int isDirectory(const char *path) {
 
 }
 
-int borrarrec_dir(char *dir) {//funcion recursiva para borrar directorios
+
+int borrar_dir(char *dir) {//funcion recursiva para borrar directorios
 
     DIR *dirp;
     struct dirent *tlist;
@@ -866,22 +891,22 @@ int borrarrec_dir(char *dir) {//funcion recursiva para borrar directorios
         strcat(strcat(aux,"/"),tlist->d_name);
 
         //comprobamos que sea un directorio valido
-        if(strcmp(tlist->d_name,"..")==0|| strcmp(tlist->d_name,".")==0){
+        if(strcmp(tlist->d_name,"..")==0|| strcmp(tlist->d_name,".")==0)
             //no vuelve a comenzar la recursividad si es el direcotrio actual o el anterior
             continue;
-        }
+
 
         if(isDirectory(aux)){//aqui se comprueba que sea un directorio
 
-            borrarrec_dir(aux);//aqui repetimos recursivamente la funcion
+            borrar_dir(aux);//aqui repetimos recursivamente la funcion
         }
 
         if(remove(aux)){//aqui se borra
             return -1;
-        }
+        }}
         closedir(dirp);
-    }
 
+    return 0;
 }
 
 
@@ -903,49 +928,46 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
 
 
 
-//para ver si es o no un directorio
-// if ((dp = opendir(argv[1])) == NULL) {
-        switch (errno) {
-            case EACCES: printf("Permission denied\n"); break;
-            case ENOENT: printf("Directory does not exist\n"); break;
-            case ENOTDIR: printf("'%s' is not a directory\n", argv[1]); break;
-
-
-
 int delete(tItemL comando) {//borra documentos o directorios vacios
 
     char error[MAX_LENGHT_PATH] = "Error, imposible de borrar";
 
     if (comando.tokens != 0) {
+        int controlador1,controlador2,auxiliar,auxiliar1;
         tItemT aux;
-        for (int i = 0; i < comando.tokens; i++) {//aqui recorremos todos los tokens ns si hay que poner -2
+        for (int i = 0; i < comando.tokens-1; i++) {//aqui recorremos todos los tokens ns si hay que poner -2
 
             getToken(i, comando.comandos, aux);
 
-            if (isDirectory(aux) != 0 && isDirEmpty(aux) == 1) {//si es directorio y esta vacio lo borra
+            controlador1= isDirectory(aux);
+            controlador2= isDirEmpty(aux);
 
-                rmdir(aux);
+            if (controlador1!=0 && controlador2==1) {//si es directorio y esta vacio lo borra
 
-                if (rmdir(aux) == -1) {//si no ha sido posible borrarlo salta error
+               auxiliar= remove(aux);
 
-                    perror(error);
-
-                }
-            }
-            else {
-
-                remove(aux);
-
-                if (remove(aux) != 0) {
+                if (auxiliar!=0) {//si no ha sido posible borrarlo salta error
 
                     perror(error);
 
                 }
             }
-        }}}
+            else {//sino es documento
+
+                auxiliar1=remove(aux);//segun ivan esto es para eliminar files
+
+                if (auxiliar1 != 0) {
+                    perror(error);
+
+                }
+            }
+        }}
+return 0;}
 
 
     int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios no vacios
+
+        int controlador1,controlador2,controlador3,auxiliar;
 
         char error[MAX_LENGHT_PATH] = "no se ha podido borrar";
 
@@ -953,26 +975,32 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
 
             tItemT aux;
 
-            for (int i = 0; i < comando.tokens; i++) {//ns si hay que poner el -2
+            for (int i = 0; i < comando.tokens-1; i++) {//ns si hay que poner el -2
 
                 getToken(i, comando.comandos, aux);
 
-                if (isDirectory(aux) && isDirEmpty(aux) == 0) {
+                controlador1= isDirectory(aux);
+                controlador2= isDirEmpty(aux);
 
-                    borrarrec_dir(aux);//aqui lo borra recursivamente
+                if (controlador1!=0 && controlador2== 0) {
 
-                    if (borrarrec_dir(aux) == -1) {
-                        perror(error);
-                    }
+                    borrar_dir(aux);//aqui lo borra recursivamente
+
+                    controlador3= isDirEmpty(aux);
+                    if(controlador3==1){
+                        auxiliar= remove(aux);
+
+                        if (auxiliar!=0) {//si no ha sido posible borrarlo salta error
+                            perror(error);
+
+                        }}
 
                 } else {
 
-                    remove(aux);
-                    //sino es directorio lo borra con remove}
+                    unlink(aux);
+
+                    //sino es directorio lo borra con unlink
 
                 }
             }
-        }
-    }
-
-*/
+        }return 0;}
