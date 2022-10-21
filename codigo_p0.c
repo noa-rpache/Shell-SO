@@ -19,7 +19,6 @@
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include "historial.h"
-
 //#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
 #define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
 
@@ -46,11 +45,10 @@ void getDir();
 int isDirectory(const char *path);
 int isDirEmpty(char *dirname);   //ver si un directorio esta o no vacio
 char * ConvierteModo2 (mode_t m);
-int isDirectory(const char *path);
-int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], modo opciones);
-int ListContent(char path[MAX_LENGHT_PATH], modo opciones);
-int ListReca(char path[MAX_LENGHT_PATH], modo opciones);
-int ListRecb(char path[MAX_LENGHT_PATH], modo opciones);
+int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], const modo *opciones);
+int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones);
+int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones);
+int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones);
 int opciones(tItemL entrada,modo *opciones);
 int borrar_dir(char *dir);//funcion recursiva para borrar directorios
 
@@ -136,7 +134,6 @@ void new_historial(char *comando[], tList *hist, int ntokens){
     nuevo.tokens = ntokens;
     strcpy(nuevo.comando,*comando);
     createEmptyTokensList(&nuevo.comandos);
-    nuevo.puesto = 1;
 
     for(int i = 1; i < ntokens; i++) //empieza en 1 porque ya se copió el valor en 0
         if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
@@ -264,8 +261,7 @@ int opciones(tItemL entrada,modo *opciones) {
     return controlador;
 }
 
-int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], modo opciones) { //la ruta enlazada se pasa siemrpe, la rutaReal puede ser NULL en un directorio
-    //pasar en rutaReal el nombre del fichero cuando lo haya
+int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], const modo *opciones) { //la ruta enlazada se pasa siemrpe, la rutaReal puede ser NULL en un directorio
     struct stat contenido;
 
     if (lstat(enlazada, &contenido) == -1) {
@@ -275,8 +271,8 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
     }
 
     struct tm *time;
-    if (opciones.acc || opciones.largo) {
-        if (opciones.acc) {
+    if (opciones->acc || opciones->largo) {
+        if (opciones->acc) {
             time = localtime(&contenido.st_atim.tv_sec);
         } else time = localtime(&contenido.st_mtim.tv_sec);
 
@@ -295,7 +291,7 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
         printf("%s ",tiempo);
     }
 
-    if (opciones.largo) {
+    if (opciones->largo) {
         struct group *grupinho = getgrgid(contenido.st_gid);
         if ( grupinho == NULL) {
             perror("error al acceder al nombre del grupo");
@@ -314,14 +310,15 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
         printf("%7s",user->pw_name);
         printf("%3c", LetraTF(contenido.st_mode));
         printf("%s", ConvierteModo2(contenido.st_mode));
+
     }
 
     printf("%10ld ", (long) contenido.st_size);
 
-    if(opciones.listar == true){
+    if(opciones->listar == true){
         printf("%s", rutaReal);
 
-        if (opciones.largo && (opciones.link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta el enlace
+        if (opciones->largo && (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta el enlace
             char origen[MAX_LENGHT_PATH];
             realpath(enlazada,origen);
             printf(" -> %s", origen);
@@ -330,7 +327,7 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
     }else {
         printf("%s", enlazada); //se imprime siempre
 
-        if (opciones.largo && (opciones.link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta
+        if (opciones->largo && (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta
             printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
         }
 
@@ -340,7 +337,7 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
     return 0;
 }
 
-int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     printf("************%s\n",path);
 
     DIR *directory_stream = opendir(path);
@@ -358,7 +355,7 @@ int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requ
         char rutaDir[tam];
         sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
 
-        if (opciones.hid) {
+        if (opciones->hid) {
             printInfo((*directorio).d_name,rutaDir,opciones); //enseñar todos los ficheros
         }else{
             if ((*directorio).d_name[0] != '.') {
@@ -389,7 +386,7 @@ int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requ
     return 0;
 }
 
-int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     printf("************%s\n",path);
 
@@ -410,13 +407,12 @@ int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerid
         char rutaDir[tam];
         sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
 
-        if (opciones.hid) {
+        if (opciones->hid) {
             if (printInfo((*directorio).d_name, rutaDir, opciones) == -1) strerror(errno); //enseñar todos los ficheros
             if (isDirectory(rutaDir) == 1) { //falta obviar a  . y ..
                 if (strcmp((*directorio).d_name, ".") != 0 && strcmp((*directorio).d_name, "..") != 0) {
                     tItemL nuevo;
                     strcpy(nuevo.comando, rutaDir);
-                    nuevo.puesto = 1;
                     if (!insertElement(nuevo, &DirRecord)) {
                         perror("no hay sitio para la recursividad");
                         return -1;
@@ -456,7 +452,8 @@ int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerid
             tItemL nextdir = getItem(primero(DirRecord), DirRecord);
             if (ListReca(nextdir.comando, opciones) == -1) {
                 perror("error en la recursividad ");
-                return -1;
+                strerror(errno);
+                //return -1;
             }
             deletePrimero(&DirRecord);
         }
@@ -465,10 +462,9 @@ int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerid
     return 0;
 }
 
-int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
 
-    //imprimir contenido
     DIR *directory_stream = opendir(path);
     if(directory_stream == NULL) return -1;
 
@@ -479,7 +475,7 @@ int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requeri
         char rutaDir[tam];
         sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
 
-        if (opciones.hid) {
+        if (opciones->hid) {
             if (isDirectory(rutaDir) == 1) {
                 if (strcmp((*directorio).d_name, ".") != 0 && strcmp((*directorio).d_name, "..") != 0)
                     ListRecb(rutaDir, opciones); //solo llama a la recursividad si no es ni . ni .., que si no nos hacemos un lío
@@ -636,7 +632,6 @@ void repetir_comando(tItemL entrada, tList *hist){ //comando N
     strcpy(nuevo.comando,repeticion.comando);
     nuevo.comandos = repeticion.comandos;
     nuevo.tokens = repeticion.tokens;
-    nuevo.puesto = 1;
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
     procesarEntrada(hist);
@@ -811,7 +806,7 @@ void status(tItemL comando){ //y si pasamos directorios y archivos a la vez??
                     perror("error al obtener el path");
                     strerror(errno);
                 }else {
-                    if ( printInfo(ruta,path,modo) == -1) strerror(errno);
+                    if ( printInfo(ruta,path,&modo) == -1) strerror(errno);
                 }
             }
         }
@@ -840,13 +835,13 @@ void listar(tItemL comando){
             getToken(controlador,comando.comandos,path);
 
             if(!modo.reca && !modo.recb){
-                if( ListContent(path,modo) == -1 ) strerror(errno);
+                if( ListContent(path,&modo) == -1 ) strerror(errno);
             }else{
                 if(modo.reca){
-                    if ( ListReca(path,modo) == -1 ) strerror(errno);
+                    if ( ListReca(path,&modo) == -1 ) strerror(errno);
                 }
                 if(modo.recb){
-                    if ( ListRecb(path,modo) == -1 ) strerror(errno);
+                    if ( ListRecb(path,&modo) == -1 ) strerror(errno);
                 }
             }
 
