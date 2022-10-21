@@ -45,7 +45,7 @@ char LetraTF (mode_t m);
 void getDir();
 int isDirectory(const char *path);
 int isDirEmpty(char *dirname);   //ver si un directorio esta o no vacio
-char * ConvierteModo (mode_t m, char *permisos);
+char * ConvierteModo2 (mode_t m);
 int isDirectory(const char *path);
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], modo opciones);
 int ListContent(char path[MAX_LENGHT_PATH], modo opciones);
@@ -207,7 +207,9 @@ void getDir(){
     }
 }
 
-char * ConvierteModo (mode_t m, char *permisos){
+char * ConvierteModo2 (mode_t m)
+{
+    static char permisos[12];
     strcpy (permisos,"---------- ");
 
     permisos[0]=LetraTF(m);
@@ -306,14 +308,12 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
             return -1;
         }
 
-        char *permisos = malloc(sizeof(10)); ConvierteModo(contenido.st_mode, permisos);
-
         printf("%5ld", (long) contenido.st_nlink);
         printf(" (%10ld)", (long) contenido.st_ino);
         printf("%7s", grupinho->gr_name);
         printf("%7s",user->pw_name);
         printf("%3c", LetraTF(contenido.st_mode));
-        printf("%s", permisos);
+        printf("%s", ConvierteModo2(contenido.st_mode));
     }
 
     printf("%10ld ", (long) contenido.st_size);
@@ -372,10 +372,11 @@ int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requ
             perror("error en telldir");
             return -1;
         }
-        seekdir(directory_stream, sig);
+        seekdir(directory_stream,sig);
     }
 
     if(directorio == NULL && errno != 0){
+        printf("errno: %d\n",errno);
         perror("error en readdir list");
         return -1;
     }
@@ -466,7 +467,6 @@ int ListReca(char path[MAX_LENGHT_PATH],modo opciones){ //pasar el path requerid
 
 int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
-    //printf("************%s\n",path);
 
     //imprimir contenido
     DIR *directory_stream = opendir(path);
@@ -480,7 +480,7 @@ int ListRecb(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requeri
         sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
 
         if (opciones.hid) {
-            if (isDirectory(rutaDir) == 1) { //falta obviar a  . y ..
+            if (isDirectory(rutaDir) == 1) {
                 if (strcmp((*directorio).d_name, ".") != 0 && strcmp((*directorio).d_name, "..") != 0)
                     ListRecb(rutaDir, opciones); //solo llama a la recursividad si no es ni . ni .., que si no nos hacemos un lío
             }
