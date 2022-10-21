@@ -308,10 +308,10 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
 
         char *permisos = malloc(sizeof(10)); ConvierteModo(contenido.st_mode, permisos);
 
-        printf("%10ld", (long) contenido.st_nlink);
+        printf("%5ld", (long) contenido.st_nlink);
         printf(" (%10ld)", (long) contenido.st_ino);
-        printf("%10s", grupinho->gr_name);
-        printf("%10s",user->pw_name);
+        printf("%7s", grupinho->gr_name);
+        printf("%7s",user->pw_name);
         printf("%3c", LetraTF(contenido.st_mode));
         printf("%s", permisos);
     }
@@ -319,22 +319,21 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
     printf("%10ld ", (long) contenido.st_size);
 
     if(opciones.listar == true){
-        //char *nombre[MAX_LENGHT_PATH];
-        //char aux[MAX_LENGHT_PATH]; strcpy(aux,enlazada);
-        //extraerNombre(aux,nombre);
-        //printf("%s",*nombre);
-        //free(nombre);
         printf("%s", rutaReal);
-    }else {
-        if (rutaReal == NULL) {
-            printf("%s", enlazada);
-        } else {
-            printf("%s", enlazada); //se imprime siempre
 
-            if (opciones.largo && (opciones.link && strcmp(rutaReal, enlazada) != 0)) { //imprimir la ruta real a la que apunta
-                printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
-            }
+        if (opciones.largo && (opciones.link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta el enlace
+            char origen[MAX_LENGHT_PATH];
+            realpath(enlazada,origen);
+            printf(" -> %s", origen);
         }
+
+    }else {
+        printf("%s", enlazada); //se imprime siempre
+
+        if (opciones.largo && (opciones.link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta
+            printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
+        }
+
     }
     printf("\n");
 
@@ -342,7 +341,6 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], mo
 }
 
 int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
-    errno = 0;
     printf("************%s\n",path);
 
     DIR *directory_stream = opendir(path);
@@ -352,8 +350,10 @@ int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requ
     }
 
     struct dirent *directorio;
+    errno = 0;
 
     while((directorio = readdir(directory_stream)) != NULL) {
+        errno = 0;
         int tam = 2*MAX_LENGHT_PATH;
         char rutaDir[tam];
         sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
@@ -376,7 +376,7 @@ int ListContent(char path[MAX_LENGHT_PATH], modo opciones){ //pasar el path requ
     }
 
     if(directorio == NULL && errno != 0){
-        perror("error en readdir");
+        perror("error en readdir list");
         return -1;
     }
 
@@ -558,12 +558,21 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
     int n = 0;
     struct dirent *p;
     DIR *dir = opendir(dirname);
+
     if (dir == NULL)
         return 1;
-    while ((p = readdir(dir)) != NULL) {
+
+    while ( (p = readdir(dir)) != NULL ) {
         if(++n > 2)break;
     }
+
+    if(p == NULL && errno !=0){
+        perror("error en readdir DirEmpty");
+        return -1;
+    }
+
     closedir(dir);
+
     if (n <= 2) //directorio vacio
         return 1;
     else
