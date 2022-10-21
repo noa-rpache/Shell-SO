@@ -536,7 +536,7 @@ int borrar_dir(char *dir) {//funcion recursiva para borrar directorios
         strcat(strcat(aux,"/"),tlist->d_name);
 
         //comprobamos que sea un directorio valido
-        if(strcmp(tlist->d_name,"..")==0|| strcmp(tlist->d_name,".")==0)
+        if(strcmp(tlist->d_name,"..")==0 || strcmp(tlist->d_name,".")==0)
             //no vuelve a comenzar la recursividad si es el direcotrio actual o el anterior
             continue;
 
@@ -576,7 +576,7 @@ void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los espec
 
     if(comando.tokens == 1){
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
-        printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda create delete deltree stat list\n");
+        printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda crear delete deltree stat list\n");
     }else if( strcmp(comando.comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
     else if( strcmp(comando.comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
     else if( strcmp(comando.comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
@@ -587,7 +587,7 @@ void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los espec
     else if( strcmp(comando.comando, "hist") == 0) printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
     else if( strcmp(comando.comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
     else if( strcmp(comando.comando, "infosis") == 0 ) printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
-    else if( strcmp(comando.comando, "create") == 0 ) printf("create [-f] [name]\tCrea un directorio o un fichero (-f)\n");
+    else if( strcmp(comando.comando, "crear") == 0 ) printf("crear [-f] [name]\tCrea un directorio o un fichero (-f)\n");
     else if( strcmp(comando.comando, "delete") == 0 ) printf("delete [name1 name2 ..]\tBorra ficheros o directorios vacios\n");
     else if( strcmp(comando.comando, "deltree") == 0 ) printf("deltree [name1 name2 ..]\tBorra ficheros o directorios no vacios recursivamente\n");
     else if( strcmp(comando.comando, "stat") == 0 ){
@@ -891,33 +891,36 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
 
     char error[MAX_LENGHT_PATH] = "Error, imposible de borrar";
 
-    if (comando.tokens != 0) {
-        int controlador1,controlador2,auxiliar,auxiliar1;
-        tItemT aux;
-        for (int i = 0; i < comando.tokens-1; i++) {//aqui recorremos todos los tokens ns si hay que poner -2
+    if(comando.tokens == 1) getDir();
+    else {
+        if (comando.tokens != 0) {
+            int controlador1, controlador2, auxiliar, auxiliar1;
+            tItemT aux;
+            for (int i = 0; i < comando.tokens - 1; i++) {//aqui recorremos todos los tokens ns si hay que poner -2
 
-            getToken(i, comando.comandos, aux);
+                getToken(i, comando.comandos, aux);
 
-            controlador1= isDirectory(aux);
-            controlador2= isDirEmpty(aux);
+                controlador1 = isDirectory(aux);
+                controlador2 = isDirEmpty(aux);
 
-            if (controlador1!=0 && controlador2==1) {//si es directorio y esta vacio lo borra
+                if (controlador1 != 0 && controlador2 == 1) {//si es directorio y esta vacio lo borra
 
-               auxiliar= remove(aux);
+                    auxiliar = remove(aux);
 
-                if (auxiliar!=0) {//si no ha sido posible borrarlo salta error
+                    if (auxiliar != 0) {//si no ha sido posible borrarlo salta error
 
-                    perror(error);
+                        perror(error);
+                        return -1;
 
-                }
-            }
-            else {//sino es documento
+                    }
+                } else {//sino es documento
 
-                auxiliar1=remove(aux);//segun ivan esto es para eliminar files
+                    auxiliar1 = remove(aux);//segun ivan esto es para eliminar files
 
-                if (auxiliar1 != 0) {
-                    perror(error);
-
+                    if (auxiliar1 != 0) {
+                        perror(error);
+                        return -1;
+                    }
                 }
             }
         }
@@ -930,37 +933,40 @@ int deleteTree(tItemL comando){//borra recursivamente documentos y directorios n
     int controlador1,controlador2,controlador3,auxiliar;
 
     char error[MAX_LENGHT_PATH] = "no se ha podido borrar";
+    if(comando.tokens == 1)getDir();
+    else{
+        if (comando.tokens != 0) {
 
-    if (comando.tokens != 0) {
+            tItemT aux;
 
-        tItemT aux;
+            for (int i = 0; i < comando.tokens - 1; i++) {//ns si hay que poner el -2
 
-        for (int i = 0; i < comando.tokens-1; i++) {//ns si hay que poner el -2
+                getToken(i, comando.comandos, aux);
 
-            getToken(i, comando.comandos, aux);
+                controlador1 = isDirectory(aux);
+                controlador2 = isDirEmpty(aux);
 
-            controlador1= isDirectory(aux);
-            controlador2= isDirEmpty(aux);
+                if (controlador1 != 0 && controlador2 == 0) {
 
-            if (controlador1!=0 && controlador2== 0) {
+                    borrar_dir(aux);//aqui lo borra recursivamente
 
-                borrar_dir(aux);//aqui lo borra recursivamente
+                    controlador3 = isDirEmpty(aux);
+                    if (controlador3 == 1) {
+                        auxiliar = remove(aux);
 
-                controlador3= isDirEmpty(aux);
-                if(controlador3==1){
-                    auxiliar= remove(aux);
+                        if (auxiliar != 0) {//si no ha sido posible borrarlo salta error
+                            perror(error);
 
-                    if (auxiliar!=0) {//si no ha sido posible borrarlo salta error
-                        perror(error);
+                        }
+                    }
 
-                    }}
+                } else {
 
-            } else {
+                    unlink(aux);
 
-                unlink(aux);
+                    //sino es directorio lo borra con unlink
 
-                //sino es directorio lo borra con unlink
-
+                }
             }
         }
     }
