@@ -69,6 +69,7 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
     else{
         int contador = 1;
         q->next = LNULL;
+        d.puesto = 1;
 
         if( d.puesto == 0){ //estamos insertando en el head node
             (*L)->next = q;
