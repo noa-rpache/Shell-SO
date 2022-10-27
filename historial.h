@@ -10,20 +10,45 @@
 #include "static_tokens.h"
 #define LNULL NULL
 
+//historial comandos
 typedef struct{
     char comando[MAX_LENGHT_PATH];
     TokensList comandos;
     int tokens;
     int puesto; //el puesto del último indica el número total de elementos en la lista
 }tItemL;
-typedef struct tNode *tPosL;
+
+
+
+typedef /*puntero geneŕico*/ tItem;
+
+typedef struct tNode *tPos;
 struct  tNode {
-    tItemL data;
-    tPosL next;
-    tPosL last;
+    void *data;
+    tPos next;
+    tPos last; //solo tiene sentido en el head node
 };
 
-typedef tPosL tList;
+typedef tPos tList;
+
+//historial memoria
+typedef enum {
+    malloc;
+    shared;
+    mapped;
+}tmem;
+
+typedef struct{
+    int direccion;
+    int tamano;
+    //cuando se colocó -> mirar tipo
+    tmem tipo;
+    key_t clave;
+    char[MAX_LENGHT_PATH] nombre_archivo;
+    int file_descriptor;
+}tItemM;
+
+
 
 bool createList(tList *L);
 bool isEmptyList (tList L);
