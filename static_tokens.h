@@ -13,13 +13,12 @@
 #include <stdlib.h>
 #define TNULL -1
 #define MAX_TOKENS 15 //máximo nº de tokens
-#define MAX 30 //largo máximo de los tokens
+#define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
 
-
-typedef char tItemT[MAX]; //definición de los elementos que queremos insertar en data
+typedef char tItemT[MAX_LENGHT_PATH]; //definición de los elementos que queremos insertar en data
 typedef int tPosT;
 typedef struct {
-    char data[MAX_TOKENS][MAX];
+    char data[MAX_TOKENS][MAX_LENGHT_PATH];
     tPosT lastPos; //última posición con datos
 } TokensList;
 

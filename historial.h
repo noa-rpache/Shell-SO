@@ -9,10 +9,9 @@
 #include <string.h>
 #include "static_tokens.h"
 #define LNULL NULL
-#define MAX_LENGHT 100 //largo máximo del comando principal
 
 typedef struct{
-    char comando[MAX_LENGHT];
+    char comando[MAX_LENGHT_PATH];
     TokensList comandos;
     int tokens;
     int puesto; //el puesto del último indica el número total de elementos en la lista

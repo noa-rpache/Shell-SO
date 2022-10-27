@@ -19,8 +19,7 @@
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include "historial.h"
-//#define MAX_INPUT 100 -> se define en la lista, pero mejor no usar ese -> está pendiente de cambiar
-#define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
+
 
 typedef struct {
     bool largo;
@@ -92,8 +91,14 @@ bool procesarEntrada(tList *historial){
 
         if (salir(peticion.comando)) return true;
         else{
-            if (peticion.tokens == 0) deleteLast(last(*historial), historial); //peticion.tokens == 0
-            else if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
+            printf("resultado %d\n", strcmp(peticion.comando, "autores") );
+            printf("procesarEntrada, peticion: %s\n",peticion.comando);
+
+            if (peticion.tokens == 0) deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
+            else if (strcmp(peticion.comando, "autores") == 0) {
+                printf("preautores\n");
+                autores(peticion);
+            }
             else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial);
             else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
             else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
@@ -115,13 +120,16 @@ bool procesarEntrada(tList *historial){
 }
 
 void leerEntrada(char *entrada[], tList *historial){
-    char *orden_procesada[MAX_LENGHT];
+    char *orden_procesada[MAX_LENGHT_PATH];
 
     printf(">> ");
-    fgets(*entrada, MAX_LENGHT, stdin);
+    fgets(*entrada,MAX_LENGHT_PATH, stdin);
     if( strcmp("\n",*entrada) != 0 ) {
         int ntokens = TrocearCadena(*entrada, orden_procesada);
         new_historial(&orden_procesada[0],historial,ntokens);
+        //printf("orden_procesada: %s\n", orden_procesada[0]);
+        //printf("comando leerEntrada: %s\n", getItem(first(*historial),*historial).comando);
+        //printf("entrada: %s\n", *entrada);
     }else{
         char *n = "vacia";
         new_historial(&n,historial,0);
@@ -522,7 +530,7 @@ int borrar_dir(char *dir) {//funcion recursiva para borrar directorios
 
     DIR *dirp;
     struct dirent *tlist;
-    char aux[MAX];
+    char aux[MAX_LENGHT_PATH];
 
     if((dirp= opendir(dir))==NULL){
         return -1;}
@@ -639,6 +647,7 @@ void repetir_comando(tItemL entrada, tList *hist){ //comando N
 }
 
 void autores( tItemL comando ){
+    printf("entramos en autores\n");
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
     char nombre_fatima[] = "Fátima Ansemil Barros", login_fatima[] = "fatima.ansemil";
 

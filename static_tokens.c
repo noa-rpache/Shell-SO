@@ -35,7 +35,7 @@ tPosT nextToken(tPosT p, TokensList L){
 
 bool insertToken (tItemT d, TokensList *L){
 
-    if(L->lastPos == MAX-1) //ya no hay más sitio en el array
+    if(L->lastPos == MAX_TOKENS-1) //ya no hay más sitio en el array
         return false;
     else {
         L->lastPos++; //aumentar en 1 la última posición
@@ -48,7 +48,6 @@ bool insertToken (tItemT d, TokensList *L){
 
 void getToken(tPosT p, TokensList L, tItemT token){
     strcpy(token, L.data[p]);
-   //return L.data[p];
 }
 
 
