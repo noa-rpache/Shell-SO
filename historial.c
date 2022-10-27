@@ -80,7 +80,6 @@ bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar
             r->next = q;
             (*L)->last = r->next; //puntero al último nodo
         }
-
         return true;
     }
 
