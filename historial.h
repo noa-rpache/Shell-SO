@@ -19,8 +19,7 @@ typedef struct{
 }tItemL;
 
 
-
-typedef /*puntero geneŕico*/ tItem;
+typedef void *tItem; //tItem es un puntero a un Item
 
 typedef struct tNode *tPos;
 struct  tNode {
