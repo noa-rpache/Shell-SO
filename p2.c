@@ -449,7 +449,7 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
                     if (auxiliar != 0) {//si no ha sido posible borrarlo salta error
 
                         perror(error);
-                        return -1;
+                    
 
                     }
                 } else {//sino es documento
@@ -458,7 +458,6 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
 
                     if (auxiliar1 != 0) {
                         perror(error);
-                        return -1;
                     }
                 }
             }
