@@ -10,9 +10,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "static_tokens.h"
+#define MNULL NULL
 
 typedef enum {
-    malloc, shared, mapped
+    maloc, shared, mapped
 }tmem;
 
 typedef struct{
@@ -23,11 +25,10 @@ typedef struct{
     key_t clave;
     char nombre_archivo[MAX_LENGHT_PATH];
     int file_descriptor;
-    //campos restantes
 }tItemM;
 
-typedef struct tNode *tPosM;
-struct  tNode {
+typedef struct tNodeM *tPosM;
+struct  tNodeM {
     tItemM data;
     tPosM next;
     tPosM last;
@@ -41,10 +42,10 @@ tPosM firstBlock (tHistMem L);
 //sirve para saltarte el head node al acceder a la lista
 tPosM primeroBlock(tHistMem L);
 tPosM lastBlock (tHistMem L);
-tPosM nextBlock (tPosM p, tHistMem L);
+tPosM nextBlock (tPosM p);
 tPosM previousBlock (tPosM p, tHistMem L);
 bool insertMemoryBlock (tItemM d , tHistMem *L);
-tItemM getMemBlock (tPosM p, tHistMem L);
+tItemM getMemBlock (tPosM p);
 tPosM  findMemblock (int num, tHistMem L);
 //el ítem esta al final de la lista
 bool deleteLastBlock(tPosM p, tHistMem *L);

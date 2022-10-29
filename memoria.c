@@ -7,18 +7,18 @@
 #include "memoria.h"
 
 
-bool createNode(tPosM* p){
+bool createNodeM(tPosM* p){
     *p=malloc(sizeof(**p)); //**p es a donde apunta p //a *p le estás reservando en memoria el espacio de un tipo int
-    return *p != LNULL; //si se cumple hay memoria disponible
+    return *p != MNULL; //si se cumple hay memoria disponible
 }
 
 bool createMem(tHistMem *L){
     tPosM q;
 
-    if (!createNode(&q)) return false; //no hay memoria
+    if (!createNodeM(&q)) return false; //no hay memoria
     else{
-        q->next = LNULL;
-        q->last = LNULL;
+        q->next = MNULL;
+        q->last = MNULL;
         *L = q;
         return true;
     }
@@ -26,7 +26,7 @@ bool createMem(tHistMem *L){
 }
 
 bool isEmptyMem (tHistMem L){
-    if(L->next == LNULL) return true; //L->next es el campo que apunta al siguiente del head node
+    if(L->next == MNULL) return true; //L->next es el campo que apunta al siguiente del head node
     else return false;
 }
 
@@ -48,7 +48,7 @@ tPosM nextBlock(tPosM p){ //tPosL next(tPosL p, tList L)
 
 tPosM previousBlock (tPosM p, tHistMem L){
     tPosM q;
-    if(p==L) return LNULL;
+    if(p==L) return MNULL;
     else{
         for(q=L; q->next!=p; q=q->next);
         return q;
@@ -60,16 +60,16 @@ bool insertMemoryBlock(tItemM d, tHistMem *L) { //en este caso siempre se va a i
 
     tPosM q, r;
 
-    if (!createNode(&q)) return false; //no hay espacio
+    if (!createNodeM(&q)) return false; //no hay espacio
     else{
-        q->next = LNULL;
+        q->next = MNULL;
         q->data = d;
 
-        if( (*L)->next == LNULL ){ //estamos insertando en el head node
+        if( (*L)->next == MNULL ){ //estamos insertando en el head node
             (*L)->next = q;
             (*L)->last = q;
         }else{ //la lista tiene más elementos
-            for (r = *L; r->next != LNULL; r = r->next); //meter aquí el contador y asignar q->data = d después
+            for (r = *L; r->next != MNULL; r = r->next); //meter aquí el contador y asignar q->data = d después
             r->next = q;
             (*L)->last = r->next; //puntero al último nodo
         }
@@ -82,16 +82,16 @@ tItemM getMemBlock(tPosM p){
     return p->data;
 }
 
-tPosM findMemblock (int num, tHistMem L){
+/*tPosM findMemblock (int num, tHistMem L){
     tPosM p;
-    p = LNULL;
-    for (p=L; (p != LNULL) && (p->data.puesto != num); p=p->next);
+    p = MNULL;
+    for (p=L; (p != MNULL) && (p->data.puesto != num); p=p->next);
     return p;
-} //devuelve el puntero al nodo que tiene la instrucción de número num
+} //devuelve el puntero al nodo que tiene la instrucción de número num*/
 
 void deleteHistMem (tHistMem *L){
     tPosM p;
-    while(*L!=LNULL){
+    while(*L!=MNULL){
         p=*L;
         *L = (*L)->next;
         free(p);
@@ -102,9 +102,9 @@ bool deleteLastBlock(tPosM p, tHistMem *L){ //siempre será al final
     p = (*L)->last;
     tPosM q;
 
-    if(p->next==LNULL){ //está al final de la lista
+    if(p->next==MNULL){ //está al final de la lista
         for(q=*L; q->next!=p; q=q->next);
-        q->next=LNULL;
+        q->next=MNULL;
         free(p);
         return true;
     }else{
