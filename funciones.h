@@ -51,6 +51,7 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones);
 int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones);
 int opciones(tItemL entrada,modo *opciones);
 int borrar_dir(char *dir);//funcion recursiva para borrar directorios
+void ListarBloques(tHistMem bloques);
 
 
 

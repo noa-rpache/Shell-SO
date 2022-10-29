@@ -429,3 +429,25 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
     else
         return 0;
 }
+
+void ListarBloques(tHistMem bloques){
+    printf("Bloques asignados al proceso %d\n",getpid());
+    if(!isEmptyMem(bloques)){
+        printf("aquí va la lista de bloques\n");
+        for( tPosM p = primeroBlock(bloques); p != MNULL; p= nextBlock(p));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
