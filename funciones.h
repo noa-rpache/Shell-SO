@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include "historial.h"
+#include "memoria.h"
 
 //tipos de datos a parte
 typedef struct {
@@ -38,7 +39,7 @@ typedef struct {
 //generales
 int TrocearCadena(char *cadena, char *trozos[]);
 int int_convert(tItemT cadena);
-void printComand(tPos impresion);
+void printComand(tItemL impresion);
 char LetraTF (mode_t m);
 void getDir();
 int isDirectory(const char *path);
