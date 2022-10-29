@@ -7,7 +7,7 @@
 #include "funciones.h"
 
 //generales
-bool procesarEntrada(tList *historial);
+bool procesarEntrada(tList *historial,tHistMem *bloques);
 void leerEntrada( char *entrada[], tList *historial);
 void new_historial(char *comando[], tList *hist, int ntokens);
 bool salir(char cadena[]);
@@ -32,19 +32,22 @@ int main(int argc, char *arvg[]){
 
     tList historial;
     createList(&historial);
+    tHistMem bloques;
+    createMem(&bloques);
     bool salida = false;
 
     while( salida == false ){
         leerEntrada(arvg,&historial);
-        salida = procesarEntrada(&historial);
+        salida = procesarEntrada(&historial,&bloques));
     }
 
     deleteList(&historial);
+    deleteHistMem(&bloques);
     return 0;
 }
 
 
-bool procesarEntrada(tList *historial){
+bool procesarEntrada(tList *historial,tHistMem *bloques){
 
     if( !isEmptyList(*historial)) {
         tItemL peticion = getItem(last(*historial), *historial);
@@ -63,9 +66,16 @@ bool procesarEntrada(tList *historial){
             else if (strcmp(peticion.comando, "crear") == 0) create(peticion);
             else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
             else if (strcmp(peticion.comando, "list") == 0) listar(peticion);
-            else if (strcmp(peticion.comando, "delete") == 0)delete(peticion);
-            else if (strcmp(peticion.comando, "deltree") == 0)deleteTree(peticion);
-            else printf("%s: no es un comando del shell\n", peticion.comando);
+            else if (strcmp(peticion.comando, "delete") == 0) delete(peticion);
+            else if (strcmp(peticion.comando, "deltree") == 0) deleteTree(peticion);
+            else if( strcmp(peticion.comando, "allocate") == 0 ) printf("*allocate en construcción*\n");
+            else if( strcmp(peticion.comando, "deallocate") == 0 ) printf("*deallocate en construcción*\n");
+            else if( strcmp(peticion.comando, "memdump") == 0 ) printf("*memdump en construcción*\n");
+            else if( strcmp(peticion.comando, "memfill") == 0 ) printf("*memfill en construcción*\n");
+            else if( strcmp(peticion.comando, "memory") == 0 ) printf("*memory en construcción*\n");
+            else if( strcmp(peticion.comando, "recurse") == 0 ) printf("*recurse en construcción*\n");
+            else printf("%s no es un comando disponible, o no existe\n",peticion.comando);
+
             return false;
         }
 
@@ -533,3 +543,61 @@ int deleteTree(tItemL comando){//borra recursivamente documentos y directorios n
     }
     return 0;
 }
+
+
+void allocate(tItemL comando, tHistMem *bloques){
+    if(comando.tokens == 1){
+        ListarBloques(*bloques);
+    }else{
+        tItemT modo;
+        getToken(1,comando.comandos,modo);
+
+        if (strcmp(modo,"-malloc") == 0){
+            tItemT tam;
+            getToken(2,comando.comandos,modo);
+            int tamano = int_convert(tam);
+
+
+        }else if (strcmp(modo,"-shared") == 0){
+
+        }else if (strcmp(modo,"-createshared") == 0){
+
+        }else if (strcmp(modo,"-mmap") == 0){
+
+        }else printf("%s no es una opción válida para este comando\n",modo);
+
+
+    }
+}
+
+void deallocate(tItemL comando, tHistMem *bloques){
+    if(comando.tokens == 1){
+        ListarBloques(*bloques);
+    }else{
+        tItemT modo;
+        getToken(1,comando.comandos,modo);
+
+        if (strcmp(modo,"-malloc") == 0){
+            tItemT tam;
+            getToken(2,comando.comandos,modo);
+            int tamano = int_convert(tam);
+
+
+        }else if (strcmp(modo,"-shared") == 0){
+
+        }else if (strcmp(modo,"-delkey") == 0){
+
+        }else if (strcmp(modo,"-mmap") == 0){
+
+        }else if (strcmp(modo,"-addr") == 0){
+
+        }else printf("%s no es una opción válida para este comando\n",modo);
+
+
+
+    }
+}
+
+
+
+
