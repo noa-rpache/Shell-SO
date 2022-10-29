@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -g -Wall
 SRC = p2.c funciones.c funciones.h historial.c historial.h static_tokens.c static_tokens.h
 OBJ = p2.o funciones.o historial.o static_tokens.o
 

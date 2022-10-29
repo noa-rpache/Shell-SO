@@ -10,7 +10,7 @@
 bool procesarEntrada(tList *historial);
 void leerEntrada( char *entrada[], tList *historial);
 void new_historial(char *comando[], tList *hist, int ntokens);
-bool salir(char cadena[]);
+bool salir(char cadena[MAX_LENGHT_PATH]);
 
 //comandos
 void ayuda(tItemL comando);
@@ -39,36 +39,53 @@ int main(int argc, char *arvg[]){
         salida = procesarEntrada(&historial);
     }
 
-    deleteList(&historial);
+    deleteHist(&historial);
     return 0;
 }
 
 
 bool procesarEntrada(tList *historial){
 
-    if( !isEmptyList(*historial)) {
-        tItemL peticion = getItem(last(*historial), *historial);
+    if( !isEmptyList(*historial) ) {
+        tItemL *peticion = getItem(last(*historial));
+        //printf("comando %s\nnúmero de tokens %d\n",peticion->comando,peticion->tokens);
+        /*printf("puesto del último de la lista %d\n",last(*historial)->puesto);
+        printf("dirección de memoria del último %d\n",(*historial)->last);
+        printf("contenido del último %s",peticion->comando);
+        printf("\n");
+        //printf("contenido del último %s\n",peticion->comando);
+         */
 
-        if (salir(peticion.comando)) return true;
+        if (salir(peticion->comando)) return true;
         else{
-            if (peticion.tokens == 0) deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
-            else if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
-            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial);
-            else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
-            else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
-            else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
-            else if (strcmp(peticion.comando, "infosis") == 0) infosis();
-            else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
-            else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "crear") == 0) create(peticion);
-            else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) listar(peticion);
-            else if (strcmp(peticion.comando, "delete") == 0)delete(peticion);
-            else if (strcmp(peticion.comando, "deltree") == 0)deleteTree(peticion);
-            else printf("%s: no es un comando del shell\n", peticion.comando);
+            //printComand(last(*historial));
+
+            if (peticion->tokens == 0) deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
+            else if (strcmp(peticion->comando, "autores") == 0) autores(*peticion);
+            else if (strcmp(peticion->comando, "comando") == 0) repetir_comando(*peticion, historial);
+            else if (strcmp(peticion->comando, "pid") == 0) pillar_pid(*peticion);
+            else if (strcmp(peticion->comando, "carpeta") == 0) carpeta(*peticion);
+            else if (strcmp(peticion->comando, "fecha") == 0) fecha(*peticion);
+            else if (strcmp(peticion->comando, "infosis") == 0) infosis();
+            else if (strcmp(peticion->comando, "ayuda") == 0) ayuda(*peticion);
+            else if (strcmp(peticion->comando, "hist") == 0) hist(*peticion, historial);
+            else if (strcmp(peticion->comando, "crear") == 0) create(*peticion);
+            else if (strcmp(peticion->comando, "stat") == 0) status(*peticion);
+            else if (strcmp(peticion->comando, "list") == 0) listar(*peticion);
+            else if (strcmp(peticion->comando, "delete") == 0) delete(*peticion);
+            else if (strcmp(peticion->comando, "deltree") == 0) deleteTree(*peticion);
+            else if (strcmp(peticion->comando, "allocate") == 0);
+            else if (strcmp(peticion->comando, "deallocate") == 0);
+            else if (strcmp(peticion->comando, "i-o") == 0);
+            else if (strcmp(peticion->comando, "memdump") == 0);
+            else if (strcmp(peticion->comando, "memfill") == 0);
+            else if (strcmp(peticion->comando, "memory") == 0);
+            else if (strcmp(peticion->comando, "recurse") == 0);
+            else printf("%s: no es un comando del shell\n", peticion->comando);
+
             return false;
         }
-
+        //return false;
     }
     return false;
 }
@@ -92,16 +109,21 @@ void new_historial(char *comando[], tList *hist, int ntokens){
     tItemL nuevo;
     nuevo.tokens = ntokens;
     strcpy(nuevo.comando,*comando);
-    createEmptyTokensList(&nuevo.comandos);
 
-    for(int i = 1; i < ntokens; i++) //empieza en 1 porque ya se copió el valor en 0
-        if( !insertToken(comando[i],&nuevo.comandos) ) printf("no se ha insertado el token %d\n", i);
+    createEmptyTokensList(&(nuevo).comandos);
+    for (int i = 1; i < ntokens; i++) { //empieza en 1 porque ya se copió el valor en 0
+        if (!insertToken(comando[i], &(nuevo).comandos)) printf("no se ha insertado el token %d\n", i);
+        char aux[MAX_LENGHT_PATH];
+        getToken(i, nuevo.comandos, aux);
+        printf("el valor que recoge el programa es %s\n", comando[i]);
+        printf("el token en la posición %d es %s\n", i, aux);
+    }
 
-    if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
+    if ( !insertElement(&nuevo, hist) ) printf("no se ha insertado el elemento\n");
 
 }
 
-bool salir(char cadena[]){
+bool salir(char cadena[MAX_LENGHT_PATH]){
 
     if (strcmp(cadena, "fin") == 0) return true;
     else if (strcmp(cadena, "salir") == 0) return true;
@@ -142,7 +164,30 @@ void ayuda( tItemL comando){ //como manda el mismo mensaje dando igual los espec
         printf("\t\t-recb: recursivo (despues)\n");
         printf("\t\tresto parametros como stat\n");
 
-    }else printf("%s no encontrado\n", comando.comando);
+    }else if( strcmp(comando.comando, "allocate") == 0 ){
+        printf("allocate [-malloc|-shared|-createshared|-mmap]... Asigna un bloque de memoria\n");
+        printf("\t-malloc tam: asigna un bloque malloc de tamano tam\n");
+        printf("\t-createshared cl tam: asigna (creando) el bloque de memoria compartida de clave cl y tamano tam\n");
+        printf("\t-shared cl: asigna el bloque de memoria compartida (ya existente) de clave cl\n");
+        printf("\t-mmap fich perm: mapea el fichero fich, perm son los permisos\n");
+    }else if( strcmp(comando.comando, "deallocate") == 0 ){
+        printf("deallocate [-malloc|-shared|-delkey|-mmap|addr]..\tDesasigna un bloque de memoria\n");
+        printf("\t-malloc tam: desasigna el bloque malloc de tamano tam\n");
+        printf("\t-shared cl: desasigna (desmapea) el bloque de memoria compartida de clave cl\n");
+        printf("\t-delkey cl: elimina del sistema (sin desmapear) la clave de memoria cl\n");
+        printf("\t-mmap fich: desmapea el fichero mapeado fich\n");
+        printf("\taddr: desasigna el bloque de memoria en la direccion addr\n");
+    }else if( strcmp(comando.comando, "memdump") == 0 ) printf("memdump addr cont \tVuelca en pantallas los contenidos (cont bytes) de la posicion de memoria addr\n");
+    else if( strcmp(comando.comando, "memfill") == 0 ) printf("memfill addr cont byte \tLlena la memoria a partir de addr con byte\n");
+    else if( strcmp(comando.comando, "memory") == 0 ){
+        printf("memory [-blocks|-funcs|-vars|-all|-pmap] ..\tMuestra muestra detalles de la memoria del proceso\n");
+        printf("\t\t-blocks: los bloques de memoria asignados\n");
+        printf("\t\t-funcs: las direcciones de las funciones\n");
+        printf("\t\t-vars: las direcciones de las variables\n");
+        printf("\t\t-all: todo\n");
+        printf("\t\t-pmap: muestra la salida del comando pmap(o similar)\n");
+    }else if( strcmp(comando.comando, "recurse") == 0 ) printf("recurse [n]\tInvoca a la funcion recursiva n veces\n");
+    else printf("%s no encontrado\n", comando.comando);
 }
 
 void infosis(){
@@ -160,20 +205,21 @@ void repetir_comando(tItemL entrada, tList *hist){ //comando N
 
     tItemT cpos; getToken(0,entrada.comandos, cpos);
     int posicion = atoi(cpos);
-    tPosL posrepeticion = findItem(posicion, *hist);
-    tItemL repeticion = getItem(posrepeticion,*hist);
+    tPos posrepeticion = findItem(posicion, *hist);
+    NodoLista repeticion = getItem(posrepeticion);
 
-    tItemL nuevo;
-    strcpy(nuevo.comando,repeticion.comando);
-    nuevo.comandos = repeticion.comandos;
-    nuevo.tokens = repeticion.tokens;
+    NodoLista nuevo;
+    strcpy(nuevo->comando,repeticion->comando);
+    nuevo->comandos = repeticion->comandos;
+    nuevo->tokens = repeticion->tokens;
 
-    if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
+    if ( !insertElement(&nuevo,hist) ) printf("no se ha insertado el elemento\n");
     procesarEntrada(hist);
 
 }
 
 void autores( tItemL comando ){
+    printf("comando %s\nnúmero de tokens %d\n",comando.comando,comando.tokens);
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
     char nombre_fatima[] = "Fátima Ansemil Barros", login_fatima[] = "fatima.ansemil";
 
@@ -290,27 +336,25 @@ void fecha( tItemL comando){
 void hist ( tItemL comando, tList *hist){
 
     if (comando.tokens == 1 && !isEmptyList(*hist)){ //imprimir la lista
-        tPosL LastNode = primero(*hist);
+        tPos LastNode = primero(*hist);
         while(LastNode != LNULL){
-            tItemL objeto = getItem(LastNode,*hist);
-            printComand(objeto);
-            LastNode = LastNode->next;
+            printComand(LastNode);
+            LastNode = next(LastNode);
         }
     }else{
         tItemT modo;
         getToken(0,comando.comandos, modo);
 
         if( strcmp(modo, "-c") == 0 ) {
-            deleteList(hist);
+            deleteHist(hist);
             createList(hist);
         }else{
             int N = int_convert(modo);
-            tPosL LastNode = primero(*hist);
+            tPos LastNode = primero(*hist);
             int i = 0;
             do{
-                tItemL objeto = getItem(LastNode,*hist);
-                printComand(objeto);
-                LastNode = next(LastNode, *hist);
+                printComand(LastNode);
+                LastNode = next(LastNode);
                 i++;
             }while( i<=N-1 && LastNode != NULL );
         }

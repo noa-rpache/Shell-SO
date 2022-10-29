@@ -38,7 +38,7 @@ typedef struct {
 //generales
 int TrocearCadena(char *cadena, char *trozos[]);
 int int_convert(tItemT cadena);
-void printComand(tItemL impresion);
+void printComand(tPos impresion);
 char LetraTF (mode_t m);
 void getDir();
 int isDirectory(const char *path);

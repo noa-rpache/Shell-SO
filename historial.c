@@ -7,25 +7,22 @@
 #include "historial.h"
 
 
-bool createNode(tPosL* p){
+bool createNode(tPos* p){
     *p=malloc(sizeof(**p)); //**p es a donde apunta p //a *p le estás reservando en memoria el espacio de un tipo int
     return *p != LNULL; //si se cumple hay memoria disponible
 }
 
 bool createList(tList *L){
-    tPosL q;
+    tPos q;
 
     if (!createNode(&q)) return false; //no hay memoria
     else{
-        char *titulo = "\0";
-        strcpy(q->data.comando, titulo);
-        //createEmptyTokensList(&comandos); //no hace falta porque el head node no tiene tokens
-        q->data.puesto = 0;
-        q->data.tokens = 0;
+        q->puesto = 0;
         q->next = LNULL;
+        q->last = LNULL;
+        q->data = LNULL;
         *L = q;
         return true;
-
     }
 
 }
@@ -35,24 +32,24 @@ bool isEmptyList (tList L){
     else return false;
 }
 
-tPosL first(tList L){
+tPos first(tList L){
     return L;
 }
 
-tPosL primero(tList L){
+tPos primero(tList L){
     return L->next;
 }
 
-tPosL last(tList L){
+tPos last(tList L){
     return L->last;
 }
 
-tPosL next(tPosL p, tList L){ //tPosL next(tPosL p, tList L)
+tPos next(tPos p){ //tPos next(tPos p, tList L)
     return p->next;
 }
 
-tPosL previous (tPosL p, tList L){
-    tPosL q;
+tPos previous (tPos p, tList L){
+    tPos q;
     if(p==L) return LNULL;
     else{
         for(q=L; q->next!=p; q=q->next);
@@ -60,59 +57,93 @@ tPosL previous (tPosL p, tList L){
     }
 }
 
+bool insertElement(void *d, tList *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
 
-bool insertElement(tItemL d, tList *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
-
-    tPosL q, r;
+    tPos q, r;
 
     if (!createNode(&q)) return false; //no hay espacio
     else{
-        int contador = 1;
-        q->next = LNULL;
-        d.puesto = 1;
 
-        if( d.puesto == 0){ //estamos insertando en el head node
+        int contador = 1;
+        q->data = d;
+        q->next = LNULL;
+
+        if( (*L)->next == NULL ){ //estamos insertando en el head node porque aún no se ha actualizado el último
+            //printf("head\n");
+            q->puesto = contador;
             (*L)->next = q;
         }else{ //la lista tiene más elementos
-            for (r = *L; r->next != LNULL; r = r->next) contador++; //meter aquí el contador y asignar q->data = d después
-            d.puesto = contador;
-            q->data = d;
+            //printf("skinheads banned from here\n");
+            for (r = *L; r->next != LNULL; r = r->next) contador++;
+            q->puesto = contador;
+            //q->data = d;
             r->next = q;
-            (*L)->last = r->next; //puntero al último nodo
         }
+        (*L)->last = q; //puntero al último nodo
+        //printf("insertamos con éxito!! yupi\n");
         return true;
     }
 
 }
 
-tItemL getItem(tPosL p, tList L){
-    //printf("getItem check!!\n");
+/*tItemL getItem(tPos p){
+    return p->data;
+}*/
+
+void *getItem(tPos p){
+    if (p == NULL) return NULL;
     return p->data;
 }
 
-tPosL findItem (int num, tList L){
-    tPosL p;
+int getPuesto(tPos p){
+    return p->puesto;
+}
+
+tPos findItem (int num, tList L){
+    tPos p;
     p = LNULL;
-    for (p=L; (p != LNULL) && (p->data.puesto != num); p=p->next);
+    for (p=L; (p != LNULL) && (p->puesto != num); p=p->next);
     return p;
 } //devuelve el puntero al nodo que tiene la instrucción de número num
 
-void deleteList (tList *L){
-    tPosL p;
+void deleteHist (tList *L){
+    tPos p;
     while(*L!=LNULL){
-        deleteTokensList(&(*L)->data.comandos);
+        p=*L;
+        //printf("posición eliminada: %d\n",p->puesto);
+        if(p->data != LNULL){
+
+            //printf("se borra data\n");
+
+            NodoLista n = getItem(p);
+            deleteTokensList(&n->comandos);
+            //free(n); //para que no quede nada
+
+            //free(p->data); //borrar el resto del contenido
+        }
+        //printf("se borra la posición\n");
+        free(p);
+        *L = (*L)->next;
+    }
+}
+
+void deleteList (tList *L){
+    tPos p;
+    while(*L!=LNULL){
         p=*L;
         *L = (*L)->next;
+        if(p->data != LNULL) free(p->data);
         free(p);
     }
 }
 
-bool deleteLast(tPosL p, tList *L){ //siempre será al final
-    tPosL q;
+bool deleteLast(tPos p, tList *L){ //siempre será al final
+    tPos q;
 
     if(p->next==LNULL){ //está al final de la lista
         for(q=*L; q->next!=p; q=q->next);
         q->next=LNULL;
+        free(p->data);
         free(p);
         return true;
     }else{
@@ -122,9 +153,10 @@ bool deleteLast(tPosL p, tList *L){ //siempre será al final
 }
 
 void deletePrimero(tList *L){
-    tPosL q,p;
+    tPos q,p;
     p = (*L)->next;
     q = p->next;
+    free(p->data);
     free(p);
     (*L)->next = q;
 }

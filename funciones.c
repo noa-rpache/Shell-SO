@@ -25,11 +25,12 @@ int int_convert(tItemT cadena){
     return convertido*(-1);
 }
 
-void printComand(tItemL impresion){
-    printf("%d: %s", impresion.puesto, impresion.comando);
-    if(impresion.tokens > 1) { //si hay algún token más que el comando ppal
-        for (int i = 0; i < impresion.tokens - 1; i++) { //ntokens -1 == nº de especificadores
-            printf(" %s", impresion.comandos.data[i]);
+void printComand(tPos impresion){
+    NodoLista contenido = getItem(impresion);
+    printf("%d: %s", impresion->puesto, contenido->comando);
+    if(contenido->tokens > 1) { //si hay algún token más que el comando ppal
+        for (int i = 0; i < contenido->tokens - 1; i++) { //ntokens -1 == nº de especificadores
+            printf(" %s", contenido->comandos.data[i]);
         }
     }
     printf("\n");
@@ -266,9 +267,9 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
             if (printInfo((*directorio).d_name, rutaDir, opciones) == -1) strerror(errno); //enseñar todos los ficheros
             if (isDirectory(rutaDir) == 1) { //falta obviar a  . y ..
                 if (strcmp((*directorio).d_name, ".") != 0 && strcmp((*directorio).d_name, "..") != 0) {
-                    tItemL nuevo;
-                    strcpy(nuevo.comando, rutaDir);
-                    if (!insertElement(nuevo, &DirRecord)) {
+                    tItemR nuevo;
+                    strcpy(nuevo.path, rutaDir);
+                    if (!insertElement(&nuevo, &DirRecord)) {
                         perror("no hay sitio para la recursividad");
                         return -1;
                     }
@@ -279,10 +280,9 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
                 if (printInfo((*directorio).d_name, rutaDir, opciones) == -1)
                     strerror(errno); //enseñar los que no empiecen por '.'
                 if (isDirectory(rutaDir) == 1) {
-                    tItemL nuevo;
-                    strcpy(nuevo.comando, rutaDir);
-                    nuevo.puesto = 1;
-                    if(!insertElement(nuevo, &DirRecord)) {
+                    tItemR nuevo;
+                    strcpy(nuevo.path, rutaDir);
+                    if(!insertElement(&nuevo, &DirRecord)) {
                         perror("no hay sitio para la recursividad");
                         return -1;
                     }
@@ -302,10 +302,10 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
 
     //llamada recursiva para los siguientes directorios
     if (!isEmptyList(DirRecord)) {
-        int total_records = getItem(last(DirRecord), DirRecord).puesto;
+        int total_records = getPuesto(last(DirRecord));
         for (int j = 0; j <= total_records - 1; j++) {
-            tItemL nextdir = getItem(primero(DirRecord), DirRecord);
-            if (ListReca(nextdir.comando, opciones) == -1) {
+            tItemR *nextdir = getItem(primero(DirRecord));
+            if (ListReca((*nextdir).path, opciones) == -1) {
                 perror("error en la recursividad ");
                 strerror(errno);
                 //return -1;
