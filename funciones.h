@@ -21,8 +21,10 @@
 //#include <sys/dir.h> //utilidades sobre directorios
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
+#include <sys/shm.h> //para memoria compartida
 #include "historial.h"
 #include "memoria.h"
+#define TAMANO 2048
 
 //tipos de datos a parte
 typedef struct {
@@ -52,6 +54,10 @@ int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones);
 int opciones(tItemL entrada,modo *opciones);
 int borrar_dir(char *dir);//funcion recursiva para borrar directorios
 void ListarBloques(tHistMem bloques);
+void Recursiva (int n);
+int asignarMalloc(tItemL entrada,tItemM *datos);
+int asignarCompartida(tItemL entrada,tItemM *datos);
+int desasignarMalloc(tItemL entrada,tItemM *datos, tHistMem *bloques);
 
 
 

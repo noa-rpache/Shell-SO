@@ -22,7 +22,8 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 int int_convert(tItemT cadena){
     int convertido = atoi(cadena);
-    return convertido*(-1);
+    if(convertido < 0 ) return convertido*(-1);
+    else return convertido;
 }
 
 void printComand(tItemL impresion){
@@ -438,11 +439,106 @@ void ListarBloques(tHistMem bloques){
     }
 }
 
+void Recursiva (int n){
+    char automatico[TAMANO];
+    static char estatico[TAMANO];
 
+    printf ("parametro:%3d(%p) array %p, arr estatico %p\n",n,&n,automatico, estatico);
 
+    if (n>0)
+        Recursiva(n-1);
+}
 
+int asignarMalloc(tItemL entrada,tItemM *datos){
+    tItemT tam;
+    getToken(2,entrada.comandos,tam);
+    int tamano = int_convert(tam);
 
+    if ( malloc(sizeof tamano) == NULL && tamano != 0 ) return -1;
 
+    (*datos).tipo = maloc;
+    (*datos).tamano = tamano;
+    (*datos).direccion = malloc(sizeof tamano);
+    return 0;
+}
+
+int asignarCompartida(tItemL entrada,tItemM *datos){
+    tItemT clave, tam;
+    getToken(2,entrada.comandos,clave);
+    getToken(3,entrada.comandos,tam);
+    int tamano = int_convert(tam);
+
+    if(shmget() == -1) return -1;
+
+    (*datos).direccion = ;
+    (*datos).tamano = tamano;
+    (*datos).tipo = shared;
+    //cuándo se asignó
+    (*datos).clave = /*clave*/;
+    return 0;
+}
+
+void * ObtenerMemoriaShmget (key_t clave, size_t tam)
+{
+    void * p;
+    int aux,id,flags=0777;
+    struct shmid_ds s;
+
+    if (tam)     /*tam distito de 0 indica crear */
+        flags=flags | IPC_CREAT | IPC_EXCL;
+    if (clave==IPC_PRIVATE)  /*no nos vale*/
+    {errno=EINVAL; return NULL;}
+    if ((id=shmget(clave, tam, flags))==-1)
+        return (NULL);
+    if ((p=shmat(id,NULL,0))==(void*) -1){
+        aux=errno;
+        if (tam)
+            shmctl(id,IPC_RMID,NULL);
+        errno=aux;
+        return (NULL);
+    }
+    shmctl (id,IPC_STAT,&s);
+    /* Guardar en la lista   InsertarNodoShared (&L, p, s.shm_segsz, clave); */
+    return (p);
+}
+
+void do_AllocateCreateshared (char *tr[])
+{
+    key_t cl;
+    size_t tam;
+    void *p;
+
+    if (tr[0]==NULL || tr[1]==NULL) {
+        ImprimirListaShared(&L);
+        return;
+    }
+
+    cl=(key_t)  strtoul(tr[0],NULL,10);
+    tam=(size_t) strtoul(tr[1],NULL,10);
+    if (tam==0) {
+        printf ("No se asignan bloques de 0 bytes\n");
+        return;
+    }
+    if ((p=ObtenerMemoriaShmget(cl,tam))!=NULL)
+        printf ("Asignados %lu bytes en %p\n",(unsigned long) tam, p);
+    else
+        printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
+}
+
+int desasignarMalloc(tItemL entrada,tItemM *datos, tHistMem *bloques){
+    tItemT tam;
+    getToken(1, entrada.comandos,tam),
+    int tamano = int_convert(tam);
+    tPosM posicion = findMemblock(,bloques);
+
+    if(posicion == MNULL){
+        //se borra un bloque que no está en el historial
+    }else{
+        tItemM bloque = getMemBlock(posicion);
+        free(bloque.direccion);
+        deleteMemBlock(posicion,bloques);
+    }
+}
 
 
 

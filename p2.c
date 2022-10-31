@@ -15,7 +15,7 @@ bool salir(char cadena[]);
 //comandos
 void ayuda(tItemL comando);
 void infosis();
-void repetir_comando(tItemL entrada, tList *hist);
+void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques);
 void autores( tItemL comando );
 void pillar_pid( tItemL comando);
 void carpeta( tItemL comando);
@@ -24,8 +24,11 @@ void hist (tItemL comando, tList *hist);
 void status(tItemL comando);
 void listar(tItemL comando);
 void create (tItemL comando);
-int delete(tItemL comando) ;//borra documentos o directorios vacios
-int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
+int delete (tItemL comando) ;//borra documentos o directorios vacios
+int deleteTree (tItemL comando);//borra recursivamente documentos y directorios no vacios
+void allocate (tItemL comando, tHistMem *bloques);
+void deallocate (tItemL comando, tHistMem *bloques);
+void recurse (tItemL comando);
 
 
 int main(int argc, char *arvg[]){
@@ -38,7 +41,7 @@ int main(int argc, char *arvg[]){
 
     while( salida == false ){
         leerEntrada(arvg,&historial);
-        salida = procesarEntrada(&historial,&bloques));
+        salida = procesarEntrada(&historial,&bloques);
     }
 
     deleteList(&historial);
@@ -56,7 +59,7 @@ bool procesarEntrada(tList *historial,tHistMem *bloques){
         else{
             if (peticion.tokens == 0) deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
             else if (strcmp(peticion.comando, "autores") == 0) autores(peticion);
-            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial);
+            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial, *bloques);
             else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
             else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
             else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
@@ -68,8 +71,8 @@ bool procesarEntrada(tList *historial,tHistMem *bloques){
             else if (strcmp(peticion.comando, "list") == 0) listar(peticion);
             else if (strcmp(peticion.comando, "delete") == 0) delete(peticion);
             else if (strcmp(peticion.comando, "deltree") == 0) deleteTree(peticion);
-            else if( strcmp(peticion.comando, "allocate") == 0 ) printf("*allocate en construcción*\n");
-            else if( strcmp(peticion.comando, "deallocate") == 0 ) printf("*deallocate en construcción*\n");
+            else if( strcmp(peticion.comando, "allocate") == 0 ) allocate(peticion, bloques);
+            else if( strcmp(peticion.comando, "deallocate") == 0 ) allocate(peticion, bloques);
             else if( strcmp(peticion.comando, "memdump") == 0 ) printf("*memdump en construcción*\n");
             else if( strcmp(peticion.comando, "memfill") == 0 ) printf("*memfill en construcción*\n");
             else if( strcmp(peticion.comando, "memory") == 0 ) printf("*memory en construcción*\n");
@@ -189,7 +192,7 @@ void infosis(){
     printf("%s (%s), OS: %s %s %s\n", informacion.nodename, informacion.machine, informacion.sysname,informacion.release, informacion.version);
 }
 
-void repetir_comando(tItemL entrada, tList *hist){ //comando N
+void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques){ //comando N
 
     tItemT cpos; getToken(0,entrada.comandos, cpos);
     int posicion = atoi(cpos);
@@ -202,7 +205,7 @@ void repetir_comando(tItemL entrada, tList *hist){ //comando N
     nuevo.tokens = repeticion.tokens;
 
     if ( !insertElement(nuevo, hist) ) printf("no se ha insertado el elemento\n");
-    procesarEntrada(hist);
+    procesarEntrada(hist,&bloques);
 
 }
 
@@ -545,20 +548,27 @@ int deleteTree(tItemL comando){//borra recursivamente documentos y directorios n
 }
 
 
-void allocate(tItemL comando, tHistMem *bloques){
+int allocate(tItemL comando, tHistMem *bloques){
     if(comando.tokens == 1){
         ListarBloques(*bloques);
     }else{
         tItemT modo;
         getToken(1,comando.comandos,modo);
+        tItemM datos;
 
         if (strcmp(modo,"-malloc") == 0){
-            tItemT tam;
-            getToken(2,comando.comandos,modo);
-            int tamano = int_convert(tam);
 
+            if ( asignarMalloc(comando,&datos) == -1 ) {
+                printf("se ha producido un error en malloc\n");
+                return 0;
+            }
 
         }else if (strcmp(modo,"-shared") == 0){
+
+            if( asignarCompartida(comando,&datos) == -1) {
+                strerror(errno);
+                return 0
+            }
 
         }else if (strcmp(modo,"-createshared") == 0){
 
@@ -566,6 +576,7 @@ void allocate(tItemL comando, tHistMem *bloques){
 
         }else printf("%s no es una opción válida para este comando\n",modo);
 
+        if( !insertMemoryBlock(datos,bloques)) printf("no se ha podido insertar el bloque de memoria en la lista\n");
 
     }
 }
@@ -582,7 +593,6 @@ void deallocate(tItemL comando, tHistMem *bloques){
             getToken(2,comando.comandos,modo);
             int tamano = int_convert(tam);
 
-
         }else if (strcmp(modo,"-shared") == 0){
 
         }else if (strcmp(modo,"-delkey") == 0){
@@ -598,6 +608,13 @@ void deallocate(tItemL comando, tHistMem *bloques){
     }
 }
 
-
+void recurse (tItemL comando){
+    if(comando.tokens > 1){
+        tItemT aux;
+        getToken(1,comando.comandos,aux);
+        int veces = atoi(aux);//comprobar que es un número
+        Recursiva(veces);
+    }
+}
 
 
