@@ -18,13 +18,13 @@ typedef enum {
 }tmem;
 
 typedef struct{
-    int direccion;
-    int tamano;
-    //cuando se colocó -> mirar tipo
-    tmem tipo;
-    key_t clave;
-    char nombre_archivo[MAX_LENGHT_PATH];
-    int file_descriptor;
+    int direccion; //para todos
+    int tamano; //para todos
+    //cuando se colocó -> mirar tipo //para todos
+    tmem tipo; //para todos
+    key_t clave; //shared
+    char nombre_archivo[MAX_LENGHT_PATH]; //mapped
+    int file_descriptor; //mapped
 }tItemM;
 
 typedef struct tNodeM *tPosM;
@@ -51,6 +51,7 @@ tPosM  findMemblock (int num, tHistMem L);
 bool deleteLastBlock(tPosM p, tHistMem *L);
 void deletePrimBlock(tHistMem *L);
 void deleteHistMem (tHistMem *L);
+bool deleteMemBlock(tPosM p, tHistMem *L);
 
 
 
