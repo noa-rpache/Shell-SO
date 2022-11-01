@@ -22,8 +22,7 @@ int TrocearCadena(char *cadena, char *trozos[]){
 
 int int_convert(tItemT cadena){
     int convertido = atoi(cadena);
-    if(convertido < 0 ) return convertido*(-1);
-    else return convertido;
+    return convertido*(-1);
 }
 
 void printComand(tItemL impresion){
@@ -365,6 +364,7 @@ int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
     return 0;
 }
 
+
 int isDirectory(const char *path) {
 
     struct stat x;
@@ -431,13 +431,24 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
         return 0;
 }
 
-void ListarBloques(tHistMem bloques){
+
+void ListarBloques(tHistMem bloques, int modo){ //modo == 4 si se listan todos
     printf("Bloques asignados al proceso %d\n",getpid());
     if(!isEmptyMem(bloques)){
         printf("aquí va la lista de bloques\n");
-        for( tPosM p = primeroBlock(bloques); p != MNULL; p= nextBlock(p));
+        if(modo == 4) { //se listan todos
+            for (tPosM p = primeroBlock(bloques); p != MNULL; p = nextBlock(p));
+        }else{
+            if( modo < 0 || 4 < modo ){ //no debería de hacer falta la comparación, pero por si acaso, si tal esto se quita para la entrega
+                printf("no hay opción válida para ese número\n");
+            }else {
+                tmem tipo = (tmem) modo;
+                printBLocks(bloques, tipo);
+            }
+        }
     }
 }
+
 
 void Recursiva (int n){
     char automatico[TAMANO];
@@ -449,10 +460,11 @@ void Recursiva (int n){
         Recursiva(n-1);
 }
 
+
 int asignarMalloc(tItemL entrada,tItemM *datos){
     tItemT tam;
     getToken(2,entrada.comandos,tam);
-    int tamano = int_convert(tam);
+    int tamano = atoi(tam);
 
     if ( malloc(sizeof tamano) == NULL && tamano != 0 ) return -1;
 
@@ -462,77 +474,116 @@ int asignarMalloc(tItemL entrada,tItemM *datos){
     return 0;
 }
 
-int asignarCompartida(tItemL entrada,tItemM *datos){
-    tItemT clave, tam;
-    getToken(2,entrada.comandos,clave);
-    getToken(3,entrada.comandos,tam);
-    int tamano = int_convert(tam);
-
-    if(shmget() == -1) return -1;
-
-    (*datos).direccion = ;
-    (*datos).tamano = tamano;
-    (*datos).tipo = shared;
-    //cuándo se asignó
-    (*datos).clave = /*clave*/;
-    return 0;
-}
-
-void * ObtenerMemoriaShmget (key_t clave, size_t tam)
-{
+void * ObtenerMemoriaShmget (key_t clave, size_t tam){
     void * p;
     int aux,id,flags=0777;
     struct shmid_ds s;
 
     if (tam)     /*tam distito de 0 indica crear */
-        flags=flags | IPC_CREAT | IPC_EXCL;
-    if (clave==IPC_PRIVATE)  /*no nos vale*/
-    {errno=EINVAL; return NULL;}
-    if ((id=shmget(clave, tam, flags))==-1)
+        flags = flags | IPC_CREAT | IPC_EXCL;
+
+    if ( clave == IPC_PRIVATE )  /*no nos vale*/{
+        errno=EINVAL;
+        return NULL;
+    }
+
+    if ( (id=shmget(clave, tam, flags))==-1 )
         return (NULL);
+
     if ((p=shmat(id,NULL,0))==(void*) -1){
         aux=errno;
         if (tam)
             shmctl(id,IPC_RMID,NULL);
+
         errno=aux;
         return (NULL);
     }
+
     shmctl (id,IPC_STAT,&s);
-    /* Guardar en la lista   InsertarNodoShared (&L, p, s.shm_segsz, clave); */
+    /* Guardar en la lista   InsertarNodoShared (&L, p, s.shm_segsz, clave); */ //-> ya se hace fuera si no se produce ningún error
     return (p);
 }
 
-void do_AllocateCreateshared (char *tr[])
-{
+int asignarCompartida (tItemL entrada,tItemM *datos){
     key_t cl;
     size_t tam;
     void *p;
 
-    if (tr[0]==NULL || tr[1]==NULL) {
-        ImprimirListaShared(&L);
-        return;
+    tItemT clave, tamano;
+    getToken(2,entrada.comandos,clave);
+    cl = (key_t) strtoul(clave,NULL,10);
+    getToken(3,entrada.comandos,tamano);
+    tam = (size_t) strtoul(tamano,NULL,10);
+
+    if ( tam == 0 ) {
+        printf ("No se asignan bloques de 0 bytes\n");
+        return 0; //no se guarda en la lista
+    }
+    if ( (p=ObtenerMemoriaShmget(cl,tam)) != NULL ) {
+        printf("Asignados %lu bytes en %p\n", (unsigned long) tam, p);
+
+        (*datos).direccion = p;
+        (*datos).tamano = tam;
+        (*datos).tipo = shared;
+        //cuándo se asignó
+        (*datos).clave = cl;
+        return 0;
+    }else {
+        printf("Imposible asignar memoria compartida clave %lu:%s\n", (unsigned long) cl, strerror(errno));
+        return 0;
     }
 
-    cl=(key_t)  strtoul(tr[0],NULL,10);
-    tam=(size_t) strtoul(tr[1],NULL,10);
-    if (tam==0) {
-        printf ("No se asignan bloques de 0 bytes\n");
-        return;
-    }
-    if ((p=ObtenerMemoriaShmget(cl,tam))!=NULL)
-        printf ("Asignados %lu bytes en %p\n",(unsigned long) tam, p);
-    else
-        printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
 }
 
-int desasignarMalloc(tItemL entrada,tItemM *datos, tHistMem *bloques){
+void * MapearFichero (char * fichero, int protection, tItemM *datos){
+    int df, map=MAP_PRIVATE,modo=O_RDONLY; //tipo de mapeo,
+    struct stat s;
+    void *p;
+
+    if (protection&PROT_WRITE)
+        modo=O_RDWR; //lectura-escritura
+    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
+        return NULL;
+    if ( (p=mmap (NULL,s.st_size, protection,map,df,0)) == MAP_FAILED )
+        return NULL;
+/* Guardar en la lista    InsertarNodoMmap (&L,p, s.st_size,df,fichero); */ //esto se cambia por guardar en el historial
+    (*datos).tamano = s.st_size;
+    (*datos).file_descriptor = df;
+    return p;
+}
+
+void asignarMap (tItemL entrada,tItemM *datos){
+    tItemT permisos,nombre;
+    getToken(1,entrada.comandos,permisos);
+    getToken(0,entrada.comandos,nombre);
+    void *p;
+    int protection=0;
+
+    if ( entrada.tokens == 3 && strlen(permisos) < 4 ) { //se han introducido los argumentos correctamente
+        if (strchr(permisos,'r')!=NULL) protection|=PROT_READ;
+        if (strchr(permisos,'w')!=NULL) protection|=PROT_WRITE;
+        if (strchr(permisos,'x')!=NULL) protection|=PROT_EXEC;
+    }
+    if ( ( p = MapearFichero(nombre,protection,datos) ) == NULL)
+        perror ("Imposible mapear fichero");
+    else {
+        printf("fichero %s mapeado en %p\n", nombre, p);
+
+        (*datos).direccion = p;
+        strcpy((*datos).nombre_archivo,nombre);
+        (*datos).tipo = mapped;
+    }
+}
+
+
+void desasignarMalloc(tItemL entrada, tHistMem *bloques){
     tItemT tam;
-    getToken(1, entrada.comandos,tam),
-    int tamano = int_convert(tam);
-    tPosM posicion = findMemblock(,bloques);
+    getToken(1, entrada.comandos,tam);
+    size_t tamano = (size_t) strtoul(tam,NULL,10);
+    tPosM posicion = findBlockMalloc(*bloques,tamano);
 
     if(posicion == MNULL){
-        //se borra un bloque que no está en el historial
+        printf("no hay un bloque de ese tamaño asignado con malloc\n");
     }else{
         tItemM bloque = getMemBlock(posicion);
         free(bloque.direccion);
@@ -540,7 +591,55 @@ int desasignarMalloc(tItemL entrada,tItemM *datos, tHistMem *bloques){
     }
 }
 
+void desasignarCompartida(tItemL entrada, tHistMem *bloques){
+    key_t clave;
+    int id;
+    tItemT key;
+    getToken(1,entrada.comandos, key);
 
+    if ( entrada.tokens == 1 || ( clave=(key_t) strtoul(key,NULL,10) ) == IPC_PRIVATE ){
+        printf ("      delkey necesita clave_valida\n");
+        return;
+    }
+    if ( (id=shmget(clave,0,0666)) == -1 ){
+        perror ("shmget: imposible obtener memoria compartida");
+        return;
+    }
+    if ( shmctl(id,IPC_RMID,NULL) == -1 )
+        perror ("shmctl: imposible eliminar memoria compartida\n");
+
+    //se tiene que borrar de la lista??
+}
+
+int desasignarMapped(tItemL entrada, tHistMem *bloques){ //fich es un nombre de fichero
+    tItemT nombre;
+    getToken(1, entrada.comandos,nombre);
+
+    tPosM posicion = findBlockMapped(*bloques,nombre);
+
+    if(posicion == LNULL){
+        printf("Fichero %s no mapeado\n",nombre);
+        return 0;
+    }else{
+        tItemM bloque = getMemBlock(posicion);
+        if( munmap(bloque.direccion,bloque.tamano) == -1 ){
+            strerror(errno);
+            return -1;
+        }else {
+            free(bloque.direccion); //esto no es redundante??
+            deleteMemBlock(posicion, bloques);
+            return 0;
+        }
+    }
+}
+
+/*int desasignarDireccion(tItemL entrada, tHistMem *bloques){
+    tItemT aux;
+    getToken(1,entrada.comandos,aux);
+    void *p;
+
+    free(p);
+}*/
 
 
 

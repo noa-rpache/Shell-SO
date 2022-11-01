@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include <sys/shm.h> //para memoria compartida
+#include <sys/mman.h> //para (des)mapear
 #include "historial.h"
 #include "memoria.h"
 #define TAMANO 2048
@@ -53,11 +54,17 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones);
 int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones);
 int opciones(tItemL entrada,modo *opciones);
 int borrar_dir(char *dir);//funcion recursiva para borrar directorios
-void ListarBloques(tHistMem bloques);
+void ListarBloques(tHistMem bloques, int modo);
 void Recursiva (int n);
 int asignarMalloc(tItemL entrada,tItemM *datos);
+void * ObtenerMemoriaShmget (key_t clave, size_t tam);
 int asignarCompartida(tItemL entrada,tItemM *datos);
-int desasignarMalloc(tItemL entrada,tItemM *datos, tHistMem *bloques);
+void * MapearFichero (char * fichero, int protection, tItemM *datos);
+void asignarMap (tItemL entrada,tItemM *datos);
+void desasignarMalloc(tItemL entrada, tHistMem *bloques);
+void desasignarCompartida (tItemL entrada, tHistMem *bloques);
+int desasignarMapped(tItemL entrada, tHistMem *bloques);
+int desasignarDireccion(tItemL entrada, tHistMem *bloques);
 
 
 
