@@ -548,9 +548,9 @@ int deleteTree(tItemL comando){//borra recursivamente documentos y directorios n
 }
 
 
-int allocate(tItemL comando, tHistMem *bloques){
+void allocate(tItemL comando, tHistMem *bloques){
     if(comando.tokens == 1){
-        ListarBloques(*bloques);
+        ListarBloques(*bloques,4);
     }else{
         tItemT modo;
         getToken(1,comando.comandos,modo);
@@ -558,23 +558,38 @@ int allocate(tItemL comando, tHistMem *bloques){
 
         if (strcmp(modo,"-malloc") == 0){
 
-            if ( asignarMalloc(comando,&datos) == -1 ) {
-                printf("se ha producido un error en malloc\n");
-                return 0;
+            if(comando.tokens == 2){
+                ListarBloques(*bloques,0);
+                return ;
+            }else {
+                if (asignarMalloc(comando, &datos) == -1) {
+                    printf("se ha producido un error en malloc\n");
+                    return ;
+                }
             }
 
-        }else if (strcmp(modo,"-shared") == 0){
+        }else if ( strcmp(modo,"-shared") == 0 || strcmp(modo,"-createshared") == 0 ){
 
-            if( asignarCompartida(comando,&datos) == -1) {
-                strerror(errno);
-                return 0
+            if(comando.tokens == 2){
+                ListarBloques(*bloques,1);
+                return ;
+            }else {
+                asignarCompartida(comando, &datos);
             }
-
-        }else if (strcmp(modo,"-createshared") == 0){
 
         }else if (strcmp(modo,"-mmap") == 0){
 
-        }else printf("%s no es una opción válida para este comando\n",modo);
+            if(comando.tokens == 2){
+                ListarBloques(*bloques,2);
+                return ;
+            }else {
+                asignarMap(comando, &datos);
+            }
+
+        }else{
+            printf("%s no es una opción válida para este comando\n", modo);
+            return ;
+        }
 
         if( !insertMemoryBlock(datos,bloques)) printf("no se ha podido insertar el bloque de memoria en la lista\n");
 
@@ -583,28 +598,47 @@ int allocate(tItemL comando, tHistMem *bloques){
 
 void deallocate(tItemL comando, tHistMem *bloques){
     if(comando.tokens == 1){
-        ListarBloques(*bloques);
+        ListarBloques(*bloques,4);
     }else{
         tItemT modo;
         getToken(1,comando.comandos,modo);
 
         if (strcmp(modo,"-malloc") == 0){
-            tItemT tam;
-            getToken(2,comando.comandos,modo);
-            int tamano = int_convert(tam);
+
+            if(comando.tokens == 2){
+                ListarBloques(*bloques,0);
+                return ;
+            }else {
+                desasignarMalloc(comando,bloques);
+            }
 
         }else if (strcmp(modo,"-shared") == 0){
 
+            if(comando.tokens == 2){
+                ListarBloques(*bloques,1);
+                return ;
+            }else{
+                //hacer la acción
+            }
+
         }else if (strcmp(modo,"-delkey") == 0){
+
+            //llama diretamente a la función
 
         }else if (strcmp(modo,"-mmap") == 0){
 
-        }else if (strcmp(modo,"-addr") == 0){
+            if(comando.tokens == 2){
+                ListarBloques(*bloques,2);
+                return ;
+            }else{
+                desasignarMapped(comando,bloques);
+            }
 
-        }else printf("%s no es una opción válida para este comando\n",modo);
+        }else {
 
+            //desasignar una dirección de memoria
 
-
+        }
     }
 }
 
