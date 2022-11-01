@@ -18,8 +18,8 @@ typedef enum {
 }tmem;
 
 typedef struct{
-    int direccion; //para todos
-    int tamano; //para todos
+    void *direccion; //para todos
+    size_t tamano; //para todos
     //cuando se colocó -> mirar tipo //para todos
     tmem tipo; //para todos
     key_t clave; //shared
@@ -51,7 +51,11 @@ tPosM  findMemblock (int num, tHistMem L);
 bool deleteLastBlock(tPosM p, tHistMem *L);
 void deletePrimBlock(tHistMem *L);
 void deleteHistMem (tHistMem *L);
-bool deleteMemBlock(tPosM p, tHistMem *L);
+void deleteMemBlock(tPosM p, tHistMem *L);
+void printBLocks(tHistMem L, tmem tipo);
+tPosM findBlockMalloc(tHistMem L, size_t tamano);
+tPosM findBlockShared(tHistMem L, key_t c);
+tPosM findBlockMapped(tHistMem L, char nombre[MAX_LENGHT_PATH]);
 
 
 

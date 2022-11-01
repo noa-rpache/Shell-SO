@@ -82,12 +82,23 @@ tItemM getMemBlock(tPosM p){
     return p->data;
 }
 
-/*tPosM findMemblock (int num, tHistMem L){
-    tPosM p;
-    p = MNULL;
-    for (p=L; (p != MNULL) && (p->data.puesto != num); p=p->next);
-    return p;
-} //devuelve el puntero al nodo que tiene la instrucción de número num*/
+void deleteMemBlock(tPosM p, tHistMem *L){
+
+    if(p == (*L)->next) deletePrimBlock(L);
+    else{
+        if( p->next == MNULL) deleteLastBlock(p,L);
+        else{
+            tPosM q;
+
+            q = p->next;
+            p->data = q->data;
+            p->next = q->next;
+            //p = q;
+
+            free(p);
+        }
+    }
+}
 
 void deleteHistMem (tHistMem *L){
     tPosM p;
@@ -119,4 +130,46 @@ void deletePrimBlock(tHistMem *L){
     q = p->next;
     free(p);
     (*L)->next = q;
+}
+
+void printBLocks(tHistMem L, tmem tipo){
+
+    for(tPosM p = primeroBlock(L); p!= MNULL ; p = p->next){
+        if(p->data.tipo == tipo){
+            //imprimir la información que toque
+        }
+    }
+}
+
+tPosM findBlockMalloc(tHistMem L, size_t tamano){ //si hay varios con el mismo tamaño??
+    for(tPosM p = primeroBlock(L); p != MNULL; p = p->next){
+        if(p->data.tipo == maloc){
+            if(p->data.tamano == tamano){
+                return p;
+            }
+        }
+    }
+    return MNULL;
+}
+
+tPosM findBlockShared(tHistMem L, key_t c){
+    for(tPosM p = primeroBlock(L); p != MNULL; p = p->next){
+        if(p->data.tipo == shared){
+            if(p->data.clave == c){
+                return p;
+            }
+        }
+    }
+    return MNULL;
+}
+
+tPosM findBlockMapped(tHistMem L, char nombre[MAX_LENGHT_PATH]){
+    for(tPosM p = primeroBlock(L); p != MNULL; p = p->next){
+        if(p->data.tipo == mapped){
+            if(strcmp(p->data.nombre_archivo,nombre) == 0){
+                return p;
+            }
+        }
+    }
+    return MNULL;
 }
