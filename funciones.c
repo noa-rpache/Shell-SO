@@ -467,10 +467,14 @@ int asignarMalloc(tItemL entrada,tItemM *datos){
     int tamano = atoi(tam);
 
     if ( malloc(sizeof tamano) == NULL && tamano != 0 ) return -1;
+    //se asignan bloques de tamaño 0??
 
     (*datos).tipo = maloc;
     (*datos).tamano = tamano;
     (*datos).direccion = malloc(sizeof tamano);
+    struct tm* hora;
+    if( ( hora = ActualTime() ) !=  NULL) (*datos).tiempo = *hora;
+
     return 0;
 }
 
@@ -525,9 +529,10 @@ int asignarCompartida (tItemL entrada,tItemM *datos){
         (*datos).direccion = p;
         (*datos).tamano = tam;
         (*datos).tipo = shared;
-        //cuándo se asignó
+        struct tm* hora;
+        if( ( hora = ActualTime() ) !=  NULL) (*datos).tiempo = *hora;
         (*datos).clave = cl;
-        return 0;
+        return 1;
     }else {
         printf("Imposible asignar memoria compartida clave %lu:%s\n", (unsigned long) cl, strerror(errno));
         return 0;
@@ -552,7 +557,7 @@ void * MapearFichero (char * fichero, int protection, tItemM *datos){
     return p;
 }
 
-void asignarMap (tItemL entrada,tItemM *datos){
+int asignarMap (tItemL entrada,tItemM *datos){
     tItemT permisos,nombre;
     getToken(1,entrada.comandos,permisos);
     getToken(0,entrada.comandos,nombre);
@@ -564,14 +569,18 @@ void asignarMap (tItemL entrada,tItemM *datos){
         if (strchr(permisos,'w')!=NULL) protection|=PROT_WRITE;
         if (strchr(permisos,'x')!=NULL) protection|=PROT_EXEC;
     }
-    if ( ( p = MapearFichero(nombre,protection,datos) ) == NULL)
-        perror ("Imposible mapear fichero");
-    else {
+    if ( ( p = MapearFichero(nombre,protection,datos) ) == NULL) {
+        perror("Imposible mapear fichero");
+        return -1;
+    }else {
         printf("fichero %s mapeado en %p\n", nombre, p);
 
         (*datos).direccion = p;
         strcpy((*datos).nombre_archivo,nombre);
         (*datos).tipo = mapped;
+        struct tm* hora;
+        if( ( hora = ActualTime() ) !=  NULL) (*datos).tiempo = *hora;
+        return 1;
     }
 }
 
@@ -595,7 +604,7 @@ void desasignarCompartida(tItemL entrada, tHistMem *bloques){
     key_t clave;
     int id;
     tItemT key;
-    getToken(1,entrada.comandos, key);
+    getToken(1,entrada.comandos,key);
 
     if ( entrada.tokens == 1 || ( clave=(key_t) strtoul(key,NULL,10) ) == IPC_PRIVATE ){
         printf ("      delkey necesita clave_valida\n");
@@ -605,43 +614,59 @@ void desasignarCompartida(tItemL entrada, tHistMem *bloques){
         perror ("shmget: imposible obtener memoria compartida");
         return;
     }
-    if ( shmctl(id,IPC_RMID,NULL) == -1 )
-        perror ("shmctl: imposible eliminar memoria compartida\n");
+    if ( shmctl(id,IPC_RMID,NULL) == -1 ) {           //ese NULL en el buf tiene que estar??
+        perror("shmctl: imposible eliminar memoria compartida\n");
+        return;
+    }
 
-    //se tiene que borrar de la lista??
+    deleteMemBlock(findBlockShared(*bloques,clave),bloques);
 }
 
-int desasignarMapped(tItemL entrada, tHistMem *bloques){ //fich es un nombre de fichero
+void desasignarMapped(tItemL entrada, tHistMem *bloques){ //fich es un nombre de fichero
     tItemT nombre;
-    getToken(1, entrada.comandos,nombre);
+    getToken(1,entrada.comandos,nombre);
 
     tPosM posicion = findBlockMapped(*bloques,nombre);
 
-    if(posicion == LNULL){
+    if(posicion == MNULL){
         printf("Fichero %s no mapeado\n",nombre);
-        return 0;
+        return ;
     }else{
         tItemM bloque = getMemBlock(posicion);
         if( munmap(bloque.direccion,bloque.tamano) == -1 ){
             strerror(errno);
-            return -1;
+            return ;
         }else {
             free(bloque.direccion); //esto no es redundante??
             deleteMemBlock(posicion, bloques);
-            return 0;
+            printf("borrando el fichero %s\n",nombre); 
+            return ;
         }
     }
 }
 
-/*int desasignarDireccion(tItemL entrada, tHistMem *bloques){
+void desasignarDireccion(tItemL entrada /*, tHistMem *bloques*/){
     tItemT aux;
     getToken(1,entrada.comandos,aux);
     void *p;
 
+    printf("liberando la dirección de memoria %s\n",aux);
+
     free(p);
-}*/
+}
 
+struct tm* ActualTime(){
+    time_t now;
+    time(&now);
 
+    if( errno == -1 ) {
+        perror("error en time(): ");
+        strerror(errno);
+        return NULL;
+    }else{
+        return localtime(&now);
+    }
+}
 
 
 

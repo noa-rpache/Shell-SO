@@ -60,12 +60,12 @@ int asignarMalloc(tItemL entrada,tItemM *datos);
 void * ObtenerMemoriaShmget (key_t clave, size_t tam);
 int asignarCompartida(tItemL entrada,tItemM *datos);
 void * MapearFichero (char * fichero, int protection, tItemM *datos);
-void asignarMap (tItemL entrada,tItemM *datos);
+int asignarMap (tItemL entrada,tItemM *datos);
 void desasignarMalloc(tItemL entrada, tHistMem *bloques);
 void desasignarCompartida (tItemL entrada, tHistMem *bloques);
-int desasignarMapped(tItemL entrada, tHistMem *bloques);
-int desasignarDireccion(tItemL entrada, tHistMem *bloques);
-
+void desasignarMapped(tItemL entrada, tHistMem *bloques);
+void desasignarDireccion(tItemL entrada /*, tHistMem *bloques*/);
+struct tm* ActualTime(); //no estoy nada segura de esto
 
 
 
