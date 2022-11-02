@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include "static_tokens.h"
 #define MNULL NULL
 
@@ -20,7 +21,7 @@ typedef enum {
 typedef struct{
     void *direccion; //para todos
     size_t tamano; //para todos
-    //cuando se colocó -> mirar tipo //para todos
+    struct tm tiempo; //para todos
     tmem tipo; //para todos
     key_t clave; //shared
     char nombre_archivo[MAX_LENGHT_PATH]; //mapped
