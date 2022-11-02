@@ -574,7 +574,7 @@ void allocate(tItemL comando, tHistMem *bloques){
                 ListarBloques(*bloques,1);
                 return ;
             }else {
-                asignarCompartida(comando, &datos);
+                if( asignarCompartida(comando, &datos) != 1) return ;
             }
 
         }else if (strcmp(modo,"-mmap") == 0){
@@ -583,7 +583,7 @@ void allocate(tItemL comando, tHistMem *bloques){
                 ListarBloques(*bloques,2);
                 return ;
             }else {
-                asignarMap(comando, &datos);
+                if( asignarMap(comando, &datos) != -1) return;
             }
 
         }else{
@@ -635,9 +635,7 @@ void deallocate(tItemL comando, tHistMem *bloques){
             }
 
         }else {
-
-            //desasignar una dirección de memoria
-
+            desasignarDireccion(comando);
         }
     }
 }
