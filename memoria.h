@@ -10,7 +10,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
+#include <time.h> //para el strftime
+#include <unistd.h> //para el pid
 #include "static_tokens.h"
 #define MNULL NULL
 
@@ -47,17 +48,17 @@ tPosM nextBlock (tPosM p);
 tPosM previousBlock (tPosM p, tHistMem L);
 bool insertMemoryBlock (tItemM d , tHistMem *L);
 tItemM getMemBlock (tPosM p);
-tPosM  findMemblock (int num, tHistMem L);
 //el ítem esta al final de la lista
 bool deleteLastBlock(tPosM p, tHistMem *L);
 void deletePrimBlock(tHistMem *L);
 void deleteHistMem (tHistMem *L);
 void deleteMemBlock(tPosM p, tHistMem *L);
 void printBLocks(tHistMem L, tmem tipo);
+void ListBLocks(tHistMem L);
 tPosM findBlockMalloc(tHistMem L, size_t tamano);
 tPosM findBlockShared(tHistMem L, key_t c);
 tPosM findBlockMapped(tHistMem L, char nombre[MAX_LENGHT_PATH]);
-
+tPosM findAddress(void *address,tHistMem L);
 
 
 

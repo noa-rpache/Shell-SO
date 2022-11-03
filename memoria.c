@@ -132,13 +132,94 @@ void deletePrimBlock(tHistMem *L){
     (*L)->next = q;
 }
 
+void printMalloc(tItemM bloque){ //operación privada de la implementación
+    char tiempo[15];
+    char format[] = "%b %d %H";
+
+    if (strftime(tiempo, 100,format, &bloque.tiempo) == 0) {
+        printf("error en strftime: el string no cabe en el tamaño proporcionado\n");
+        return ;
+    }
+
+    printf("%p %10lu %s malloc\n",bloque.direccion, bloque.tamano, tiempo);
+}
+
+void printShared(tItemM bloque){
+    char tiempo[15];
+    char format[] = "%b %d %H";
+
+    if (strftime(tiempo, 100,format, &bloque.tiempo) == 0) {
+        printf("error en strftime: el string no cabe en el tamaño proporcionado\n");
+        return ;
+    }
+
+    printf("%p %10lu %s shared (key %d)\n",bloque.direccion, bloque.tamano, tiempo, bloque.clave);
+}
+
+void printMmap(tItemM bloque){
+    char tiempo[15];
+    char format[] = "%b %d %H";
+
+    if (strftime(tiempo, 100,format, &bloque.tiempo) == 0) {
+        printf("error en strftime: el string no cabe en el tamaño proporcionado\n");
+        return ;
+    }
+
+    printf("%p %10lu %s %s (descriptor %d)\n",bloque.direccion, bloque.tamano, tiempo, bloque.nombre_archivo, bloque.file_descriptor);
+}
+
 void printBLocks(tHistMem L, tmem tipo){
+    char type[10];
+
+    switch(tipo){
+        case maloc:
+            strcpy(type, "malloc"); printf("***Lista de bloques asignados %s para el proceso %d\n",type,getpid());
+
+            for(tPosM p = primeroBlock(L); p!= MNULL ; p = p->next){
+                if(p->data.tipo == tipo){
+                    printMalloc(p->data);
+                }
+            }
+
+            break;
+        case shared:
+            strcpy(type, "shared"); printf("***Lista de bloques asignados %s para el proceso %d\n",type,getpid());
+
+            for(tPosM p = primeroBlock(L); p!= MNULL ; p = p->next){
+                if(p->data.tipo == tipo){
+                    printShared(p->data);
+                }
+            }
+
+            break;
+        case mapped:
+            strcpy(type, "mapped"); printf("***Lista de bloques asignados %s para el proceso %d\n",type,getpid());
+
+            for(tPosM p = primeroBlock(L); p!= MNULL ; p = p->next){
+                if(p->data.tipo == tipo){
+                    printMmap(p->data);
+                }
+            }
+
+            break;
+        default: printf("si llegas aquí has hecho algo muy mal\n");
+    }
+
+}
+
+void ListBLocks(tHistMem L){
+    printf("***Lista de bloques asignados para el proceso %d\n",getpid());
 
     for(tPosM p = primeroBlock(L); p!= MNULL ; p = p->next){
-        if(p->data.tipo == tipo){
-            //imprimir la información que toque
+        if(p->data.tipo == maloc){
+            printMalloc(p->data);
+        }else if(p->data.tipo == shared){
+            printShared(p->data);
+        }else {
+            printMmap(p->data);
         }
     }
+
 }
 
 tPosM findBlockMalloc(tHistMem L, size_t tamano){ //si hay varios con el mismo tamaño??
@@ -170,6 +251,13 @@ tPosM findBlockMapped(tHistMem L, char nombre[MAX_LENGHT_PATH]){
                 return p;
             }
         }
+    }
+    return MNULL;
+}
+
+tPosM findAddress(void *address,tHistMem L){
+    for(tPosM p = primeroBlock(L); p != MNULL; p = p->next){
+        if(address == p->data.direccion) return p;
     }
     return MNULL;
 }
