@@ -76,7 +76,7 @@ bool procesarEntrada(tList *historial,tHistMem *bloques){
             else if( strcmp(peticion.comando, "memdump") == 0 ) printf("*memdump en construcción*\n");
             else if( strcmp(peticion.comando, "memfill") == 0 ) printf("*memfill en construcción*\n");
             else if( strcmp(peticion.comando, "memory") == 0 ) printf("*memory en construcción*\n");
-            else if( strcmp(peticion.comando, "recurse") == 0 ) printf("*recurse en construcción*\n");
+            else if( strcmp(peticion.comando, "recurse") == 0 ) recurse(peticion);
             else printf("%s no es un comando disponible, o no existe\n",peticion.comando);
 
             return false;
@@ -553,7 +553,7 @@ void allocate(tItemL comando, tHistMem *bloques){
         ListarBloques(*bloques,4);
     }else{
         tItemT modo;
-        getToken(1,comando.comandos,modo);
+        getToken(0,comando.comandos,modo);
         tItemM datos;
 
         if (strcmp(modo,"-malloc") == 0){
@@ -563,7 +563,7 @@ void allocate(tItemL comando, tHistMem *bloques){
                 return ;
             }else {
                 if (asignarMalloc(comando, &datos) == -1) {
-                    printf("se ha producido un error en malloc\n");
+                    printf("se ha producido un error en -malloc\n");
                     return ;
                 }
             }
@@ -635,7 +635,8 @@ void deallocate(tItemL comando, tHistMem *bloques){
             }
 
         }else {
-            desasignarDireccion(comando);
+            printf("esto está en proceso\n");
+            desasignarDireccion(comando,bloques);
         }
     }
 }
@@ -643,7 +644,7 @@ void deallocate(tItemL comando, tHistMem *bloques){
 void recurse (tItemL comando){
     if(comando.tokens > 1){
         tItemT aux;
-        getToken(1,comando.comandos,aux);
+        getToken(0,comando.comandos,aux);
         int veces = atoi(aux);//comprobar que es un número
         Recursiva(veces);
     }
