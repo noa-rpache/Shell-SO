@@ -433,20 +433,22 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
 
 
 void ListarBloques(tHistMem bloques, int modo){ //modo == 4 si se listan todos
-    printf("Bloques asignados al proceso %d\n",getpid());
-    if(!isEmptyMem(bloques)){
-        printf("aquí va la lista de bloques\n");
-        if(modo == 4) { //se listan todos
-            for (tPosM p = primeroBlock(bloques); p != MNULL; p = nextBlock(p));
-        }else{
-            if( modo < 0 || 4 < modo ){ //no debería de hacer falta la comparación, pero por si acaso, si tal esto se quita para la entrega
-                printf("no hay opción válida para ese número\n");
-            }else {
-                tmem tipo = (tmem) modo;
-                printBLocks(bloques, tipo);
-            }
+
+    if(modo == 4) { //se listan todos
+
+        ListBLocks(bloques);
+
+    }else{
+
+        if( modo < 0 || 4 < modo ){ //no debería de hacer falta la comparación, pero por si acaso, si tal esto se quita para la entrega
+            printf("no hay opción válida para ese número\n");
+        }else {
+            tmem tipo = (tmem) modo;
+            printBLocks(bloques, tipo);
         }
+
     }
+
 }
 
 
@@ -463,11 +465,14 @@ void Recursiva (int n){
 
 int asignarMalloc(tItemL entrada,tItemM *datos){
     tItemT tam;
-    getToken(2,entrada.comandos,tam);
+    getToken(1,entrada.comandos,tam);
     int tamano = atoi(tam);
 
     if ( malloc(sizeof tamano) == NULL && tamano != 0 ) return -1;
-    //se asignan bloques de tamaño 0??
+    else if(tamano == 0) {
+        printf("No se asignan bloques de 0 bytes\n");
+        return 0;
+    }
 
     (*datos).tipo = maloc;
     (*datos).tamano = tamano;
@@ -514,9 +519,9 @@ int asignarCompartida (tItemL entrada,tItemM *datos){
     void *p;
 
     tItemT clave, tamano;
-    getToken(2,entrada.comandos,clave);
+    getToken(1,entrada.comandos,clave);
     cl = (key_t) strtoul(clave,NULL,10);
-    getToken(3,entrada.comandos,tamano);
+    getToken(2,entrada.comandos,tamano);
     tam = (size_t) strtoul(tamano,NULL,10);
 
     if ( tam == 0 ) {
@@ -559,8 +564,8 @@ void * MapearFichero (char * fichero, int protection, tItemM *datos){
 
 int asignarMap (tItemL entrada,tItemM *datos){
     tItemT permisos,nombre;
-    getToken(1,entrada.comandos,permisos);
     getToken(0,entrada.comandos,nombre);
+    getToken(1,entrada.comandos,permisos);
     void *p;
     int protection=0;
 
@@ -645,14 +650,27 @@ void desasignarMapped(tItemL entrada, tHistMem *bloques){ //fich es un nombre de
     }
 }
 
-void desasignarDireccion(tItemL entrada /*, tHistMem *bloques*/){
+void desasignarDireccion(tItemL entrada, const tHistMem *bloques){
+
     tItemT aux;
-    getToken(1,entrada.comandos,aux);
-    void *p;
+    getToken(0,entrada.comandos,aux);
+    void *buscado = aux;
+    tPosM p;
 
-    printf("liberando la dirección de memoria %s\n",aux);
+    if ( (p = findAddress(buscado,*bloques)) == MNULL ){
+        printf("Direccion %p no asignada con malloc, shared o mmap\n",buscado);
+        return ;
+    }
 
-    free(p);
+    //borra de distinta forma dependiendo del tipo de bloque
+    if ( getMemBlock(p).tipo == maloc ) {
+        desasignarMalloc(entrada, **bloques);
+    } else if (getMemBlock(p).tipo == shared ) {
+        desasignarCompartida(entrada, **bloques);
+    } else {
+        desasignarMapped(entrada, **bloques);
+    }
+
 }
 
 struct tm* ActualTime(){

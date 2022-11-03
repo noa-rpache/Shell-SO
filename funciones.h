@@ -39,32 +39,38 @@ typedef struct {
 }modo;
 
 
-//generales
+//utilidades
 int TrocearCadena(char *cadena, char *trozos[]);
 int int_convert(tItemT cadena);
 void printComand(tItemL impresion);
 char LetraTF (mode_t m);
+char * ConvierteModo2 (mode_t m);
 void getDir();
+//sobre directorios
 int isDirectory(const char *path);
 int isDirEmpty(char *dirname);   //ver si un directorio esta o no vacio
-char * ConvierteModo2 (mode_t m);
+int borrar_dir(char *dir);//funcion recursiva para borrar directorios
+//sobre stat y list
 int printInfo(char ruta[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], const modo *opciones);
 int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones);
 int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones);
 int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones);
 int opciones(tItemL entrada,modo *opciones);
-int borrar_dir(char *dir);//funcion recursiva para borrar directorios
 void ListarBloques(tHistMem bloques, int modo);
+//sobre recursiva
 void Recursiva (int n);
+//sobre allocate
 int asignarMalloc(tItemL entrada,tItemM *datos);
 void * ObtenerMemoriaShmget (key_t clave, size_t tam);
 int asignarCompartida(tItemL entrada,tItemM *datos);
 void * MapearFichero (char * fichero, int protection, tItemM *datos);
 int asignarMap (tItemL entrada,tItemM *datos);
+//sobre deallocate
 void desasignarMalloc(tItemL entrada, tHistMem *bloques);
 void desasignarCompartida (tItemL entrada, tHistMem *bloques);
 void desasignarMapped(tItemL entrada, tHistMem *bloques);
-void desasignarDireccion(tItemL entrada /*, tHistMem *bloques*/);
+void desasignarDireccion(tItemL entrada , const tHistMem *bloques);
+
 struct tm* ActualTime(); //no estoy nada segura de esto
 
 
