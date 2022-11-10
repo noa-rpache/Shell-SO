@@ -38,6 +38,12 @@ typedef struct {
     bool listar; //el struct lo pasa list y no stat
 }modo;
 
+typedef struct{
+    bool write;
+    bool read;
+    bool overwrite;
+}modo_IO;
+
 
 //utilidades
 int TrocearCadena(char *cadena, char *trozos[]);
@@ -66,10 +72,13 @@ int asignarCompartida(tItemL entrada,tItemM *datos);
 void * MapearFichero (char * fichero, int protection, tItemM *datos);
 int asignarMap (tItemL entrada,tItemM *datos);
 //sobre deallocate
-void desasignarMalloc(tItemL entrada, tHistMem *bloques);
-void desasignarCompartida (tItemL entrada, tHistMem *bloques);
-void desasignarMapped(tItemL entrada, tHistMem *bloques);
+void desasignarMalloc(size_t tamano, tHistMem *bloques);
+void desasignarCompartida(key_t clave, tHistMem *bloques);
+void desasignarClave(key_t clave);
+void desasignarMapped(tItemT nombre, tHistMem *bloques);
 void desasignarDireccion(tItemL entrada , const tHistMem *bloques);
+//sobre I-O
+int modos_IO(tItemL entrada, modo_IO *opciones);
 
 struct tm* ActualTime(); //no estoy nada segura de esto
 
