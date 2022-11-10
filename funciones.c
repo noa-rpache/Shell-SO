@@ -400,7 +400,8 @@ int borrar_dir(char *dir) {//funcion recursiva para borrar directorios
 
         if(remove(aux)){//aqui se borra
             return -1;
-        }}
+        }
+    }
     closedir(dirp);
 
     return 0;
@@ -590,28 +591,24 @@ int asignarMap (tItemL entrada,tItemM *datos){
 }
 
 
-void desasignarMalloc(tItemL entrada, tHistMem *bloques){
-    tItemT tam;
-    getToken(1, entrada.comandos,tam);
-    size_t tamano = (size_t) strtoul(tam,NULL,10);
+void desasignarMalloc(size_t tamano, tHistMem *bloques){ //tamaño y bloque
     tPosM posicion = findBlockMalloc(*bloques,tamano);
 
     if(posicion == MNULL){
         printf("no hay un bloque de ese tamaño asignado con malloc\n");
     }else{
+
         tItemM bloque = getMemBlock(posicion);
         free(bloque.direccion);
         deleteMemBlock(posicion,bloques);
+
     }
 }
 
-void desasignarCompartida(tItemL entrada, tHistMem *bloques){
-    key_t clave;
+void desasignarCompartida(key_t clave, tHistMem *bloques){
     int id;
-    tItemT key;
-    getToken(1,entrada.comandos,key);
 
-    if ( entrada.tokens == 1 || ( clave=(key_t) strtoul(key,NULL,10) ) == IPC_PRIVATE ){
+    if ( entrada.tokens == 1 || clave == IPC_PRIVATE ){
         printf ("      delkey necesita clave_valida\n");
         return;
     }
@@ -627,16 +624,14 @@ void desasignarCompartida(tItemL entrada, tHistMem *bloques){
     deleteMemBlock(findBlockShared(*bloques,clave),bloques);
 }
 
-void desasignarMapped(tItemL entrada, tHistMem *bloques){ //fich es un nombre de fichero
-    tItemT nombre;
-    getToken(1,entrada.comandos,nombre);
-
+void desasignarMapped(tItemT nombre, tHistMem *bloques){ //fich es un nombre de fichero
     tPosM posicion = findBlockMapped(*bloques,nombre);
 
     if(posicion == MNULL){
         printf("Fichero %s no mapeado\n",nombre);
         return ;
     }else{
+
         tItemM bloque = getMemBlock(posicion);
         if( munmap(bloque.direccion,bloque.tamano) == -1 ){
             strerror(errno);
@@ -647,14 +642,14 @@ void desasignarMapped(tItemL entrada, tHistMem *bloques){ //fich es un nombre de
             printf("borrando el fichero %s\n",nombre); 
             return ;
         }
+
     }
 }
 
 void desasignarDireccion(tItemL entrada, const tHistMem *bloques){
-
     tItemT aux;
     getToken(0,entrada.comandos,aux);
-    void *buscado = aux;
+    void *buscado = (void *) strtoul(aux,NULL,10); //aux -> a unsigned long
     tPosM p;
 
     if ( (p = findAddress(buscado,*bloques)) == MNULL ){
@@ -664,13 +659,42 @@ void desasignarDireccion(tItemL entrada, const tHistMem *bloques){
 
     //borra de distinta forma dependiendo del tipo de bloque
     if ( getMemBlock(p).tipo == maloc ) {
-        desasignarMalloc(entrada, **bloques);
+
+        desasignarMalloc(getMemBlock(p).tamano, **bloques);
+
     } else if (getMemBlock(p).tipo == shared ) {
-        desasignarCompartida(entrada, **bloques);
+
+        desasignarCompartida(getMemBlock(p).clave, **bloques); //esto es como deallocate -shared
+
     } else {
-        desasignarMapped(entrada, **bloques);
+
+        desasignarMapped(getMemBlock(p).nombre_archivo, **bloques);
+
     }
 
+}
+
+//i-o es igual a memdump y memfill, pero con el disco
+int modos_IO(tItemL entrada, modo_IO *opciones){
+    int controlador = 0;
+
+    for (int i = 0; i <= entrada.tokens - 2; i++) { //tokens es el total de tokens, incluido el ppal
+        tItemT aux;
+        getToken(i, entrada.comandos, aux);
+
+        if (strcmp("-read", aux) == 0) {
+            (*opciones).read = true; //se ha detectado long
+            controlador++;
+        } else if (strcmp("-write", aux) == 0) {
+            (*opciones).write = true;
+            controlador++;
+        } else if (strcmp("-o", aux) == 0) {
+            (*opciones).overwrite = true;
+            controlador++;
+        } else i = entrada.tokens - 2; //no se ha detectado ninguno -> actualizar i para terminar el bucle
+
+    }
+    return controlador;
 }
 
 struct tm* ActualTime(){
