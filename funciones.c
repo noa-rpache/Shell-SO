@@ -7,27 +7,27 @@
 #include "funciones.h"
 
 //auxiliares
-int TrocearCadena(char *cadena, char *trozos[]){
-    int i=1;
+int TrocearCadena(char *cadena, char *trozos[]) {
+    int i = 1;
 
-    if ((trozos[0]=strtok(cadena," \n\t"))==NULL)
+    if ((trozos[0] = strtok(cadena, " \n\t")) == NULL)
         return 0;
-    else{
-        while ((trozos[i]=strtok(NULL," \n\t"))!=NULL)
+    else {
+        while ((trozos[i] = strtok(NULL, " \n\t")) != NULL)
             i++;
         return i;
     }
 
 }
 
-int int_convert(tItemT cadena){
+int int_convert(tItemT cadena) {
     int convertido = atoi(cadena);
-    return convertido*(-1);
+    return convertido * (-1);
 }
 
-void printComand(tItemL impresion){
+void printComand(tItemL impresion) {
     printf("%d: %s", impresion.puesto, impresion.comando);
-    if(impresion.tokens > 1) { //si hay algún token más que el comando ppal
+    if (impresion.tokens > 1) { //si hay algún token más que el comando ppal
         for (int i = 0; i < impresion.tokens - 1; i++) { //ntokens -1 == nº de especificadores
             printf(" %s", impresion.comandos.data[i]);
         }
@@ -35,53 +35,60 @@ void printComand(tItemL impresion){
     printf("\n");
 }
 
-char LetraTF (mode_t m){//devuelve el tipo de un fichero
-    switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
-        case S_IFSOCK: return 's'; /*socket */
-        case S_IFLNK: return 'l'; /*symbolic link*/
-        case S_IFREG: return '-'; /* fichero normal*/
-        case S_IFBLK: return 'b'; /*block device*/
-        case S_IFDIR: return 'd'; /*directorio */
-        case S_IFCHR: return 'c'; /*char device*/
-        case S_IFIFO: return 'p'; /*pipe*/
-        default: return '?'; /*desconocido, no debería aparecer*/
+char LetraTF(mode_t m) {//devuelve el tipo de un fichero
+    switch (m & S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
+        case S_IFSOCK:
+            return 's'; /*socket */
+        case S_IFLNK:
+            return 'l'; /*symbolic link*/
+        case S_IFREG:
+            return '-'; /* fichero normal*/
+        case S_IFBLK:
+            return 'b'; /*block device*/
+        case S_IFDIR:
+            return 'd'; /*directorio */
+        case S_IFCHR:
+            return 'c'; /*char device*/
+        case S_IFIFO:
+            return 'p'; /*pipe*/
+        default:
+            return '?'; /*desconocido, no debería aparecer*/
     }
 }
 
-void getDir(){
+void getDir() {
     char directorio[MAX_LENGHT_PATH];
-    getcwd(directorio,sizeof(directorio) );
-    if( errno == -1 ){ //se ha dado un error
+    getcwd(directorio, sizeof(directorio));
+    if (errno == -1) { //se ha dado un error
         perror("no se ha podido conseguir la ruta actual");
         strerror(errno);
-    }else{
-        printf("%s\n", directorio );
+    } else {
+        printf("%s\n", directorio);
     }
 }
 
-char * ConvierteModo2 (mode_t m)
-{
+char *ConvierteModo2(mode_t m) {
     static char permisos[12];
-    strcpy (permisos,"---------- ");
+    strcpy(permisos, "---------- ");
 
-    permisos[0]=LetraTF(m);
-    if (m&S_IRUSR) permisos[1]='r';    /*propietario*/
-    if (m&S_IWUSR) permisos[2]='w';
-    if (m&S_IXUSR) permisos[3]='x';
-    if (m&S_IRGRP) permisos[4]='r';    /*grupo*/
-    if (m&S_IWGRP) permisos[5]='w';
-    if (m&S_IXGRP) permisos[6]='x';
-    if (m&S_IROTH) permisos[7]='r';    /*resto*/
-    if (m&S_IWOTH) permisos[8]='w';
-    if (m&S_IXOTH) permisos[9]='x';
-    if (m&S_ISUID) permisos[3]='s';    /*setuid, setgid y stickybit*/
-    if (m&S_ISGID) permisos[6]='s';
-    if (m&S_ISVTX) permisos[9]='t';
+    permisos[0] = LetraTF(m);
+    if (m & S_IRUSR) permisos[1] = 'r';    /*propietario*/
+    if (m & S_IWUSR) permisos[2] = 'w';
+    if (m & S_IXUSR) permisos[3] = 'x';
+    if (m & S_IRGRP) permisos[4] = 'r';    /*grupo*/
+    if (m & S_IWGRP) permisos[5] = 'w';
+    if (m & S_IXGRP) permisos[6] = 'x';
+    if (m & S_IROTH) permisos[7] = 'r';    /*resto*/
+    if (m & S_IWOTH) permisos[8] = 'w';
+    if (m & S_IXOTH) permisos[9] = 'x';
+    if (m & S_ISUID) permisos[3] = 's';    /*setuid, setgid y stickybit*/
+    if (m & S_ISGID) permisos[6] = 's';
+    if (m & S_ISVTX) permisos[9] = 't';
 
     return permisos;
 }
 
-int opciones(tItemL entrada,modo *opciones) {
+int opciones(tItemL entrada, modo *opciones) {
     int controlador = 0;
 
     for (int i = 0; i <= entrada.tokens - 2; i++) { //tokens es el total de tokens, incluido el ppal
@@ -116,7 +123,8 @@ int opciones(tItemL entrada,modo *opciones) {
     return controlador;
 }
 
-int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], const modo *opciones) { //la ruta enlazada se pasa siemrpe, la rutaReal puede ser NULL en un directorio
+int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH],
+              const modo *opciones) { //la ruta enlazada se pasa siemrpe, la rutaReal puede ser NULL en un directorio
     struct stat contenido;
 
     if (lstat(enlazada, &contenido) == -1) {
@@ -138,23 +146,23 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], co
 
         char tiempo[15];
         char format[] = "%Y-%m-%d %H:%M";
-        if (strftime(tiempo, 100,format, time) == 0) {
+        if (strftime(tiempo, 100, format, time) == 0) {
             printf("el string no cabe en el tamaño proporcionado\n");
             return 0;
         }
 
-        printf("%s ",tiempo);
+        printf("%s ", tiempo);
     }
 
     if (opciones->largo) {
         struct group *grupinho = getgrgid(contenido.st_gid);
-        if ( grupinho == NULL) {
+        if (grupinho == NULL) {
             perror("error al acceder al nombre del grupo");
             return -1;
         }
 
         struct passwd *user = getpwuid(contenido.st_uid);
-        if(user == NULL){
+        if (user == NULL) {
             perror("error al acceder al nombre del propietario");
             return -1;
         }
@@ -162,7 +170,7 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], co
         printf("%5ld", (long) contenido.st_nlink);
         printf(" (%10ld)", (long) contenido.st_ino);
         printf("%7s", grupinho->gr_name);
-        printf("%7s",user->pw_name);
+        printf("%7s", user->pw_name);
         printf("%3c", LetraTF(contenido.st_mode));
         printf("%s", ConvierteModo2(contenido.st_mode));
 
@@ -170,19 +178,21 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], co
 
     printf("%10ld ", (long) contenido.st_size);
 
-    if(opciones->listar == true){
+    if (opciones->listar == true) {
         printf("%s", rutaReal);
 
-        if (opciones->largo && (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta el enlace
+        if (opciones->largo &&
+            (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta el enlace
             char origen[MAX_LENGHT_PATH];
-            realpath(enlazada,origen);
+            realpath(enlazada, origen);
             printf(" -> %s", origen);
         }
 
-    }else {
+    } else {
         printf("%s", enlazada); //se imprime siempre
 
-        if (opciones->largo && (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta
+        if (opciones->largo &&
+            (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta
             printf(" -> %s", rutaReal); //con -link siempre se imprime LA RUTA real
         }
 
@@ -192,11 +202,12 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], co
     return 0;
 }
 
-int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
-    printf("************%s\n",path);
+int ListContent(char path[MAX_LENGHT_PATH],
+                const modo *opciones) { //pasar el path requerido con las opciones pedidas y mostrarlo
+    printf("************%s\n", path);
 
     DIR *directory_stream = opendir(path);
-    if(directory_stream == NULL){
+    if (directory_stream == NULL) {
         perror("error en opendir");
         return -1;
     }
@@ -204,36 +215,36 @@ int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el pa
     struct dirent *directorio;
     errno = 0;
 
-    while((directorio = readdir(directory_stream)) != NULL) {
+    while ((directorio = readdir(directory_stream)) != NULL) {
         errno = 0;
-        int tam = 2*MAX_LENGHT_PATH;
+        int tam = 2 * MAX_LENGHT_PATH;
         char rutaDir[tam];
-        sprintf(rutaDir,"%s/%s",path,(*directorio).d_name);
+        sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
 
         if (opciones->hid) {
-            printInfo((*directorio).d_name,rutaDir,opciones); //enseñar todos los ficheros
-        }else{
+            printInfo((*directorio).d_name, rutaDir, opciones); //enseñar todos los ficheros
+        } else {
             if ((*directorio).d_name[0] != '.') {
-                if (printInfo((*directorio).d_name,rutaDir, opciones) == -1) return -1;
+                if (printInfo((*directorio).d_name, rutaDir, opciones) == -1) return -1;
             }
 
         }
 
         long sig = telldir(directory_stream);
-        if(sig == -1){
+        if (sig == -1) {
             perror("error en telldir");
             return -1;
         }
-        seekdir(directory_stream,sig);
+        seekdir(directory_stream, sig);
     }
 
-    if(directorio == NULL && errno != 0){
-        printf("errno: %d\n",errno);
+    if (directorio == NULL && errno != 0) {
+        printf("errno: %d\n", errno);
         perror("error en readdir list");
         return -1;
     }
 
-    if( closedir(directory_stream) == -1){
+    if (closedir(directory_stream) == -1) {
         perror("error al cerrar el directorio");
         return -1;
     }
@@ -241,12 +252,13 @@ int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el pa
     return 0;
 }
 
-int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListReca(char path[MAX_LENGHT_PATH],
+             const modo *opciones) { //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
-    printf("************%s\n",path);
+    printf("************%s\n", path);
 
     tList DirRecord;
-    if(!createList(&DirRecord)){
+    if (!createList(&DirRecord)) {
         perror("no hay espacio para la recursividad");
         return -1;
     }
@@ -257,7 +269,7 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
 
     struct dirent *directorio;
 
-    while( (directorio = readdir(directory_stream)) != NULL) { //incluir detectar errores y no mostrar hidd
+    while ((directorio = readdir(directory_stream)) != NULL) { //incluir detectar errores y no mostrar hidd
         int tam = 2 * MAX_LENGHT_PATH;
         char rutaDir[tam];
         sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
@@ -282,7 +294,7 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
                     tItemL nuevo;
                     strcpy(nuevo.comando, rutaDir);
                     nuevo.puesto = 1;
-                    if(!insertElement(nuevo, &DirRecord)) {
+                    if (!insertElement(nuevo, &DirRecord)) {
                         perror("no hay sitio para la recursividad");
                         return -1;
                     }
@@ -317,15 +329,16 @@ int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
     return 0;
 }
 
-int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListRecb(char path[MAX_LENGHT_PATH],
+             const modo *opciones) { //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
 
     DIR *directory_stream = opendir(path);
-    if(directory_stream == NULL) return -1;
+    if (directory_stream == NULL) return -1;
 
     struct dirent *directorio;
 
-    while((directorio = readdir(directory_stream)) != NULL ) {
+    while ((directorio = readdir(directory_stream)) != NULL) {
         int tam = 2 * MAX_LENGHT_PATH;
         char rutaDir[tam];
         sprintf(rutaDir, "%s/%s", path, (*directorio).d_name);
@@ -333,7 +346,8 @@ int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
         if (opciones->hid) {
             if (isDirectory(rutaDir) == 1) {
                 if (strcmp((*directorio).d_name, ".") != 0 && strcmp((*directorio).d_name, "..") != 0)
-                    ListRecb(rutaDir, opciones); //solo llama a la recursividad si no es ni . ni .., que si no nos hacemos un lío
+                    ListRecb(rutaDir,
+                             opciones); //solo llama a la recursividad si no es ni . ni .., que si no nos hacemos un lío
             }
         } else {
             if ((*directorio).d_name[0] != '.') {
@@ -359,7 +373,7 @@ int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones){ //pasar el path 
     }
 
 
-    if(closedir(directory_stream) == -1) return -1;
+    if (closedir(directory_stream) == -1) return -1;
 
     return 0;
 }
@@ -380,25 +394,26 @@ int borrar_dir(char *dir) {//funcion recursiva para borrar directorios
     struct dirent *tlist;
     char aux[MAX_LENGHT_PATH];
 
-    if((dirp= opendir(dir))==NULL){
-        return -1;}
+    if ((dirp = opendir(dir)) == NULL) {
+        return -1;
+    }
 
-    while ((tlist = readdir(dirp))!=NULL){
-        strcpy(aux,dir);
-        strcat(strcat(aux,"/"),tlist->d_name);
+    while ((tlist = readdir(dirp)) != NULL) {
+        strcpy(aux, dir);
+        strcat(strcat(aux, "/"), tlist->d_name);
 
         //comprobamos que sea un directorio valido
-        if(strcmp(tlist->d_name,"..")==0 || strcmp(tlist->d_name,".")==0)
+        if (strcmp(tlist->d_name, "..") == 0 || strcmp(tlist->d_name, ".") == 0)
             //no vuelve a comenzar la recursividad si es el direcotrio actual o el anterior
             continue;
 
 
-        if(isDirectory(aux)){//aqui se comprueba que sea un directorio
+        if (isDirectory(aux)) {//aqui se comprueba que sea un directorio
 
             borrar_dir(aux);//aqui repetimos recursivamente la funcion
         }
 
-        if(remove(aux)){//aqui se borra
+        if (remove(aux)) {//aqui se borra
             return -1;
         }
     }
@@ -415,11 +430,11 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
     if (dir == NULL)
         return 1;
 
-    while ( (p = readdir(dir)) != NULL ) {
-        if(++n > 2)break;
+    while ((p = readdir(dir)) != NULL) {
+        if (++n > 2)break;
     }
 
-    if(p == NULL && errno !=0){
+    if (p == NULL && errno != 0) {
         perror("error en readdir DirEmpty");
         return -1;
     }
@@ -433,17 +448,18 @@ int isDirEmpty(char *dirname) {   //ver si un directorio esta o no vacio
 }
 
 
-void ListarBloques(tHistMem bloques, int modo){ //modo == 4 si se listan todos
+void ListarBloques(tHistMem bloques, int modo) { //modo == 4 si se listan todos
 
-    if(modo == 4) { //se listan todos
+    if (modo == 4) { //se listan todos
 
         ListBLocks(bloques);
 
-    }else{
+    } else {
 
-        if( modo < 0 || 4 < modo ){ //no debería de hacer falta la comparación, pero por si acaso, si tal esto se quita para la entrega
+        if (modo < 0 || 4 <
+                        modo) { //no debería de hacer falta la comparación, pero por si acaso, si tal esto se quita para la entrega
             printf("no hay opción válida para ese número\n");
-        }else {
+        } else {
             tmem tipo = (tmem) modo;
             printBLocks(bloques, tipo);
         }
@@ -453,24 +469,24 @@ void ListarBloques(tHistMem bloques, int modo){ //modo == 4 si se listan todos
 }
 
 
-void Recursiva (int n){
+void Recursiva(int n) {
     char automatico[TAMANO];
     static char estatico[TAMANO];
 
-    printf ("parametro:%3d(%p) array %p, arr estatico %p\n",n,&n,automatico, estatico);
+    printf("parametro:%3d(%p) array %p, arr estatico %p\n", n, &n, automatico, estatico);
 
-    if (n>0)
-        Recursiva(n-1);
+    if (n > 0)
+        Recursiva(n - 1);
 }
 
 
-int asignarMalloc(tItemL entrada,tItemM *datos){
+int asignarMalloc(tItemL entrada, tItemM *datos) {
     tItemT tam;
-    getToken(1,entrada.comandos,tam);
+    getToken(1, entrada.comandos, tam);
     int tamano = atoi(tam);
 
-    if ( malloc(sizeof tamano) == NULL && tamano != 0 ) return -1;
-    else if(tamano == 0) {
+    if (malloc(sizeof tamano) == NULL && tamano != 0) return -1;
+    else if (tamano == 0) {
         printf("No se asignan bloques de 0 bytes\n");
         return 0;
     }
@@ -478,84 +494,84 @@ int asignarMalloc(tItemL entrada,tItemM *datos){
     (*datos).tipo = maloc;
     (*datos).tamano = tamano;
     (*datos).direccion = malloc(sizeof tamano);
-    struct tm* hora;
-    if( ( hora = ActualTime() ) !=  NULL) (*datos).tiempo = *hora;
+    struct tm *hora;
+    if ((hora = ActualTime()) != NULL) (*datos).tiempo = *hora;
 
     return 0;
 }
 
-void * ObtenerMemoriaShmget (key_t clave, size_t tam){
-    void * p;
-    int aux,id,flags=0777;
+void *ObtenerMemoriaShmget(key_t clave, size_t tam) {
+    void *p;
+    int aux, id, flags = 0777;
     struct shmid_ds s;
 
     if (tam)     /*tam distito de 0 indica crear */
         flags = flags | IPC_CREAT | IPC_EXCL;
 
-    if ( clave == IPC_PRIVATE )  /*no nos vale*/{
-        errno=EINVAL;
+    if (clave == IPC_PRIVATE)  /*no nos vale*/{
+        errno = EINVAL;
         return NULL;
     }
 
-    if ( (id=shmget(clave, tam, flags))==-1 )
+    if ((id = shmget(clave, tam, flags)) == -1)
         return (NULL);
 
-    if ((p=shmat(id,NULL,0))==(void*) -1){
-        aux=errno;
+    if ((p = shmat(id, NULL, 0)) == (void *) -1) {
+        aux = errno;
         if (tam)
-            shmctl(id,IPC_RMID,NULL);
+            shmctl(id, IPC_RMID, NULL);
 
-        errno=aux;
+        errno = aux;
         return (NULL);
     }
 
-    shmctl (id,IPC_STAT,&s);
+    shmctl(id, IPC_STAT, &s);
     /* Guardar en la lista   InsertarNodoShared (&L, p, s.shm_segsz, clave); */ //-> ya se hace fuera si no se produce ningún error
     return (p);
 }
 
-int asignarCompartida (tItemL entrada,tItemM *datos){
+int asignarCompartida(tItemL entrada, tItemM *datos) {
     key_t cl;
     size_t tam;
     void *p;
 
     tItemT clave, tamano;
-    getToken(1,entrada.comandos,clave);
-    cl = (key_t) strtoul(clave,NULL,10);
-    getToken(2,entrada.comandos,tamano);
-    tam = (size_t) strtoul(tamano,NULL,10);
+    getToken(1, entrada.comandos, clave);
+    cl = (key_t) strtoul(clave, NULL, 10);
+    getToken(2, entrada.comandos, tamano);
+    tam = (size_t) strtoul(tamano, NULL, 10);
 
-    if ( tam == 0 ) {
-        printf ("No se asignan bloques de 0 bytes\n");
+    if (tam == 0) {
+        printf("No se asignan bloques de 0 bytes\n");
         return 0; //no se guarda en la lista
     }
-    if ( (p=ObtenerMemoriaShmget(cl,tam)) != NULL ) {
+    if ((p = ObtenerMemoriaShmget(cl, tam)) != NULL) {
         printf("Asignados %lu bytes en %p\n", (unsigned long) tam, p);
 
         (*datos).direccion = p;
         (*datos).tamano = tam;
         (*datos).tipo = shared;
-        struct tm* hora;
-        if( ( hora = ActualTime() ) !=  NULL) (*datos).tiempo = *hora;
+        struct tm *hora;
+        if ((hora = ActualTime()) != NULL) (*datos).tiempo = *hora;
         (*datos).clave = cl;
         return 1;
-    }else {
+    } else {
         printf("Imposible asignar memoria compartida clave %lu:%s\n", (unsigned long) cl, strerror(errno));
         return 0;
     }
 
 }
 
-void * MapearFichero (char * fichero, int protection, tItemM *datos){
-    int df, map=MAP_PRIVATE,modo=O_RDONLY; //tipo de mapeo,
+void *MapearFichero(char *fichero, int protection, tItemM *datos) {
+    int df, map = MAP_PRIVATE, modo = O_RDONLY; //tipo de mapeo,
     struct stat s;
     void *p;
 
-    if (protection&PROT_WRITE)
-        modo=O_RDWR; //lectura-escritura
-    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
+    if (protection & PROT_WRITE)
+        modo = O_RDWR; //lectura-escritura
+    if (stat(fichero, &s) == -1 || (df = open(fichero, modo)) == -1)
         return NULL;
-    if ( (p=mmap (NULL,s.st_size, protection,map,df,0)) == MAP_FAILED )
+    if ((p = mmap(NULL, s.st_size, protection, map, df, 0)) == MAP_FAILED)
         return NULL;
 /* Guardar en la lista    InsertarNodoMmap (&L,p, s.st_size,df,fichero); */ //esto se cambia por guardar en el historial
     (*datos).tamano = s.st_size;
@@ -563,106 +579,106 @@ void * MapearFichero (char * fichero, int protection, tItemM *datos){
     return p;
 }
 
-int asignarMap (tItemL entrada,tItemM *datos){
-    tItemT permisos,nombre;
-    getToken(0,entrada.comandos,nombre);
-    getToken(1,entrada.comandos,permisos);
+int asignarMap(tItemL entrada, tItemM *datos) {
+    tItemT permisos, nombre;
+    getToken(0, entrada.comandos, nombre);
+    getToken(1, entrada.comandos, permisos);
     void *p;
-    int protection=0;
+    int protection = 0;
 
-    if ( entrada.tokens == 3 && strlen(permisos) < 4 ) { //se han introducido los argumentos correctamente
-        if (strchr(permisos,'r')!=NULL) protection|=PROT_READ;
-        if (strchr(permisos,'w')!=NULL) protection|=PROT_WRITE;
-        if (strchr(permisos,'x')!=NULL) protection|=PROT_EXEC;
+    if (entrada.tokens == 3 && strlen(permisos) < 4) { //se han introducido los argumentos correctamente
+        if (strchr(permisos, 'r') != NULL) protection |= PROT_READ;
+        if (strchr(permisos, 'w') != NULL) protection |= PROT_WRITE;
+        if (strchr(permisos, 'x') != NULL) protection |= PROT_EXEC;
     }
-    if ( ( p = MapearFichero(nombre,protection,datos) ) == NULL) {
+    if ((p = MapearFichero(nombre, protection, datos)) == NULL) {
         perror("Imposible mapear fichero");
         return -1;
-    }else {
+    } else {
         printf("fichero %s mapeado en %p\n", nombre, p);
 
         (*datos).direccion = p;
-        strcpy((*datos).nombre_archivo,nombre);
+        strcpy((*datos).nombre_archivo, nombre);
         (*datos).tipo = mapped;
-        struct tm* hora;
-        if( ( hora = ActualTime() ) !=  NULL) (*datos).tiempo = *hora;
+        struct tm *hora;
+        if ((hora = ActualTime()) != NULL) (*datos).tiempo = *hora;
         return 1;
     }
 }
 
 
-void desasignarMalloc(size_t tamano, tHistMem *bloques){ //tamaño y bloque
-    tPosM posicion = findBlockMalloc(*bloques,tamano);
+void desasignarMalloc(size_t tamano, tHistMem *bloques) { //tamaño y bloque
+    tPosM posicion = findBlockMalloc(*bloques, tamano);
 
-    if(posicion == MNULL){
+    if (posicion == MNULL) {
         printf("no hay un bloque de ese tamaño asignado con malloc\n");
-    }else{
+    } else {
 
         tItemM bloque = getMemBlock(posicion);
         free(bloque.direccion);
-        deleteMemBlock(posicion,bloques);
+        deleteMemBlock(posicion, bloques);
 
     }
 }
 
-void desasignarCompartida(key_t clave, tHistMem *bloques){
+void desasignarCompartida(key_t clave, tHistMem *bloques) {
     int id;
 
-    if ( entrada.tokens == 1 || clave == IPC_PRIVATE ){
-        printf ("      delkey necesita clave_valida\n");
+    if (entrada.tokens == 1 || clave == IPC_PRIVATE) {
+        printf("      delkey necesita clave_valida\n");
         return;
     }
-    if ( (id=shmget(clave,0,0666)) == -1 ){
-        perror ("shmget: imposible obtener memoria compartida");
+    if ((id = shmget(clave, 0, 0666)) == -1) {
+        perror("shmget: imposible obtener memoria compartida");
         return;
     }
-    if ( shmctl(id,IPC_RMID,NULL) == -1 ) {           //ese NULL en el buf tiene que estar??
+    if (shmctl(id, IPC_RMID, NULL) == -1) {           //ese NULL en el buf tiene que estar??
         perror("shmctl: imposible eliminar memoria compartida\n");
         return;
     }
 
-    deleteMemBlock(findBlockShared(*bloques,clave),bloques);
+    deleteMemBlock(findBlockShared(*bloques, clave), bloques);
 }
 
-void desasignarMapped(tItemT nombre, tHistMem *bloques){ //fich es un nombre de fichero
-    tPosM posicion = findBlockMapped(*bloques,nombre);
+void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de fichero
+    tPosM posicion = findBlockMapped(*bloques, nombre);
 
-    if(posicion == MNULL){
-        printf("Fichero %s no mapeado\n",nombre);
-        return ;
-    }else{
+    if (posicion == MNULL) {
+        printf("Fichero %s no mapeado\n", nombre);
+        return;
+    } else {
 
         tItemM bloque = getMemBlock(posicion);
-        if( munmap(bloque.direccion,bloque.tamano) == -1 ){
+        if (munmap(bloque.direccion, bloque.tamano) == -1) {
             strerror(errno);
-            return ;
-        }else {
+            return;
+        } else {
             free(bloque.direccion); //esto no es redundante??
             deleteMemBlock(posicion, bloques);
-            printf("borrando el fichero %s\n",nombre); 
-            return ;
+            printf("borrando el fichero %s\n", nombre);
+            return;
         }
 
     }
 }
 
-void desasignarDireccion(tItemL entrada, const tHistMem *bloques){
+void desasignarDireccion(tItemL entrada, const tHistMem *bloques) {
     tItemT aux;
-    getToken(0,entrada.comandos,aux);
-    void *buscado = (void *) strtoul(aux,NULL,10); //aux -> a unsigned long
+    getToken(0, entrada.comandos, aux);
+    void *buscado = (void *) strtoul(aux, NULL, 10); //aux -> a unsigned long
     tPosM p;
 
-    if ( (p = findAddress(buscado,*bloques)) == MNULL ){
-        printf("Direccion %p no asignada con malloc, shared o mmap\n",buscado);
-        return ;
+    if ((p = findAddress(buscado, *bloques)) == MNULL) {
+        printf("Direccion %p no asignada con malloc, shared o mmap\n", buscado);
+        return;
     }
 
     //borra de distinta forma dependiendo del tipo de bloque
-    if ( getMemBlock(p).tipo == maloc ) {
+    if (getMemBlock(p).tipo == maloc) {
 
         desasignarMalloc(getMemBlock(p).tamano, **bloques);
 
-    } else if (getMemBlock(p).tipo == shared ) {
+    } else if (getMemBlock(p).tipo == shared) {
 
         desasignarCompartida(getMemBlock(p).clave, **bloques); //esto es como deallocate -shared
 
@@ -675,7 +691,7 @@ void desasignarDireccion(tItemL entrada, const tHistMem *bloques){
 }
 
 //i-o es igual a memdump y memfill, pero con el disco
-int modos_IO(tItemL entrada, modo_IO *opciones){
+int modos_IO(tItemL entrada, modo_IO *opciones) {
     int controlador = 0;
 
     for (int i = 0; i <= entrada.tokens - 2; i++) { //tokens es el total de tokens, incluido el ppal
@@ -697,15 +713,15 @@ int modos_IO(tItemL entrada, modo_IO *opciones){
     return controlador;
 }
 
-struct tm* ActualTime(){
+struct tm *ActualTime() {
     time_t now;
     time(&now);
 
-    if( errno == -1 ) {
+    if (errno == -1) {
         perror("error en time(): ");
         strerror(errno);
         return NULL;
-    }else{
+    } else {
         return localtime(&now);
     }
 }

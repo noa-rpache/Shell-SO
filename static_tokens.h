@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+
 #define TNULL -1
 #define MAX_TOKENS 15 //máximo nº de tokens
 #define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
@@ -27,13 +28,21 @@ typedef struct {
  * */
 
 void createEmptyTokensList(TokensList *L);
-bool isEmptyTokensList (TokensList L);
-tPosT firstToken (TokensList L);
-tPosT lastToken (TokensList L);
-tPosT nextToken (tPosT p, TokensList L);
-tPosT previousToken (tPosT p, TokensList L);
-bool insertToken (tItemT d ,TokensList *L);
+
+bool isEmptyTokensList(TokensList L);
+
+tPosT firstToken(TokensList L);
+
+tPosT lastToken(TokensList L);
+
+tPosT nextToken(tPosT p, TokensList L);
+
+tPosT previousToken(tPosT p, TokensList L);
+
+bool insertToken(tItemT d, TokensList *L);
+
 void getToken(tPosT p, TokensList L, tItemT token);
-void deleteTokensList (TokensList* L);
+
+void deleteTokensList(TokensList *L);
 
 #endif
