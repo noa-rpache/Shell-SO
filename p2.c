@@ -183,7 +183,6 @@ ayuda(tItemL comando) { //como manda el mismo mensaje dando igual los especifica
         printf("\t\t-reca: recursivo (antes)\n");
         printf("\t\t-recb: recursivo (despues)\n");
         printf("\t\tresto parametros como stat\n");
-
     } else if (strcmp(comando.comando, "allocate") == 0) {
         printf("allocate [-malloc|-shared|-createshared|-mmap]... Asigna un bloque de memoria\n");
         printf("\t-malloc tam: asigna un bloque malloc de tamano tam\n");
@@ -220,8 +219,8 @@ void infosis() {
         strerror(errno);
     }
 
-    printf("%s (%s), OS: %s %s %s\n", informacion.nodename, informacion.machine, informacion.sysname,
-           informacion.release, informacion.version);
+    printf("%s (%s), OS: %s %s %s\n",
+           informacion.nodename, informacion.machine, informacion.sysname, informacion.release, informacion.version);
 }
 
 void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques) { //comando N
@@ -246,7 +245,6 @@ void autores(tItemL comando) {
     char nombre_noa[] = "Noa Rodriguez Pache", login_noa[] = "noa.rpache";
     char nombre_fatima[] = "Fátima Ansemil Barros", login_fatima[] = "fatima.ansemil";
 
-    //printf("%s\n", modo);
     if (comando.tokens == 1) { //no se especifica nada
         printf("%s: %s\n", nombre_noa, login_noa);
         printf("%s: %s\n", nombre_fatima, login_fatima);
@@ -270,9 +268,8 @@ void autores(tItemL comando) {
 }
 
 void pillar_pid(tItemL comando) { //char *modo, int ntokens
-    //printf("entra en pid\n");
+
     if (comando.tokens == 1) { //no se ha especificado -p
-        //int PID = ;
         printf("Pid de shell: %d\n", getpid());
     } else {
         tItemT modo;
@@ -319,19 +316,13 @@ void fecha(tItemL comando) {
 
     struct tm *local = localtime(&now);
 
-    horas = local->tm_hour;
-    //aqui obtiene horas desde la medianoche
-    minutos = local->tm_min;
-    //obtiene los minutos
-    segundos = local->tm_sec;
-    //obtiene los segundos
+    horas = local->tm_hour; //aqui obtiene horas desde la medianoche
+    minutos = local->tm_min; //obtiene los minutos
+    segundos = local->tm_sec; //obtiene los segundos
 
-    dia = local->tm_mday;
-    //obtiene el dia del mes (1 al 31)
-    mes = local->tm_mon + 1;
-    //ontiene el mes del año del 0 al 11
-    anho = local->tm_year + 1900;
-    //obtiene el año desde 1900
+    dia = local->tm_mday; //obtiene el dia del mes (1 al 31)
+    mes = local->tm_mon + 1; //ontiene el mes del año del 0 al 11
+    anho = local->tm_year + 1900; //obtiene el año desde 1900
 
     //ya tenemos hechas todas las variables
 
@@ -482,12 +473,11 @@ void create(tItemL comando) {
 
             char *name_folder = modo;
 
-
             if (creat(strcat(path, name_folder), 0666) == -1) {//creamos el documento y le pasamos el permiso
                 perror(error);//salta error si no se puede crear
             }
-        } else {
 
+        } else {
 
             char *name_folder = modo;
 
@@ -525,7 +515,6 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
 
                         perror(error);
 
-
                     }
                 } else {//sino es documento
 
@@ -562,8 +551,8 @@ int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios 
                 if (controlador1 != 0 && controlador2 == 0) {
 
                     borrar_dir(aux);//aqui lo borra recursivamente
-
                     controlador3 = isDirEmpty(aux);
+
                     if (controlador3 == 1) {
                         auxiliar = remove(aux);
 
@@ -575,9 +564,7 @@ int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios 
 
                 } else {
 
-                    unlink(aux);
-
-                    //sino es directorio lo borra con unlink
+                    unlink(aux); //si no es directorio lo borra con unlink
 
                 }
             }
@@ -676,7 +663,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             getToken(1, entrada.comandos, key);
             kety_t clave = (key_t) strtoul(key, NULL, 10);
 
-            desasignarClave(clave,*bloques);
+            desasignarClave(clave, *bloques);
 
         } else if (strcmp(modo, "-mmap") == 0) {
 
@@ -709,20 +696,65 @@ void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
     else {
         modo_IO opciones;
-        modos_IO(comando, &opciones);
+        int aux = modos_IO(comando, &opciones);
 
         if ((opciones.read && opciones.write) || (opciones.read && opciones.overwrite) ||
             (opciones.read && opciones.write && opciones.overwrite))
             printf("uso: e-s [read|write] ......\n");
         else {
 
-            if (opciones.read) {
+            tItemT fich, dir, tam;
+            ssize_t n;
+            const void *addr;
+            size_t cont;
 
-            }
+            if (opciones.read) { // i-o -read fich addr cont
 
-            if (opciones.write) {
+                getToken(1, comando.comandos, fich); //nombre del fichero
+                getToken(2, comando.comandos, dir);
+                addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+                getToken(3, comando.comandos, tam); //número de bytes a leer
+                cont = (size_t) strtoul(tam, NULL, 10);
 
-                if (opciones.overwrite) {
+                if ((n = LeerFichero(fich, *addr, cont)) == -1) {
+                    perror("Imposible leer fichero");
+                }else {
+                    printf("leidos %lld bytes de %s en %p\n", (long long) n, fich, addr);
+                }
+
+            }else {
+
+                if (opciones.write) { //i-o -write fich addr cont
+
+                    getToken(1, comando.comandos, fich); //nombre del fichero
+                    getToken(2, comando.comandos, dir);
+                    addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+                    getToken(3, comando.comandos, tam); //número de bytes a leer
+                    cont = (size_t) strtoul(tam, NULL, 10);
+
+                    if( ( n = EscribirFichero(fich,*addr,cont,0) ) == -1 ){
+                        perror("error al leer en el fichero");
+                        strerror(errno);
+                    }else{
+                        printf("escritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
+                    }
+
+                }
+
+                if (opciones.write && opciones.overwrite) { //i-o -write -o fich addr cont
+
+                    getToken(2, comando.comandos, fich); //nombre del fichero
+                    getToken(3, comando.comandos, dir);
+                    *addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+                    getToken(4, comando.comandos, tam); //número de bytes a leer
+                    cont = (size_t) strtoul(tam, NULL, 10);
+
+                    if( ( n = EscribirFichero(fich,*addr,cont,0) ) == -1 ){
+                        perror("error al leer en el fichero");
+                        strerror(errno);
+                    }else{
+                        printf("sobreescritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
+                    }
 
                 }
 
