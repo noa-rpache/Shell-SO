@@ -275,7 +275,6 @@ void pillar_pid(tItemL comando) { //char *modo, int ntokens
         tItemT modo;
         getToken(0, comando.comandos, modo);
         if (strcmp(modo, "-p") == 0) { //hay que sacar el proceso padre de la shell
-            //int PID = ;
             printf("Pid del padre del shell: %d\n", getppid());
         } else {
             printf("%s no es un especificador válido\n", modo);
@@ -698,68 +697,68 @@ void input_output(tItemL comando) {
         modo_IO opciones;
         int aux = modos_IO(comando, &opciones);
 
-        if ((opciones.read && opciones.write) || (opciones.read && opciones.overwrite) ||
-            (opciones.read && opciones.write && opciones.overwrite))
-            printf("uso: e-s [read|write] ......\n");
-        else {
+        if (aux <= 5) {
+            printf("faltan parámetros\n");
+            return;
+        }
 
-            tItemT fich, dir, tam;
-            ssize_t n;
-            const void *addr;
-            size_t cont;
+        tItemT fich, dir, tam;
+        ssize_t n;
+        const void *addr;
+        size_t cont;
 
-            if (opciones.read) { // i-o -read fich addr cont
+        //se diferencia escoger o no -o por dónde estén colocados los tokens
+        if (opciones.read || (opciones.write && !opciones.overwrite) ) { // i-o -read fich addr cont
 
-                getToken(1, comando.comandos, fich); //nombre del fichero
-                getToken(2, comando.comandos, dir);
-                addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
-                getToken(3, comando.comandos, tam); //número de bytes a leer
-                cont = (size_t) strtoul(tam, NULL, 10);
+            getToken(1, comando.comandos, fich); //nombre del fichero
+            getToken(2, comando.comandos, dir);
+            addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+            getToken(3, comando.comandos, tam); //número de bytes a leer
+            cont = (size_t) strtoul(tam, NULL, 10);
+
+            if (opciones.read) { //si se ha elegido -o también ya salta error al convertir los parámetros
 
                 if ((n = LeerFichero(fich, *addr, cont)) == -1) {
                     perror("Imposible leer fichero");
-                }else {
+                } else {
                     printf("leidos %lld bytes de %s en %p\n", (long long) n, fich, addr);
                 }
 
-            }else {
+            } else {
 
-                if (opciones.write) { //i-o -write fich addr cont
-
-                    getToken(1, comando.comandos, fich); //nombre del fichero
-                    getToken(2, comando.comandos, dir);
-                    addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
-                    getToken(3, comando.comandos, tam); //número de bytes a leer
-                    cont = (size_t) strtoul(tam, NULL, 10);
-
-                    if( ( n = EscribirFichero(fich,*addr,cont,0) ) == -1 ){
-                        perror("error al leer en el fichero");
-                        strerror(errno);
-                    }else{
-                        printf("escritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
-                    }
-
-                }
-
-                if (opciones.write && opciones.overwrite) { //i-o -write -o fich addr cont
-
-                    getToken(2, comando.comandos, fich); //nombre del fichero
-                    getToken(3, comando.comandos, dir);
-                    *addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
-                    getToken(4, comando.comandos, tam); //número de bytes a leer
-                    cont = (size_t) strtoul(tam, NULL, 10);
-
-                    if( ( n = EscribirFichero(fich,*addr,cont,0) ) == -1 ){
-                        perror("error al leer en el fichero");
-                        strerror(errno);
-                    }else{
-                        printf("sobreescritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
-                    }
-
+                if ((n = EscribirFichero(fich, *addr, cont, 0)) == -1) {
+                    perror("error al leer en el fichero");
+                    strerror(errno);
+                } else {
+                    printf("escritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
                 }
 
             }
 
+        } else {
+
+            if (opciones.overwrite) { //i-o -write -o fich addr cont
+
+                getToken(2, comando.comandos, fich); //nombre del fichero
+                getToken(3, comando.comandos, dir);
+                *addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+                getToken(4, comando.comandos, tam); //número de bytes a leer
+                cont = (size_t) strtoul(tam, NULL, 10);
+
+                if ((n = EscribirFichero(fich, *addr, cont, 1)) == -1) {
+                    perror("error al leer en el fichero");
+                    strerror(errno);
+                } else {
+                    printf("sobreescritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
+                }
+
+            }else{
+                perror("esta es una vía rara que no debiera saltar, comprobar la entrada para contemplarla en la casuística");
+            }
+
         }
+
     }
+}
+
 }
