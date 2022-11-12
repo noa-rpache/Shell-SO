@@ -98,7 +98,7 @@ void desasignarMalloc(size_t tamano, tHistMem *bloques);
 
 void desasignarCompartida(key_t clave, tHistMem *bloques);
 
-void desasignarClave(key_t clave);
+void desasignarClave(key_t clave, tHistMem bloques)
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques);
 

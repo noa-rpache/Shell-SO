@@ -663,14 +663,20 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             } else {
                 tItemT key;
                 getToken(1, entrada.comandos, key);
-                kety_t clave = (key_t) strtoul(key, NULL, 10)
+                kety_t clave = (key_t) strtoul(key, NULL, 10);
 
-                //hacer la acción
+                desasignarCompartida(clave, bloques);
             }
 
         } else if (strcmp(modo, "-delkey") == 0) {
 
-            //llama directamente a la función
+            printf("se elimina la clave de un posible uso");
+
+            tItemT key;
+            getToken(1, entrada.comandos, key);
+            kety_t clave = (key_t) strtoul(key, NULL, 10);
+
+            desasignarClave(clave,*bloques);
 
         } else if (strcmp(modo, "-mmap") == 0) {
 

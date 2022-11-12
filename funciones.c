@@ -621,7 +621,7 @@ void desasignarMalloc(size_t tamano, tHistMem *bloques) { //tamaño y bloque
     }
 }
 
-void desasignarCompartida(key_t clave, tHistMem *bloques) {
+void desasignarCompartida(key_t clave, tHistMem *bloques) { //elimina un bloque, no la clave del bloque
     int id;
 
     if (entrada.tokens == 1 || clave == IPC_PRIVATE) {
@@ -632,12 +632,27 @@ void desasignarCompartida(key_t clave, tHistMem *bloques) {
         perror("shmget: imposible obtener memoria compartida");
         return;
     }
-    if (shmctl(id, IPC_RMID, NULL) == -1) {           //ese NULL en el buf tiene que estar??
+    if (shmctl(id, IPC_RMID, NULL) == -1) {           //el NULL da igual porque se ignpra ese campo con IPC_RMID
         perror("shmctl: imposible eliminar memoria compartida\n");
-        return;
     }
 
     deleteMemBlock(findBlockShared(*bloques, clave), bloques);
+}
+
+void desasignarClave(key_t clave, tHistMem bloques) {
+
+    tPosM p = findBlockShared(bloques, clave);
+
+    if (p == MNULL) {
+        printf("la clave on pertenece a ningún bloque asignado a ese proceso");
+        return;
+    }
+    if (shmdt(getMemBlock(p).direccion) == -1) {
+        perror("error al desasignar la clave");
+        strerror(errno);
+    }
+
+    //se borra de la lista de bloques de memoria??
 }
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de fichero
