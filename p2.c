@@ -59,7 +59,7 @@ int main(int argc, char *arvg[]) {
     createMem(&bloques);
     bool salida = false;
 
-    while (salida == false) {
+    while (!salida) {
         leerEntrada(arvg, &historial);
         salida = procesarEntrada(&historial, &bloques);
     }
@@ -635,7 +635,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
                 return;
             } else {
                 tItemT tam;
-                getToken(1, entrada.comandos, tam);
+                getToken(1, comando.comandos, tam);
                 size_t tamano = (size_t) strtoul(tam, NULL, 10);
 
                 desasignarMalloc(tamano, bloques);
@@ -648,8 +648,8 @@ void deallocate(tItemL comando, tHistMem *bloques) {
                 return;
             } else {
                 tItemT key;
-                getToken(1, entrada.comandos, key);
-                kety_t clave = (key_t) strtoul(key, NULL, 10);
+                getToken(1, comando.comandos, key);
+                key_t clave = (key_t) strtoul(key, NULL, 10);
 
                 desasignarCompartida(clave, bloques);
             }
@@ -659,8 +659,8 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             printf("se elimina la clave de un posible uso");
 
             tItemT key;
-            getToken(1, entrada.comandos, key);
-            kety_t clave = (key_t) strtoul(key, NULL, 10);
+            getToken(1, comando.comandos, key);
+            key_t clave = (key_t) strtoul(key, NULL, 10);
 
             desasignarClave(clave, *bloques);
 
@@ -671,7 +671,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
                 return;
             } else {
                 tItemT nombre;
-                getToken(1, entrada.comandos, nombre);
+                getToken(1, comando.comandos, nombre);
                 desasignarMapped(nombre, bloques);
             }
 
@@ -704,11 +704,11 @@ void input_output(tItemL comando) {
 
         tItemT fich, dir, tam;
         ssize_t n;
-        const void *addr;
+        void *addr;
         size_t cont;
 
         //se diferencia escoger o no -o por dónde estén colocados los tokens
-        if (opciones.read || (opciones.write && !opciones.overwrite) ) { // i-o -read fich addr cont
+        if (opciones.read || (opciones.write && !opciones.overwrite)) { // i-o -read fich addr cont
 
             getToken(1, comando.comandos, fich); //nombre del fichero
             getToken(2, comando.comandos, dir);
@@ -718,7 +718,7 @@ void input_output(tItemL comando) {
 
             if (opciones.read) { //si se ha elegido -o también ya salta error al convertir los parámetros
 
-                if ((n = LeerFichero(fich, *addr, cont)) == -1) {
+                if ((n = LeerFichero(fich, addr, cont)) == -1) {
                     perror("Imposible leer fichero");
                 } else {
                     printf("leidos %lld bytes de %s en %p\n", (long long) n, fich, addr);
@@ -726,7 +726,7 @@ void input_output(tItemL comando) {
 
             } else {
 
-                if ((n = EscribirFichero(fich, *addr, cont, 0)) == -1) {
+                if ((n = EscribirFichero(fich, addr, cont, 0)) == -1) {
                     perror("error al leer en el fichero");
                     strerror(errno);
                 } else {
@@ -741,18 +741,18 @@ void input_output(tItemL comando) {
 
                 getToken(2, comando.comandos, fich); //nombre del fichero
                 getToken(3, comando.comandos, dir);
-                *addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+                addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
                 getToken(4, comando.comandos, tam); //número de bytes a leer
                 cont = (size_t) strtoul(tam, NULL, 10);
 
-                if ((n = EscribirFichero(fich, *addr, cont, 1)) == -1) {
+                if ((n = EscribirFichero(fich, addr, cont, 1)) == -1) {
                     perror("error al leer en el fichero");
                     strerror(errno);
                 } else {
                     printf("sobreescritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
                 }
 
-            }else{
+            } else {
                 perror("esta es una vía rara que no debiera saltar, comprobar la entrada para contemplarla en la casuística");
             }
 
@@ -761,4 +761,3 @@ void input_output(tItemL comando) {
     }
 }
 
-}

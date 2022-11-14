@@ -98,18 +98,18 @@ void desasignarMalloc(size_t tamano, tHistMem *bloques);
 
 void desasignarCompartida(key_t clave, tHistMem *bloques);
 
-void desasignarClave(key_t clave, tHistMem bloques)
+void desasignarClave(key_t clave, tHistMem bloques);
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques);
 
-void desasignarDireccion(tItemL entrada, const tHistMem *bloques);
+void desasignarDireccion(tItemL entrada, tHistMem *bloques);
 
 //sobre I-O
 int modos_IO(tItemL entrada, modo_IO *opciones);
 
 ssize_t LeerFichero(char *f, void *p, size_t cont);
 
-ssize_t EscribirFichero(char *f, void *p, size_t cont, int overwrite);
+ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
 
 //provisionales
 struct tm *ActualTime(); //no estoy nada segura de esto
