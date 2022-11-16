@@ -483,19 +483,26 @@ void Recursiva(int n) {
 int asignarMalloc(tItemL entrada, tItemM *datos) {
     tItemT tam;
     getToken(1, entrada.comandos, tam);
-    int tamano = atoi(tam);
+    int tamano = (int) strtoul(tam,NULL,10);
+    time_t now;
+    void *direccion;
 
-    if (malloc(sizeof tamano) == NULL && tamano != 0) return -1;
+    if ((direccion = malloc(sizeof tamano) ) == NULL && tamano != 0) return -1;
     else if (tamano == 0) {
         printf("No se asignan bloques de 0 bytes\n");
         return 0;
     }
 
+    time(&now);
+    if (errno == -1) return -1;
+    else {
+        struct tm *local = localtime(&now);
+        (*datos).tiempo = *local;
+    }
+
     (*datos).tipo = maloc;
     (*datos).tamano = tamano;
-    (*datos).direccion = malloc(sizeof tamano);
-    struct tm *hora;
-    if ((hora = ActualTime()) != NULL) (*datos).tiempo = *hora;
+    (*datos).direccion = direccion;
 
     return 0;
 }
@@ -538,8 +545,12 @@ int asignarCompartida(tItemL entrada, tItemM *datos) {
     tItemT clave, tamano;
     getToken(1, entrada.comandos, clave);
     cl = (key_t) strtoul(clave, NULL, 10);
-    getToken(2, entrada.comandos, tamano);
-    tam = (size_t) strtoul(tamano, NULL, 10);
+    if (entrada.tokens == 2) { //para diferenciar shared de createshared
+        tam = 0;
+    } else {
+        getToken(2, entrada.comandos, tamano);
+        tam = (size_t) strtoul(tamano, NULL, 10);
+    }
 
     if (tam == 0) {
         printf("No se asignan bloques de 0 bytes\n");
@@ -680,11 +691,12 @@ void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de
 void desasignarDireccion(tItemL entrada, tHistMem *bloques) {
     tItemT aux;
     getToken(0, entrada.comandos, aux);
-    void *buscado = (void *) strtoul(aux, NULL, 10); //aux -> a unsigned long
+    void *buscado = (void *) strtoul(aux, NULL, 16); //aux -> a unsigned long
     tPosM p;
 
     if ((p = findAddress(buscado, *bloques)) == MNULL) {
         printf("Direccion %p no asignada con malloc, shared o mmap\n", buscado);
+        printf("%s\n", aux);
         return;
     }
 
@@ -747,7 +759,8 @@ ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, direc
     return n;
 }
 
-ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
+ssize_t
+EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
     ssize_t n;
     int df, aux, flags = O_CREAT | O_EXCL | O_WRONLY;
 
