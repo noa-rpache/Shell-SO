@@ -589,6 +589,7 @@ void allocate(tItemL comando, tHistMem *bloques) {
             } else {
                 if (asignarMalloc(comando, &datos) == -1) {
                     printf("se ha producido un error en -malloc\n");
+                    strerror(errno);
                     return;
                 }
             }
@@ -626,7 +627,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
         ListarBloques(*bloques, 4);
     } else {
         tItemT modo;
-        getToken(1, comando.comandos, modo);
+        getToken(0, comando.comandos, modo);
 
         if (strcmp(modo, "-malloc") == 0) {
 
@@ -695,9 +696,8 @@ void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
     else {
         modo_IO opciones;
-        int aux = modos_IO(comando, &opciones);
 
-        if (aux <= 5) {
+        if (modos_IO(comando, &opciones) <= 5) {
             printf("faltan parámetros\n");
             return;
         }
@@ -712,7 +712,7 @@ void input_output(tItemL comando) {
 
             getToken(1, comando.comandos, fich); //nombre del fichero
             getToken(2, comando.comandos, dir);
-            addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+            addr = (void *) strtoul(dir, NULL, 16); //dirección del fichero
             getToken(3, comando.comandos, tam); //número de bytes a leer
             cont = (size_t) strtoul(tam, NULL, 10);
 
@@ -741,7 +741,7 @@ void input_output(tItemL comando) {
 
                 getToken(2, comando.comandos, fich); //nombre del fichero
                 getToken(3, comando.comandos, dir);
-                addr = (void *) strtoul(dir, NULL, 10); //dirección del fichero
+                addr = (void *) strtoul(dir, NULL, 16); //dirección del fichero
                 getToken(4, comando.comandos, tam); //número de bytes a leer
                 cont = (size_t) strtoul(tam, NULL, 10);
 
