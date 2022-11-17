@@ -600,22 +600,31 @@ void allocate(tItemL comando, tHistMem *bloques) {
                 }
             }
 
-        } else if (strcmp(modo, "-shared") == 0 || strcmp(modo, "-createshared") == 0) {
+        } else if (strcmp(modo, "-shared") == 0) {
 
             if (comando.tokens == 2) {
                 ListarBloques(*bloques, 1);
                 return;
             } else {
-                if (asignarCompartida(comando, &datos) != 1) return;
+                if (asignarCompartida(comando, &datos, false) == -1) return;
             }
 
-        } else if (strcmp(modo, "-mmap") == 0) {
+        } else if(strcmp(modo, "-createshared") == 0){
+
+            if (comando.tokens == 2) {
+                ListarBloques(*bloques, 1);
+                return;
+            } else {
+                if (asignarCompartida(comando, &datos, true) == -1) return;
+            }
+
+        }else if (strcmp(modo, "-mmap") == 0) {
 
             if (comando.tokens == 2) {
                 ListarBloques(*bloques, 2);
                 return;
             } else {
-                if (asignarMap(comando, &datos) != -1) return;
+                if (asignarMap(comando, &datos) == -1) return;
             }
 
         } else {
@@ -662,8 +671,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             }
 
         } else if (strcmp(modo, "-delkey") == 0) {
-
-            printf("se elimina la clave de un posible uso");
+            //printf("se elimina la clave de un posible uso");
 
             tItemT key;
             getToken(1, comando.comandos, key);
@@ -683,7 +691,6 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             }
 
         } else {
-            printf("esto está en proceso\n");
             desasignarDireccion(comando, bloques);
         }
     }
@@ -845,13 +852,14 @@ void Memfill(tItemL comando) {
 void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
     else {
-        modo_IO opciones;
 
-        if (modos_IO(comando, &opciones) <= 5) {
+        if(comando.tokens < 5) {
             printf("faltan parámetros\n");
             return;
         }
 
+        modo_IO opciones;
+        modos_IO(comando,&opciones);
         tItemT fich, dir, tam;
         ssize_t n;
         void *addr;
@@ -863,8 +871,13 @@ void input_output(tItemL comando) {
             getToken(1, comando.comandos, fich); //nombre del fichero
             getToken(2, comando.comandos, dir);
             addr = (void *) strtoul(dir, NULL, 16); //dirección del fichero
-            getToken(3, comando.comandos, tam); //número de bytes a leer
-            cont = (size_t) strtoul(tam, NULL, 10);
+
+            if(opciones.read && comando.tokens == 4){
+                cont = -1; //se lee entero
+            }else {
+                getToken(3, comando.comandos, tam); //número de bytes a leer/escribir
+                cont = (size_t) strtoul(tam, NULL, 10);
+            }
 
             if (opciones.read) { //si se ha elegido -o también ya salta error al convertir los parámetros
 
