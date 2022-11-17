@@ -810,12 +810,15 @@ int volcarmem(tItemL comando){
 
     }}
 
+
+
 void Memfill(tItemL comando) {
 
-    tItemT modo, modo2, modo0;
+    tItemT modo0,modo, modo2;
 
+
+    getToken(0, comando.comandos, modo0);
     getToken(1, comando.comandos, modo);
-
     getToken(2, comando.comandos, modo2);
 
 
@@ -825,19 +828,23 @@ void Memfill(tItemL comando) {
         char *dir;
 
         if (comando.tokens >=2 && isNumber(modo)) cont = atoi(modo);
+
         if(comando.tokens > 2 && isNumber(modo)){
+
             if(isNumber(modo2)) c= atoi(modo2);
+
             else c= strtoul(modo2,&dir,16);
         }
 
-           long addr = strtoul(modo0, &dir, 16);
+            long addr = strtoul(modo0, &dir, 16);
 
-        for (int i = 0; i < cont; i++) {
-        *(int *) addr = c;
-        addr++;}
+            for (int i = 0; i < cont; i++) {
+            *(int *) addr = c;
+            addr++;}
 
 }}
 
+      
 void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
     else {
