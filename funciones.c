@@ -96,7 +96,7 @@ int opciones(tItemL entrada, modo *opciones) {
         getToken(i, entrada.comandos, aux);
 
         if (strcmp("-long", aux) == 0) {
-            (*opciones).largo = true; //se ha detectado long
+            (*opciones).largo = true;
             controlador++;
         } else if (strcmp("-link", aux) == 0) {
             (*opciones).link = true;
@@ -123,8 +123,8 @@ int opciones(tItemL entrada, modo *opciones) {
     return controlador;
 }
 
-int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH],
-              const modo *opciones) { //la ruta enlazada se pasa siemrpe, la rutaReal puede ser NULL en un directorio
+int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH], const modo *opciones) {
+    //la ruta enlazada se pasa siempre, la rutaReal puede ser NULL en un directorio
     struct stat contenido;
 
     if (lstat(enlazada, &contenido) == -1) {
@@ -181,8 +181,8 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH],
     if (opciones->listar == true) {
         printf("%s", rutaReal);
 
-        if (opciones->largo &&
-            (opciones->link && LetraTF(contenido.st_mode) == 'l')) { //imprimir la ruta real a la que apunta el enlace
+        if (opciones->largo && (opciones->link && LetraTF(contenido.st_mode) == 'l')) {
+            //imprimir la ruta real a la que apunta el enlace
             char origen[MAX_LENGHT_PATH];
             realpath(enlazada, origen);
             printf(" -> %s", origen);
@@ -202,8 +202,8 @@ int printInfo(char rutaReal[MAX_LENGHT_PATH], char enlazada[MAX_LENGHT_PATH],
     return 0;
 }
 
-int ListContent(char path[MAX_LENGHT_PATH],
-                const modo *opciones) { //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListContent(char path[MAX_LENGHT_PATH], const modo *opciones) {
+    //pasar el path requerido con las opciones pedidas y mostrarlo
     printf("************%s\n", path);
 
     DIR *directory_stream = opendir(path);
@@ -252,8 +252,8 @@ int ListContent(char path[MAX_LENGHT_PATH],
     return 0;
 }
 
-int ListReca(char path[MAX_LENGHT_PATH],
-             const modo *opciones) { //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListReca(char path[MAX_LENGHT_PATH], const modo *opciones) {
+    //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
     printf("************%s\n", path);
 
@@ -262,7 +262,6 @@ int ListReca(char path[MAX_LENGHT_PATH],
         perror("no hay espacio para la recursividad");
         return -1;
     }
-
 
     DIR *directory_stream = opendir(path);
     if (directory_stream == NULL) return -1;
@@ -329,8 +328,8 @@ int ListReca(char path[MAX_LENGHT_PATH],
     return 0;
 }
 
-int ListRecb(char path[MAX_LENGHT_PATH],
-             const modo *opciones) { //pasar el path requerido con las opciones pedidas y mostrarlo
+int ListRecb(char path[MAX_LENGHT_PATH], const modo *opciones) {
+    //pasar el path requerido con las opciones pedidas y mostrarlo
     errno = 0;
 
     DIR *directory_stream = opendir(path);
@@ -404,7 +403,7 @@ int borrar_dir(char *dir) {//funcion recursiva para borrar directorios
 
         //comprobamos que sea un directorio valido
         if (strcmp(tlist->d_name, "..") == 0 || strcmp(tlist->d_name, ".") == 0)
-            //no vuelve a comenzar la recursividad si es el direcotrio actual o el anterior
+            //no vuelve a comenzar la recursividad si es el directorio actual o el anterior
             continue;
 
 
@@ -483,11 +482,11 @@ void Recursiva(int n) {
 int asignarMalloc(tItemL entrada, tItemM *datos) {
     tItemT tam;
     getToken(1, entrada.comandos, tam);
-    int tamano = (int) strtoul(tam,NULL,10);
+    int tamano = (int) strtoul(tam, NULL, 10);
     time_t now;
     void *direccion;
 
-    if ((direccion = malloc(sizeof tamano) ) == NULL && tamano != 0) return -1;
+    if ((direccion = malloc(sizeof tamano)) == NULL && tamano != 0) return -1;
     else if (tamano == 0) {
         printf("No se asignan bloques de 0 bytes\n");
         return 0;
@@ -503,6 +502,8 @@ int asignarMalloc(tItemL entrada, tItemM *datos) {
     (*datos).tipo = maloc;
     (*datos).tamano = tamano;
     (*datos).direccion = direccion;
+
+    printf("Asignados %ld bytes en %p\n", (*datos).tamano, (*datos).direccion);
 
     return 0;
 }
@@ -537,38 +538,49 @@ void *ObtenerMemoriaShmget(key_t clave, size_t tam) {
     return (p);
 }
 
-int asignarCompartida(tItemL entrada, tItemM *datos) {
+int asignarCompartida(tItemL entrada, tItemM *datos, bool crear) {
     key_t cl;
     size_t tam;
     void *p;
-
+    time_t now;
     tItemT clave, tamano;
+
     getToken(1, entrada.comandos, clave);
     cl = (key_t) strtoul(clave, NULL, 10);
-    if (entrada.tokens == 2) { //para diferenciar shared de createshared
-        tam = 0;
-    } else {
+
+    if (crear) { //createshared
         getToken(2, entrada.comandos, tamano);
         tam = (size_t) strtoul(tamano, NULL, 10);
+
+        if (tam == 0) {
+            printf("No se asignan bloques de 0 bytes\n");
+            return 0; //no se guarda en la lista
+        }
+
+    } else { //shared
+        tam = 0;
     }
 
-    if (tam == 0) {
-        printf("No se asignan bloques de 0 bytes\n");
-        return 0; //no se guarda en la lista
-    }
     if ((p = ObtenerMemoriaShmget(cl, tam)) != NULL) {
-        printf("Asignados %lu bytes en %p\n", (unsigned long) tam, p);
+
+        time(&now);
+        if (errno == -1) return -1;
+        else {
+            struct tm *local = localtime(&now);
+            (*datos).tiempo = *local;
+        }
 
         (*datos).direccion = p;
         (*datos).tamano = tam;
         (*datos).tipo = shared;
-        struct tm *hora;
-        if ((hora = ActualTime()) != NULL) (*datos).tiempo = *hora;
         (*datos).clave = cl;
+
+        printf("Asignados %lu bytes en %p\n", (unsigned long) tam, p);
+
         return 1;
     } else {
         printf("Imposible asignar memoria compartida clave %lu:%s\n", (unsigned long) cl, strerror(errno));
-        return 0;
+        return -1;
     }
 
 }
@@ -584,7 +596,7 @@ void *MapearFichero(char *fichero, int protection, tItemM *datos) {
         return NULL;
     if ((p = mmap(NULL, s.st_size, protection, map, df, 0)) == MAP_FAILED)
         return NULL;
-/* Guardar en la lista    InsertarNodoMmap (&L,p, s.st_size,df,fichero); */ //esto se cambia por guardar en el historial
+
     (*datos).tamano = s.st_size;
     (*datos).file_descriptor = df;
     return p;
@@ -592,10 +604,11 @@ void *MapearFichero(char *fichero, int protection, tItemM *datos) {
 
 int asignarMap(tItemL entrada, tItemM *datos) {
     tItemT permisos, nombre;
-    getToken(0, entrada.comandos, nombre);
-    getToken(1, entrada.comandos, permisos);
+    getToken(1, entrada.comandos, nombre);
+    getToken(2, entrada.comandos, permisos);
     void *p;
     int protection = 0;
+    time_t now;
 
     if (entrada.tokens == 3 && strlen(permisos) < 4) { //se han introducido los argumentos correctamente
         if (strchr(permisos, 'r') != NULL) protection |= PROT_READ;
@@ -606,13 +619,19 @@ int asignarMap(tItemL entrada, tItemM *datos) {
         perror("Imposible mapear fichero");
         return -1;
     } else {
-        printf("fichero %s mapeado en %p\n", nombre, p);
+
+        time(&now);
+        if (errno == -1) return -1;
+        else {
+            struct tm *local = localtime(&now);
+            (*datos).tiempo = *local;
+        }
 
         (*datos).direccion = p;
         strcpy((*datos).nombre_archivo, nombre);
         (*datos).tipo = mapped;
-        struct tm *hora;
-        if ((hora = ActualTime()) != NULL) (*datos).tiempo = *hora;
+
+        printf("fichero %s mapeado en %p\n", nombre, p);
         return 1;
     }
 }
@@ -640,7 +659,7 @@ void desasignarCompartida(key_t clave, tHistMem *bloques) { //elimina un bloque,
         return;
     }
     if ((id = shmget(clave, 0, 0666)) == -1) {
-        perror("shmget: imposible obtener memoria compartida");
+        perror("shmget: imposible obtener memoria compartida\n");
         return;
     }
     if (shmctl(id, IPC_RMID, NULL) == -1) {           //el NULL da igual porque se ignpra ese campo con IPC_RMID
@@ -655,7 +674,7 @@ void desasignarClave(key_t clave, tHistMem bloques) {
     tPosM p = findBlockShared(bloques, clave);
 
     if (p == MNULL) {
-        printf("la clave on pertenece a ningún bloque asignado a ese proceso");
+        printf("la clave on pertenece a ningún bloque asignado a ese proceso\n");
         return;
     }
     if (shmdt(getMemBlock(p).direccion) == -1) {
@@ -663,7 +682,6 @@ void desasignarClave(key_t clave, tHistMem bloques) {
         strerror(errno);
     }
 
-    //se borra de la lista de bloques de memoria??
 }
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de fichero
@@ -690,7 +708,7 @@ void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de
 
 void desasignarDireccion(tItemL entrada, tHistMem *bloques) {
     tItemT aux;
-    getToken(0, entrada.comandos, aux);
+    getToken(0, entrada.comandos, aux); //aquí es 0 porque haces deallocate 0x7f6f5e4d2000
     void *buscado = (void *) strtoul(aux, NULL, 16); //aux -> a unsigned long
     tPosM p;
 
@@ -715,6 +733,8 @@ void desasignarDireccion(tItemL entrada, tHistMem *bloques) {
 
     }
 
+    printf("Dirección %p desasignada\n", buscado);
+
 }
 
 //i-o es igual a memdump y memfill, pero con el disco
@@ -726,7 +746,7 @@ int modos_IO(tItemL entrada, modo_IO *opciones) {
         getToken(i, entrada.comandos, aux);
 
         if (strcmp("-read", aux) == 0) {
-            (*opciones).read = true; //se ha detectado long
+            (*opciones).read = true;
             controlador++;
         } else if (strcmp("-write", aux) == 0) {
             (*opciones).write = true;
@@ -741,6 +761,7 @@ int modos_IO(tItemL entrada, modo_IO *opciones) {
 }
 
 ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, dirección de memoria, tamaño
+    printf("p %p\n", p);
     struct stat s;
     ssize_t n;
     int df, aux;
@@ -759,8 +780,7 @@ ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, direc
     return n;
 }
 
-ssize_t
-EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
+ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
     ssize_t n;
     int df, aux, flags = O_CREAT | O_EXCL | O_WRONLY;
 
@@ -780,24 +800,10 @@ EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, 
     return n;
 }
 
-struct tm *ActualTime() {
-    time_t now;
-    time(&now);
-
-    if (errno == -1) {
-        perror("error en time(): ");
-        strerror(errno);
-        return NULL;
-    } else {
-        return localtime(&now);
-    }
-}
-
-
-int isNumber(char * string){
-    for(int i = 0; i < strlen( string ); i ++){
-        if (string[i] < 48 || string[i] > 57 ){
-            if (string[i] != 45){
+int isNumber(char *string) {
+    for (int i = 0; i < strlen(string); i++) {
+        if (string[i] < 48 || string[i] > 57) {
+            if (string[i] != 45) {
                 return 0;
             }
         }
@@ -805,32 +811,30 @@ int isNumber(char * string){
     return 1;
 }
 
-int minimo (int a, int b){
-    if(a<b) return a;
+int minimo(int a, int b) {
+    if (a < b) return a;
     else return b;
-
 }
 
-void dopmap(){
+void dopmap() {
 
-   pid_t pid;
+    pid_t pid;
+    char npid[32];
+    char *aux[3] = {"pmap", npid, NULL};
 
-   char npid[32];
+    sprintf(npid, "%d", (int) getpid());
 
-   char *aux[3]={"pmap",npid,NULL};
-    sprintf(npid,"½d", (int) getpid());
-
-    if((pid=fork())==-1){
+    if ((pid = fork()) == -1) {
         perror("imposible crear el proceso");
         return;
     }
-    if(pid==0){
-        if(execvp(aux[0],aux)==-1)
+    if (pid == 0) {
+        if (execvp(aux[0], aux) == -1)
             perror("no se puede ejecutar pmap");
         exit(1);
 
     }
-    waitpid(pid,NULL,0);
+    waitpid(pid, NULL, 0);
 
 }
 

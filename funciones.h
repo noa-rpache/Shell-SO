@@ -7,10 +7,10 @@
 #ifndef P0_SO_FUNCIONES_H
 #define P0_SO_FUNCIONES_H
 
-//#include <limits.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h> //esta venía en el man C de google
+#include <unistd.h>
 #include <sys/utsname.h> //esto es para infosis
 #include <time.h> //para fecha
 #include <errno.h> //para errores
@@ -18,13 +18,14 @@
 #include <sys/stat.h> //para struct stat
 #include <grp.h> //utilidades sobre grupos
 #include <pwd.h> //utilidades fichero password -> para gid y uid
-//#include <sys/dir.h> //utilidades sobre directorios
+#include <sys/dir.h> //utilidades sobre directorios
 #include <fcntl.h>
 #include <dirent.h> //para opendir()
 #include <sys/shm.h> //para memoria compartida
 #include <sys/mman.h> //para (des)mapear
-#include "historial.h"
-#include "memoria.h"
+#include <sys/wait.h> //para waitpid
+#include "historial.h" //lista historial
+#include "memoria.h" //lista bloques de memoria
 
 #define TAMANO 2048
 
@@ -87,7 +88,7 @@ int asignarMalloc(tItemL entrada, tItemM *datos);
 
 void *ObtenerMemoriaShmget(key_t clave, size_t tam);
 
-int asignarCompartida(tItemL entrada, tItemM *datos);
+int asignarCompartida(tItemL entrada, tItemM *datos, bool crear);
 
 void *MapearFichero(char *fichero, int protection, tItemM *datos);
 
@@ -104,6 +105,7 @@ void desasignarMapped(tItemT nombre, tHistMem *bloques);
 
 void desasignarDireccion(tItemL entrada, tHistMem *bloques);
 
+//aux de mem
 void dopmap();
 
 int isNumber(char *string);
@@ -116,9 +118,6 @@ int modos_IO(tItemL entrada, modo_IO *opciones);
 ssize_t LeerFichero(char *f, void *p, size_t cont);
 
 ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
-
-//provisionales
-struct tm *ActualTime(); //no estoy nada segura de esto
 
 
 
