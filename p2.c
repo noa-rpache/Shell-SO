@@ -48,6 +48,12 @@ void deallocate(tItemL comando, tHistMem *bloques);
 
 void recurse(tItemL comando);
 
+void memory(tItemL comando, tHistMem *bloques);
+
+int volcarmem(tItemL comando);
+
+void Memfill(tItemL comando);
+
 void input_output(tItemL comando);
 
 
@@ -691,6 +697,146 @@ void recurse(tItemL comando) {
         Recursiva(veces);
     }
 }
+
+
+//variables para funcion memoria
+int g1 = 0, g2 = 0, g3 = 0;
+
+void memory(tItemL comando, tHistMem *bloques) {
+
+    if (comando.tokens == 1) {
+
+        tItemT modo;//asignamos la variable tItemT
+
+        for (int i = 0; i < comando.tokens - 1; i++) {
+
+            getToken(i, comando.comandos, modo);//recogemos el modo de cada comando
+
+//lo vamos comparando
+
+            if (strcmp(modo, "-vars") == 0) {//aqui devuelve las varaibles
+
+                auto int x = 0, y = 0, z = 0;
+                static int a = 0, b = 0, c = 0;
+
+                printf("automatic variables:\t%p, %p, %p\n", &x, &y, &z);
+                printf("static variables:\t%p, %p, %p\n", &a, &b, &c);
+                printf("global variables:\t%p, %p, %p\n", &g1, &g2, &g3);
+
+            }
+            if (strcmp(modo, "-funcs") == 0) {//aqui las funciones
+
+                printf("program functions:\t%p, %p, %p\n", autores, pillar_pid, infosis);
+                printf("library functions :\t%p, %p, %p\n", malloc, printf, strcmp);
+
+
+            }
+            if (strcmp(modo, "-blocks") == 0) {
+
+                deallocate(comando, bloques);
+
+            }
+            if (strcmp(modo, "-all") == 0) {//tiene que hacer lo equivalente a blocks func y vars
+
+                auto int x = 0, y = 0, z = 0;
+                static int a = 0, b = 0, c = 0;
+
+                printf("automatic variables:\t%p, %p, %p\n", &x, &y, &z);
+                printf("static variables:\t%p, %p, %p\n", &a, &b, &c);
+                printf("global variables:\t%p, %p, %p\n", &g1, &g2, &g3);
+
+                printf("program functions:\t%p, %p, %p\n", autores, pillar_pid, infosis);
+                printf("library functions :\t%p, %p, %p\n", malloc, printf, strcmp);
+
+                deallocate(comando, bloques);
+
+
+            } else if (strcmp(modo, "-pmap") == 0) {
+
+                dopmap();
+            }
+
+
+        }
+
+
+    } else {
+
+        //sino se dan argumentos se hace la operacion equivalente a -all
+        auto int x = 0, y = 0, z = 0;
+        static int a = 0, b = 0, c = 0;
+
+        printf("automatic variables:\t%p, %p, %p\n", &x, &y, &z);
+        printf("static variables:\t%p, %p, %p\n", &a, &b, &c);
+        printf("global variables:\t%p, %p, %p\n", &g1, &g2, &g3);
+
+        printf("program functions:\t%p, %p, %p\n", autores, pillar_pid, infosis);
+        printf("library functions :\t%p, %p, %p\n", malloc, printf, strcmp);
+
+        deallocate(comando, bloques);
+    }
+
+}
+
+
+int volcarmem(tItemL comando){
+
+    tItemT modo, modo2;
+    getToken(1, comando.comandos, modo);
+
+    getToken(0, comando.comandos, modo2);
+
+    if(comando.tokens!=0) {
+        int n = 25;
+
+        if (comando.tokens == 2 && isNumber(modo)) n = atoi(modo);
+
+        char *p;
+        long addr = strtoul(modo2, &p, 16);
+
+        for (int i = 0; i < n; i += minimo(n - i, 25)) {
+            long aux = addr;
+            for (int j = 0; j < minimo(n - i, 25); j++) {
+                printf(" %c ", (*(char *) aux == '\n') ? ' ' : *(char *) aux);
+                aux++;
+            }
+            printf("\n");
+            for (int j = 0; j < minimo(n - i, 25); j++) {
+                printf("%02X ", *(char *) addr);
+                addr++;
+            }
+            printf("\n");
+        }
+
+    }}
+
+void Memfill(tItemL comando) {
+
+    tItemT modo, modo2, modo0;
+
+    getToken(1, comando.comandos, modo);
+
+    getToken(2, comando.comandos, modo2);
+
+
+    if(comando.tokens !=0){
+        int cont = 128;
+        int c = 65;
+        char *dir;
+
+        if (comando.tokens >=2 && isNumber(modo)) cont = atoi(modo);
+        if(comando.tokens > 2 && isNumber(modo)){
+            if(isNumber(modo2)) c= atoi(modo2);
+            else c= strtoul(modo2,&dir,16);
+        }
+
+           long addr = strtoul(modo0, &dir, 16);
+
+        for (int i = 0; i < cont; i++) {
+        *(int *) addr = c;
+        addr++;}
+
+}}
 
 void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
