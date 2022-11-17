@@ -794,5 +794,47 @@ struct tm *ActualTime() {
 }
 
 
+int isNumber(char * string){
+    for(int i = 0; i < strlen( string ); i ++){
+        if (string[i] < 48 || string[i] > 57 ){
+            if (string[i] != 45){
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+int minimo (int a, int b){
+    if(a<b) return a;
+    else return b;
+
+}
+
+void dopmap(){
+
+   pid_t pid;
+
+   char npid[32];
+
+   char *aux[3]={"pmap",npid,NULL};
+    sprintf(npid,"½d", (int) getpid());
+
+    if((pid=fork())==-1){
+        perror("imposible crear el proceso");
+        return;
+    }
+    if(pid==0){
+        if(execvp(aux[0],aux)==-1)
+            perror("no se puede ejecutar pmap");
+        exit(1);
+
+    }
+    waitpid(pid,NULL,0);
+
+}
+
+
+
 
 
