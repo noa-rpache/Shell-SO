@@ -15,7 +15,7 @@ void new_historial(char *comando[], tList *hist, int ntokens);
 
 bool salir(char cadena[]);
 
-//comandos
+//p0
 void ayuda(tItemL comando);
 
 void infosis();
@@ -31,7 +31,7 @@ void carpeta(tItemL comando);
 void fecha(tItemL comando);
 
 void hist(tItemL comando, tList *hist);
-
+//p1
 void status(tItemL comando);
 
 void listar(tItemL comando);
@@ -41,7 +41,7 @@ void create(tItemL comando);
 int delete(tItemL comando);//borra documentos o directorios vacios
 
 int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
-
+//p2
 void allocate(tItemL comando, tHistMem *bloques);
 
 void deallocate(tItemL comando, tHistMem *bloques);
@@ -100,11 +100,11 @@ bool procesarEntrada(tList *historial, tHistMem *bloques) {
             else if (strcmp(peticion.comando, "deltree") == 0) deleteTree(peticion);
             else if (strcmp(peticion.comando, "allocate") == 0) allocate(peticion, bloques); //p2
             else if (strcmp(peticion.comando, "deallocate") == 0) deallocate(peticion, bloques);
-            else if (strcmp(peticion.comando, "memdump") == 0) printf("*memdump en construcción*\n");
-            else if (strcmp(peticion.comando, "memfill") == 0) printf("*memfill en construcción*\n");
-            else if (strcmp(peticion.comando, "memory") == 0) printf("*memory en construcción*\n");
+            else if (strcmp(peticion.comando, "memdump") == 0) volcarmem(peticion);
+            else if (strcmp(peticion.comando, "memfill") == 0) Memfill(peticion);
+            else if (strcmp(peticion.comando, "memory") == 0) memory(peticion, bloques);
             else if (strcmp(peticion.comando, "recurse") == 0) recurse(peticion);
-            else if (strcmp(peticion.comando, "i-o") == 0) printf("i-o en construcción\n");
+            else if (strcmp(peticion.comando, "i-o") == 0) input_output(peticion);
             else printf("%s no es un comando disponible, o no existe\n", peticion.comando);
 
             return false;
@@ -512,7 +512,7 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
                 controlador1 = isDirectory(aux);
                 controlador2 = isDirEmpty(aux);
 
-                if (controlador1 != 0 && controlador2 == 1) {//si es directorio y esta vacio lo borra
+                if (controlador1 != 0 && controlador2 == 1) {//si es directorio y esta vacío lo borra
 
                     auxiliar = remove(aux);
 
@@ -521,9 +521,10 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
                         perror(error);
 
                     }
+
                 } else {//sino es documento
 
-                    auxiliar1 = remove(aux);//segun ivan esto es para eliminar files
+                    auxiliar1 = remove(aux);//esto es para eliminar files
 
                     if (auxiliar1 != 0) {
                         perror(error);
@@ -538,9 +539,9 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
 int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios no vacios
 
     int controlador1, controlador2, controlador3, auxiliar;
-
     char error[MAX_LENGHT_PATH] = "no se ha podido borrar";
-    if (comando.tokens == 1)getDir();
+
+    if (comando.tokens == 1) getDir();
     else {
         if (comando.tokens != 0) {
 
@@ -553,17 +554,16 @@ int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios 
                 controlador1 = isDirectory(aux);
                 controlador2 = isDirEmpty(aux);
 
-                if (controlador1 != 0 && controlador2 == 0) {
+                if (controlador1 != 0 && controlador2 == 0) { //si es directorio y está vacío
 
-                    borrar_dir(aux);//aqui lo borra recursivamente
+                    borrar_dir(aux); //aquí borra el contenido recursivamente
                     controlador3 = isDirEmpty(aux);
 
-                    if (controlador3 == 1) {
+                    if (controlador3 != 1) {
                         auxiliar = remove(aux);
 
                         if (auxiliar != 0) {//si no ha sido posible borrarlo salta error
                             perror(error);
-
                         }
                     }
 
@@ -704,17 +704,17 @@ int g1 = 0, g2 = 0, g3 = 0;
 
 void memory(tItemL comando, tHistMem *bloques) {
 
-    if (comando.tokens == 1) {
+    if (comando.tokens > 1) {
 
         tItemT modo;//asignamos la variable tItemT
 
         for (int i = 0; i < comando.tokens - 1; i++) {
 
-            getToken(i, comando.comandos, modo);//recogemos el modo de cada comando
+            getToken(i, comando.comandos, modo); //recogemos el modo de cada comando
 
-//lo vamos comparando
+            //lo vamos comparando
 
-            if (strcmp(modo, "-vars") == 0) {//aqui devuelve las varaibles
+            if (strcmp(modo, "-vars") == 0) {//aquí devuelve las variables
 
                 auto int x = 0, y = 0, z = 0;
                 static int a = 0, b = 0, c = 0;
@@ -724,16 +724,15 @@ void memory(tItemL comando, tHistMem *bloques) {
                 printf("global variables:\t%p, %p, %p\n", &g1, &g2, &g3);
 
             }
-            if (strcmp(modo, "-funcs") == 0) {//aqui las funciones
+            if (strcmp(modo, "-funcs") == 0) {//aquí las funciones
 
                 printf("program functions:\t%p, %p, %p\n", autores, pillar_pid, infosis);
                 printf("library functions :\t%p, %p, %p\n", malloc, printf, strcmp);
 
-
             }
             if (strcmp(modo, "-blocks") == 0) {
 
-                deallocate(comando, bloques);
+                ListBLocks(*bloques);
 
             }
             if (strcmp(modo, "-all") == 0) {//tiene que hacer lo equivalente a blocks func y vars
@@ -748,7 +747,7 @@ void memory(tItemL comando, tHistMem *bloques) {
                 printf("program functions:\t%p, %p, %p\n", autores, pillar_pid, infosis);
                 printf("library functions :\t%p, %p, %p\n", malloc, printf, strcmp);
 
-                deallocate(comando, bloques);
+                ListBLocks(*bloques);
 
 
             } else if (strcmp(modo, "-pmap") == 0) {
@@ -756,9 +755,7 @@ void memory(tItemL comando, tHistMem *bloques) {
                 dopmap();
             }
 
-
         }
-
 
     } else {
 
@@ -779,14 +776,14 @@ void memory(tItemL comando, tHistMem *bloques) {
 }
 
 
-int volcarmem(tItemL comando){
+int volcarmem(tItemL comando) {
 
     tItemT modo, modo2;
     getToken(1, comando.comandos, modo);
 
     getToken(0, comando.comandos, modo2);
 
-    if(comando.tokens!=0) {
+    if (comando.tokens > 1) {
         int n = 25;
 
         if (comando.tokens == 2 && isNumber(modo)) n = atoi(modo);
@@ -808,43 +805,43 @@ int volcarmem(tItemL comando){
             printf("\n");
         }
 
-    }}
-
+    }
+    return 0;
+}
 
 
 void Memfill(tItemL comando) {
 
-    tItemT modo0,modo, modo2;
+    tItemT modo0, modo, modo2;
 
+    getToken(0, comando.comandos, modo0); //dirección a llenar
+    getToken(1, comando.comandos, modo); //cont
+    getToken(2, comando.comandos, modo2); //bytes, cantidad
 
-    getToken(0, comando.comandos, modo0);
-    getToken(1, comando.comandos, modo);
-    getToken(2, comando.comandos, modo2);
-
-
-    if(comando.tokens !=0){
+    if (comando.tokens != 0) {
         int cont = 128;
         int c = 65;
         char *dir;
 
-        if (comando.tokens >=2 && isNumber(modo)) cont = atoi(modo);
+        if (comando.tokens >= 2 && isNumber(modo)) cont = atoi(modo);
 
-        if(comando.tokens > 2 && isNumber(modo)){
+        if (comando.tokens > 2 && isNumber(modo)) {
 
-            if(isNumber(modo2)) c= atoi(modo2);
+            if (isNumber(modo2)) c = atoi(modo2);
 
-            else c= strtoul(modo2,&dir,16);
+            else c = strtoul(modo2, &dir, 16);
         }
 
-            long addr = strtoul(modo0, &dir, 16);
+        long addr = strtoul(modo0, &dir, 16);
 
-            for (int i = 0; i < cont; i++) {
+        for (int i = 0; i < cont; i++) {
             *(int *) addr = c;
-            addr++;}
+            addr++;
+        }
 
-}}
+    }
+}
 
-      
 void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
     else {
