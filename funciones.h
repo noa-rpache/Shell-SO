@@ -104,6 +104,12 @@ void desasignarMapped(tItemT nombre, tHistMem *bloques);
 
 void desasignarDireccion(tItemL entrada, tHistMem *bloques);
 
+void dopmap();
+
+int isNumber(char *string);
+
+int minimo(int a, int b);
+
 //sobre I-O
 int modos_IO(tItemL entrada, modo_IO *opciones);
 
