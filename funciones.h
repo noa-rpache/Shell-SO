@@ -97,9 +97,9 @@ int asignarMap(tItemL entrada, tItemM *datos);
 //sobre deallocate
 void desasignarMalloc(size_t tamano, tHistMem *bloques);
 
-void desasignarCompartida(key_t clave, tHistMem *bloques, bool delkey);
+//void desasignarCompartida(key_t clave, tHistMem *bloques, bool delkey);
 
-void desasignarClave(key_t clave, tHistMem bloques);
+void desasignarClave(key_t clave, tHistMem *bloques);
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques);
 
@@ -118,7 +118,6 @@ int modos_IO(tItemL entrada, modo_IO *opciones);
 ssize_t LeerFichero(char *f, void *p, size_t cont);
 
 ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
-
 
 
 #endif //P0_SO_FUNCIONES_H

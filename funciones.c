@@ -649,12 +649,12 @@ void desasignarMalloc(size_t tamano, tHistMem *bloques) { //tamaño y bloque
         tItemM bloque = getMemBlock(posicion);
         free(bloque.direccion);
         deleteMemBlock(posicion, bloques);
-        printf("Dirección %p desasignada\n",bloque.direccion);
+        printf("Dirección %p desasignada\n", bloque.direccion);
 
     }
 }
 
-void desasignarClavekey_t clave, tHistMem *bloques) { //elimina un bloque, no la clave del bloque
+void desasignarClave(key_t clave, tHistMem *bloques) { //elimina un bloque, no la clave del bloque
     int id;
 
     if (clave == IPC_PRIVATE) { //entrada.tokens == 1 || clave == IPC_PRIVATE
@@ -671,7 +671,7 @@ void desasignarClavekey_t clave, tHistMem *bloques) { //elimina un bloque, no la
 
     //if(!delkey) deleteMemBlock(findBlockShared(*bloques, clave), bloques);
 
-    printf("Clave %d desasignada\n",clave);
+    printf("Clave %d desasignada\n", clave);
 }
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de fichero
@@ -715,7 +715,7 @@ void desasignarDireccion(tItemL entrada, tHistMem *bloques) {
 
     } else if (getMemBlock(p).tipo == shared) {
 
-        desasignarCompartida(getMemBlock(p).clave, bloques, false); //esto es como deallocate -shared
+        deleteMemBlock(p,bloques);
 
     } else {
 
@@ -768,7 +768,8 @@ ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, direc
     return n;
 }
 
-ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
+ssize_t
+EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
     ssize_t n;
     int df, aux, flags = O_CREAT | O_EXCL | O_WRONLY;
 

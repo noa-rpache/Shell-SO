@@ -667,8 +667,8 @@ void deallocate(tItemL comando, tHistMem *bloques) {
                 tItemT key;
                 getToken(1, comando.comandos, key);
                 key_t clave = (key_t) strtoul(key, NULL, 10);
-                tPosM posicion = findBlockShared(*bloques,clave);
-                deleteMemBlock(posicion,bloques);
+                tPosM posicion = findBlockShared(*bloques, clave);
+                deleteMemBlock(posicion, bloques);
             }
 
         } else if (strcmp(modo, "-delkey") == 0) {
@@ -678,7 +678,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             getToken(1, comando.comandos, key);
             key_t clave = (key_t) strtoul(key, NULL, 10);
 
-            desasignarCompartida(clave, bloques, true);
+            desasignarClave(clave, bloques);
 
         } else if (strcmp(modo, "-mmap") == 0) {
 
