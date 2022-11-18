@@ -893,13 +893,13 @@ void input_output(tItemL comando) {
                 if ((n = LeerFichero(fich, addr, cont)) == -1) {
                     perror("Imposible leer fichero");
                 } else {
-                    printf("leidos %lld bytes de %s en %p\n", (long long) n, fich, addr);
+                    printf("leidos %lld bytes de %s en %p\n", (long long) cont, fich, addr);
                 }
 
             } else {
 
                 if ((n = EscribirFichero(fich, addr, cont, 0)) == -1) {
-                    perror("error al leer en el fichero");
+                    perror("error al escribir en el fichero");
                     strerror(errno);
                 } else {
                     printf("escritos %lld bytes de %s en %p\n", (long long) n, fich, addr);
@@ -925,7 +925,7 @@ void input_output(tItemL comando) {
                 }
 
             } else {
-                perror("esta es una vía rara que no debiera saltar, comprobar la entrada para contemplarla en la casuística");
+                printf("has introducido mal alguno de los argumentos, probablemente te has olvidado de un '-'\n");
             }
 
         }

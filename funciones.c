@@ -594,11 +594,11 @@ void *MapearFichero(char *fichero, int protection, tItemM *datos) {
     if (protection & PROT_WRITE)
         modo = O_RDWR; //lectura-escritura
     if (stat(fichero, &s) == -1 || (df = open(fichero, modo)) == -1) {
-        printf("salimos en stat\n");
+        printf("error en stat\n");
         return NULL;
     }
     if ((p = mmap(NULL, s.st_size, protection, map, df, 0)) == MAP_FAILED) {
-        printf("salimos en mmap\n");
+        printf("error en mmap\n");
         return NULL;
     }
 
@@ -611,7 +611,6 @@ int asignarMap(tItemL entrada, tItemM *datos) {
     tItemT permisos, nombre;
     getToken(1, entrada.comandos, nombre);
     getToken(2, entrada.comandos, permisos);
-    //printf("los tokens nombre %s permisos %s\n",nombre, permisos);
     void *p;
     int protection = 0;
     time_t now;
@@ -753,7 +752,7 @@ int modos_IO(tItemL entrada, modo_IO *opciones) {
 }
 
 ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, dirección de memoria, tamaño
-    printf("p %p\n", p);
+    //printf("p %p\n", p);
     struct stat s;
     ssize_t n;
     int df, aux;
@@ -772,8 +771,7 @@ ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, direc
     return n;
 }
 
-ssize_t
-EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
+ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
     ssize_t n;
     int df, aux, flags = O_CREAT | O_EXCL | O_WRONLY;
 
