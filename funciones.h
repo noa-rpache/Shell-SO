@@ -97,7 +97,7 @@ int asignarMap(tItemL entrada, tItemM *datos);
 //sobre deallocate
 void desasignarMalloc(size_t tamano, tHistMem *bloques);
 
-void desasignarCompartida(key_t clave, tHistMem *bloques);
+void desasignarCompartida(key_t clave, tHistMem *bloques, bool delkey);
 
 void desasignarClave(key_t clave, tHistMem bloques);
 

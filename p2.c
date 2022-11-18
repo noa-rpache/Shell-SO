@@ -31,6 +31,7 @@ void carpeta(tItemL comando);
 void fecha(tItemL comando);
 
 void hist(tItemL comando, tList *hist);
+
 //p1
 void status(tItemL comando);
 
@@ -52,7 +53,7 @@ void memory(tItemL comando, tHistMem *bloques);
 
 int volcarmem(tItemL comando);
 
-void Memfill(tItemL comando);
+void memfill(tItemL comando);
 
 void input_output(tItemL comando);
 
@@ -101,7 +102,7 @@ bool procesarEntrada(tList *historial, tHistMem *bloques) {
             else if (strcmp(peticion.comando, "allocate") == 0) allocate(peticion, bloques); //p2
             else if (strcmp(peticion.comando, "deallocate") == 0) deallocate(peticion, bloques);
             else if (strcmp(peticion.comando, "memdump") == 0) volcarmem(peticion);
-            else if (strcmp(peticion.comando, "memfill") == 0) Memfill(peticion);
+            else if (strcmp(peticion.comando, "memfill") == 0) memfill(peticion);
             else if (strcmp(peticion.comando, "memory") == 0) memory(peticion, bloques);
             else if (strcmp(peticion.comando, "recurse") == 0) recurse(peticion);
             else if (strcmp(peticion.comando, "i-o") == 0) input_output(peticion);
@@ -609,7 +610,7 @@ void allocate(tItemL comando, tHistMem *bloques) {
                 if (asignarCompartida(comando, &datos, false) == -1) return;
             }
 
-        } else if(strcmp(modo, "-createshared") == 0){
+        } else if (strcmp(modo, "-createshared") == 0) {
 
             if (comando.tokens == 2) {
                 ListarBloques(*bloques, 1);
@@ -618,7 +619,7 @@ void allocate(tItemL comando, tHistMem *bloques) {
                 if (asignarCompartida(comando, &datos, true) == -1) return;
             }
 
-        }else if (strcmp(modo, "-mmap") == 0) {
+        } else if (strcmp(modo, "-mmap") == 0) {
 
             if (comando.tokens == 2) {
                 ListarBloques(*bloques, 2);
@@ -666,8 +667,8 @@ void deallocate(tItemL comando, tHistMem *bloques) {
                 tItemT key;
                 getToken(1, comando.comandos, key);
                 key_t clave = (key_t) strtoul(key, NULL, 10);
-
-                desasignarCompartida(clave, bloques);
+                tPosM posicion = findBlockShared(*bloques,clave);
+                deleteMemBlock(posicion,bloques);
             }
 
         } else if (strcmp(modo, "-delkey") == 0) {
@@ -677,7 +678,7 @@ void deallocate(tItemL comando, tHistMem *bloques) {
             getToken(1, comando.comandos, key);
             key_t clave = (key_t) strtoul(key, NULL, 10);
 
-            desasignarClave(clave, *bloques);
+            desasignarCompartida(clave, bloques, true);
 
         } else if (strcmp(modo, "-mmap") == 0) {
 
@@ -785,18 +786,18 @@ void memory(tItemL comando, tHistMem *bloques) {
 
 int volcarmem(tItemL comando) {
 
-    tItemT modo, modo2;
-    getToken(1, comando.comandos, modo);
-
-    getToken(0, comando.comandos, modo2);
-
     if (comando.tokens > 1) {
         int n = 25;
-
-        if (comando.tokens == 2 && isNumber(modo)) n = atoi(modo);
-
         char *p;
-        long addr = strtoul(modo2, &p, 16);
+        tItemT cont, dir;
+
+        getToken(0, comando.comandos, dir);
+        long addr = strtoul(dir, &p, 16);
+
+        if (comando.tokens == 3) { //se ha indicado un contenido específico
+            getToken(1, comando.comandos, cont);
+            if (isNumber(cont)) n = atoi(cont);
+        }
 
         for (int i = 0; i < n; i += minimo(n - i, 25)) {
             long aux = addr;
@@ -817,30 +818,37 @@ int volcarmem(tItemL comando) {
 }
 
 
-void Memfill(tItemL comando) {
+void memfill(tItemL comando) {
 
-    tItemT modo0, modo, modo2;
-
-    getToken(0, comando.comandos, modo0); //dirección a llenar
-    getToken(1, comando.comandos, modo); //cont
-    getToken(2, comando.comandos, modo2); //bytes, cantidad
-
-    if (comando.tokens != 0) {
-        int cont = 128;
+    if (comando.tokens > 1) { //se han introducido datos
+        int cont = 128; //valores predeterminados que cambiaremos si se introducen datos
         int c = 65;
         char *dir;
+        tItemT address, content, byte;
 
-        if (comando.tokens >= 2 && isNumber(modo)) cont = atoi(modo);
+        getToken(0, comando.comandos, address);
+        long addr = strtoul(address, &dir, 16);
 
-        if (comando.tokens > 2 && isNumber(modo)) {
+        if (comando.tokens > 2) { //se ha introducido un contenido
 
-            if (isNumber(modo2)) c = atoi(modo2);
+            getToken(1, comando.comandos, content);
 
-            else c = strtoul(modo2, &dir, 16);
+            if (isNumber(content)) { //solo continuamos si el segundo elemento es un número
+                cont = atoi(content);
+
+                if (comando.tokens > 3) { //se han introducido los bytes
+
+                    getToken(2, comando.comandos, byte);
+
+                    if (isNumber(byte)) c = atoi(byte);
+                    else c = strtoul(byte, &dir, 16);
+
+                }
+            }
+
         }
 
-        long addr = strtoul(modo0, &dir, 16);
-
+        //ejecutamos memfill en sí misma
         for (int i = 0; i < cont; i++) {
             *(int *) addr = c;
             addr++;
@@ -853,13 +861,13 @@ void input_output(tItemL comando) {
     if (comando.tokens == 1) printf("uso: e-s [read|write] ......\n");
     else {
 
-        if(comando.tokens < 5) {
+        if (comando.tokens < 5) {
             printf("faltan parámetros\n");
             return;
         }
 
         modo_IO opciones;
-        modos_IO(comando,&opciones);
+        modos_IO(comando, &opciones);
         tItemT fich, dir, tam;
         ssize_t n;
         void *addr;
@@ -872,9 +880,9 @@ void input_output(tItemL comando) {
             getToken(2, comando.comandos, dir);
             addr = (void *) strtoul(dir, NULL, 16); //dirección del fichero
 
-            if(opciones.read && comando.tokens == 4){
+            if (opciones.read && comando.tokens == 4) {
                 cont = -1; //se lee entero
-            }else {
+            } else {
                 getToken(3, comando.comandos, tam); //número de bytes a leer/escribir
                 cont = (size_t) strtoul(tam, NULL, 10);
             }

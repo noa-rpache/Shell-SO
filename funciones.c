@@ -589,6 +589,7 @@ void *MapearFichero(char *fichero, int protection, tItemM *datos) {
     int df, map = MAP_PRIVATE, modo = O_RDONLY; //tipo de mapeo,
     struct stat s;
     void *p;
+    //printf("en el mapeado fichero %s permisos %d\n",fichero, protection);
 
     if (protection & PROT_WRITE)
         modo = O_RDWR; //lectura-escritura
@@ -606,6 +607,7 @@ int asignarMap(tItemL entrada, tItemM *datos) {
     tItemT permisos, nombre;
     getToken(1, entrada.comandos, nombre);
     getToken(2, entrada.comandos, permisos);
+    //printf("los tokens nombre %s permisos %s\n",nombre, permisos);
     void *p;
     int protection = 0;
     time_t now;
@@ -647,11 +649,12 @@ void desasignarMalloc(size_t tamano, tHistMem *bloques) { //tamaño y bloque
         tItemM bloque = getMemBlock(posicion);
         free(bloque.direccion);
         deleteMemBlock(posicion, bloques);
+        printf("Dirección %p desasignada\n",bloque.direccion);
 
     }
 }
 
-void desasignarCompartida(key_t clave, tHistMem *bloques) { //elimina un bloque, no la clave del bloque
+void desasignarClavekey_t clave, tHistMem *bloques) { //elimina un bloque, no la clave del bloque
     int id;
 
     if (clave == IPC_PRIVATE) { //entrada.tokens == 1 || clave == IPC_PRIVATE
@@ -666,22 +669,9 @@ void desasignarCompartida(key_t clave, tHistMem *bloques) { //elimina un bloque,
         perror("shmctl: imposible eliminar memoria compartida\n");
     }
 
-    deleteMemBlock(findBlockShared(*bloques, clave), bloques);
-}
+    //if(!delkey) deleteMemBlock(findBlockShared(*bloques, clave), bloques);
 
-void desasignarClave(key_t clave, tHistMem bloques) {
-
-    tPosM p = findBlockShared(bloques, clave);
-
-    if (p == MNULL) {
-        printf("la clave on pertenece a ningún bloque asignado a ese proceso\n");
-        return;
-    }
-    if (shmdt(getMemBlock(p).direccion) == -1) {
-        perror("error al desasignar la clave");
-        strerror(errno);
-    }
-
+    printf("Clave %d desasignada\n",clave);
 }
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de fichero
@@ -697,7 +687,7 @@ void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de
             strerror(errno);
             return;
         } else {
-            free(bloque.direccion); //esto no es redundante??
+            //free(bloque.direccion); //esto no es redundante??
             deleteMemBlock(posicion, bloques);
             printf("borrando el fichero %s\n", nombre);
             return;
@@ -725,15 +715,13 @@ void desasignarDireccion(tItemL entrada, tHistMem *bloques) {
 
     } else if (getMemBlock(p).tipo == shared) {
 
-        desasignarCompartida(getMemBlock(p).clave, bloques); //esto es como deallocate -shared
+        desasignarCompartida(getMemBlock(p).clave, bloques, false); //esto es como deallocate -shared
 
     } else {
 
         desasignarMapped(getMemBlock(p).nombre_archivo, bloques);
 
     }
-
-    printf("Dirección %p desasignada\n", buscado);
 
 }
 
