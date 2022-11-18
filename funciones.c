@@ -593,10 +593,14 @@ void *MapearFichero(char *fichero, int protection, tItemM *datos) {
 
     if (protection & PROT_WRITE)
         modo = O_RDWR; //lectura-escritura
-    if (stat(fichero, &s) == -1 || (df = open(fichero, modo)) == -1)
+    if (stat(fichero, &s) == -1 || (df = open(fichero, modo)) == -1) {
+        printf("salimos en stat\n");
         return NULL;
-    if ((p = mmap(NULL, s.st_size, protection, map, df, 0)) == MAP_FAILED)
+    }
+    if ((p = mmap(NULL, s.st_size, protection, map, df, 0)) == MAP_FAILED) {
+        printf("salimos en mmap\n");
         return NULL;
+    }
 
     (*datos).tamano = s.st_size;
     (*datos).file_descriptor = df;
@@ -715,7 +719,7 @@ void desasignarDireccion(tItemL entrada, tHistMem *bloques) {
 
     } else if (getMemBlock(p).tipo == shared) {
 
-        deleteMemBlock(p,bloques);
+        deleteMemBlock(p, bloques);
 
     } else {
 

@@ -42,6 +42,7 @@ void create(tItemL comando);
 int delete(tItemL comando);//borra documentos o directorios vacios
 
 int deleteTree(tItemL comando);//borra recursivamente documentos y directorios no vacios
+
 //p2
 void allocate(tItemL comando, tHistMem *bloques);
 
