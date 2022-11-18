@@ -4,7 +4,7 @@ SRC = p2.c funciones.c funciones.h memoria.h memoria.c historial.c historial.h s
 OBJ = p2.o funciones.o memoria.o historial.o static_tokens.o
 
 all: $(OBJ)
-	$(CC) $(CFLAGS) -o main $(OBJ)
+	$(CC) $(CFLAGS) -o p2 $(OBJ)
 
 tokens.o: static_tokens.c static_tokens.h
 historial.o: historial.c historial.h static_tokens.h
