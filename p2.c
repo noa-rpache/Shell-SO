@@ -868,6 +868,9 @@ void input_output(tItemL comando) {
         }
 
         modo_IO opciones;
+        opciones.write = false;
+        opciones.read = false;
+        opciones.overwrite = false;
         modos_IO(comando, &opciones);
         tItemT fich, dir, tam;
         ssize_t n;
