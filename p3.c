@@ -107,7 +107,16 @@ bool procesarEntrada(tList *historial, tHistMem *bloques) {
             else if (strcmp(peticion.comando, "memory") == 0) memory(peticion, bloques);
             else if (strcmp(peticion.comando, "recurse") == 0) recurse(peticion);
             else if (strcmp(peticion.comando, "i-o") == 0) input_output(peticion);
-            else printf("%s no es un comando disponible, o no existe\n", peticion.comando);
+            else if (strcmp(peticion.comando, "priority") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "showvar") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "changevar") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "showenv") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "fork") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "listjobs") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "deljobs") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "jobs") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "execute") == 0) ;//input_output(peticion);
+            else printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n", peticion.comando);
 
             return false;
         }
