@@ -26,6 +26,7 @@
 #include <sys/wait.h> //para waitpid
 #include "historial.h" //lista historial
 #include "memoria.h" //lista bloques de memoria
+#include "procesos.h" //para los procesos
 
 #define TAMANO 2048
 
@@ -96,8 +97,6 @@ int asignarMap(tItemL entrada, tItemM *datos);
 
 //sobre deallocate
 void desasignarMalloc(size_t tamano, tHistMem *bloques);
-
-//void desasignarCompartida(key_t clave, tHistMem *bloques, bool delkey);
 
 void desasignarClave(key_t clave, tHistMem *bloques);
 
