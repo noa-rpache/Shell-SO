@@ -7,7 +7,7 @@
 #include "funciones.h"
 
 //generales
-bool procesarEntrada(tList *historial, tHistMem *bloques);
+bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) ;
 
 void leerEntrada(char *entrada[], tList *historial);
 
@@ -58,6 +58,10 @@ void memfill(tItemL comando);
 
 void input_output(tItemL comando);
 
+//p3
+void listJobs(tHistProc procesos);
+
+void deleteJobs(tItemL comando, tHistProc *procesos);
 
 int main(int argc, char *arvg[]) {
 
@@ -65,20 +69,23 @@ int main(int argc, char *arvg[]) {
     createList(&historial);
     tHistMem bloques;
     createMem(&bloques);
+    tHistProc procesos;
+    createProcList(&procesos);
     bool salida = false;
 
     while (!salida) {
         leerEntrada(arvg, &historial);
-        salida = procesarEntrada(&historial, &bloques);
+        salida = procesarEntrada(&historial, &bloques, &procesos);
     }
 
     deleteList(&historial);
     deleteHistMem(&bloques);
+    deleteProcList(&procesos);
     return 0;
 }
 
 
-bool procesarEntrada(tList *historial, tHistMem *bloques) {
+bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) {
 
     if (!isEmptyList(*historial)) {
         tItemL peticion = getItem(last(*historial), *historial);
@@ -107,15 +114,15 @@ bool procesarEntrada(tList *historial, tHistMem *bloques) {
             else if (strcmp(peticion.comando, "memory") == 0) memory(peticion, bloques);
             else if (strcmp(peticion.comando, "recurse") == 0) recurse(peticion);
             else if (strcmp(peticion.comando, "i-o") == 0) input_output(peticion);
-            else if (strcmp(peticion.comando, "priority") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "showvar") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "changevar") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "showenv") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "fork") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "listjobs") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "deljobs") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "jobs") == 0) ;//input_output(peticion);
-            else if (strcmp(peticion.comando, "execute") == 0) ;//input_output(peticion);
+            else if (strcmp(peticion.comando, "priority") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "showvar") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "changevar") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "showenv") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "fork") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "listjobs") == 0) printf("--listJobs en construcción--\n");
+            else if (strcmp(peticion.comando, "deljobs") == 0) printf("--delJobs en construcción--\n");
+            else if (strcmp(peticion.comando, "jobs") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "execute") == 0);//input_output(peticion);
             else printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n", peticion.comando);
 
             return false;
@@ -945,3 +952,37 @@ void input_output(tItemL comando) {
     }
 }
 
+void listJobs(tHistProc procesos) {
+
+    for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
+        printf("información del proceso\n");
+    }
+
+}
+
+void deleteJobs(tItemL comando, tHistProc *procesos) {
+    if (comando.tokens == 1) {
+        //se borran todos??
+        deleteProcList(procesos);
+        createProcList(procesos);
+    } else {
+        tItemT modo;
+        getToken(1, comando.comandos, modo);
+
+        if (strcmp("-term", modo) == 0) {
+
+            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i)) {
+                if (getProc(i).estado == finished) deleteProc(i, procesos);
+            }
+
+        } else if (strcmp("-sig", modo) == 0) {
+
+            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i)) {
+                if (getProc(i).estado == signaled) deleteProc(i, procesos);
+            }
+
+        } else {
+            perror("no has introducido un modo correcto");
+        }
+    }
+}
