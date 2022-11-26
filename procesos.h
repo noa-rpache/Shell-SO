@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+//#include "historial.h"
 
 #define PNULL NULL
 
@@ -20,7 +21,7 @@ typedef struct {
     int pid;
     struct tm tiempo;
     status estado;
-    //línea de comandos, podemos guardar el tposl de cuando se introduce
+    //tPosL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
     int prioridad;
 } tItemP;
 
@@ -39,22 +40,24 @@ bool isEmptyProc(tHistProc L);
 
 tPosP firstProc(tHistProc L);
 
-tPosP primeroProc(tHistProc L); //sirve para saltarte el head node al acceder a la lista
+tPosP primerProc(tHistProc L); //sirve para saltarte el head node al acceder a la lista
 
 tPosP lastProc(tHistProc L);
 
-tPosP nextProc(tPosP p, tHistProc L);
+tPosP nextProc(tPosP p);
 
 tPosP previousProc(tPosP p, tHistProc L);
 
 bool insertProc(tItemP d, tHistProc *L);
 
-tItemP getProc(tPosP p, tHistProc L);
+tItemP getProc(tPosP p);
 
 //tPosP findProc(int num, tHistProc L);
 
+bool deleteProc(tPosP p, tHistProc *L);
+
 //el ítem esta al final de la lista
-bool deleteLastProc(tPosP p, tHistProc *L);
+bool deleteLastProc(tHistProc *L);
 
 void deletePrimeroProc(tHistProc *L);
 

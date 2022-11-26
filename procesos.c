@@ -32,7 +32,7 @@ tPosP firstProc(tHistProc L) {
     return L;
 }
 
-tPosP primeroProc(tHistProc L) { //sirve para saltarte el head node al acceder a la lista
+tPosP primerProc(tHistProc L) { //sirve para saltarte el head node al acceder a la lista
     return L->next;
 }
 
@@ -53,7 +53,7 @@ tPosP previousProc(tPosP p, tHistProc L) {
     }
 }
 
-bool insertProc(tItemP d, tHistProc *L){
+bool insertProc(tItemP d, tHistProc *L) {
     tPosP q, r;
 
     if (!createNodeP(&q)) return false; //no hay espacio
@@ -73,14 +73,32 @@ bool insertProc(tItemP d, tHistProc *L){
     }
 }
 
-tItemP getProc(tPosP p){
+tItemP getProc(tPosP p) {
     return p->data;
 }
 
 //tPosP findProc(int num, tHistProc L);
 
+bool deleteProc(tPosP p, tHistProc *L) {
+    if (p == (*L)->next) deletePrimeroProc(L);
+    else {
+        if (p->next == PNULL) deleteLastProc(p, L);
+        else {
+            tPosP q;
+
+            q = p->next;
+            p->data = q->data;
+            p->next = q->next;
+            //p = q;
+
+            free(p);
+        }
+    }
+
+}
+
 //el ítem esta al final de la lista
-bool deleteLastProc(tPosP p, tHistProc *L){
+bool deleteLastProc(tHistProc *L) {
     tPosP q, p = (*L)->last;
 
     for (q = *L; q->next != p; q = q->next); //buscamos el penúltimo
@@ -89,7 +107,7 @@ bool deleteLastProc(tPosP p, tHistProc *L){
     free(p); //liberamos el último
 }
 
-void deletePrimeroProc(tHistProc *L){
+void deletePrimeroProc(tHistProc *L) {
     tPosP q, p;
     p = (*L)->next;
     q = p->next;
@@ -97,7 +115,7 @@ void deletePrimeroProc(tHistProc *L){
     (*L)->next = q;
 }
 
-void deleteProcList(tHistProc *L){
+void deleteProcList(tHistProc *L) {
     tPosP p;
     while (*L != PNULL) {
         p = *L;
