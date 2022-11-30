@@ -123,6 +123,15 @@ bool deleteLast(tPosL p, tList *L) { //siempre será al final
     }
 }
 
+/*void deleteLast(tList *L) { //siempre será al final
+    tPosL q, p = (*L)->last;
+
+    for (q = *L; q->next != p; q = q->next); //buscamos el penúltimo
+    q->next = LNULL; //hacemos que el penúltimo no apunte al siguiente
+    (*L)->last = q;
+    free(p); //liberamos el último
+}*/
+
 void deletePrimero(tList *L) {
     tPosL q, p;
     p = (*L)->next;
