@@ -22,6 +22,7 @@ typedef struct {
     struct tm tiempo;
     status estado;
     //tPosL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
+    // -> se añadirá cuando se haya probado bien esta lista, para comprobar que no hay coincidencias con la otra implementación
     int prioridad;
 } tItemP;
 
