@@ -20,7 +20,7 @@ void ayuda(tItemL comando);
 
 void infosis();
 
-void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques);
+void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc procesos);
 
 void autores(tItemL comando);
 
@@ -95,7 +95,7 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) {
             if (peticion.tokens == 0)
                 deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
             else if (strcmp(peticion.comando, "autores") == 0) autores(peticion); //p0
-            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial, *bloques);
+            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial, *bloques, *procesos);
             else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
             else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
             else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
@@ -177,21 +177,28 @@ ayuda(tItemL comando) { //como manda el mismo mensaje dando igual los especifica
     if (comando.tokens == 1) {
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda crear delete deltree stat list\n");
-    } else if (strcmp(comando.comando, "fin") == 0) printf("fin\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando.comando, "salir") == 0) printf("salir\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando.comando, "bye") == 0) printf("bye\tTermina la ejecucion del shell\n");
+    } else if (strcmp(comando.comando, "fin") == 0) 
+        printf("fin\tTermina la ejecucion del shell\n");
+    else if (strcmp(comando.comando, "salir") == 0) 
+        printf("salir\tTermina la ejecucion del shell\n");
+    else if (strcmp(comando.comando, "bye") == 0) 
+        printf("bye\tTermina la ejecucion del shell\n");
     else if (strcmp(comando.comando, "autores") == 0)
         printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
-    else if (strcmp(comando.comando, "pid") == 0) printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
+    else if (strcmp(comando.comando, "pid") == 0) 
+        printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
     else if (strcmp(comando.comando, "carpeta") == 0)
         printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
-    else if (strcmp(comando.comando, "fecha") == 0) printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
+    else if (strcmp(comando.comando, "fecha") == 0) 
+        printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
     else if (strcmp(comando.comando, "hist") == 0)
         printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
-    else if (strcmp(comando.comando, "comando") == 0) printf("comando [-N]\tRepite el comando N (del historico)\n");
+    else if (strcmp(comando.comando, "comando") == 0) 
+        printf("comando [-N]\tRepite el comando N (del historico)\n");
     else if (strcmp(comando.comando, "infosis") == 0)
         printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
-    else if (strcmp(comando.comando, "crear") == 0) printf("crear [-f] [name]\tCrea un directorio o un fichero (-f)\n");
+    else if (strcmp(comando.comando, "crear") == 0) 
+        printf("crear [-f] [name]\tCrea un directorio o un fichero (-f)\n");
     else if (strcmp(comando.comando, "delete") == 0)
         printf("delete [name1 name2 ..]\tBorra ficheros o directorios vacios\n");
     else if (strcmp(comando.comando, "deltree") == 0)
@@ -231,8 +238,38 @@ ayuda(tItemL comando) { //como manda el mismo mensaje dando igual los especifica
         printf("\t\t-vars: las direcciones de las variables\n");
         printf("\t\t-all: todo\n");
         printf("\t\t-pmap: muestra la salida del comando pmap(o similar)\n");
-    } else if (strcmp(comando.comando, "recurse") == 0) printf("recurse [n]\tInvoca a la funcion recursiva n veces\n");
-    else printf("%s no encontrado\n", comando.comando);
+    } else if (strcmp(comando.comando, "recurse") == 0) 
+        printf("recurse [n]\tInvoca a la funcion recursiva n veces\n");
+    else if (strcmp(comando.comando, "listjobs") == 0) 
+        printf("listjobs 	Lista los procesos en segundo plano\n");
+    else if(strcmp(comando.comando, "deljobs") == 0){
+        printf("deljobs [-term][-sig]	Elimina los procesos de la lista procesos en sp\n");
+        printf("	-term: los terminados\n");
+        printf("	-sig: los terminados por senal\n");
+    } else if(strcmp(comando.comando, "priority") == 0) 
+        printf("priority [pid] [valor] 	Muestra o cambia la prioridad del proceso pid a valor\n");
+    else if(strcmp(comando.comando, "showvar") == 0) 
+        printf("showvar var	Muestra el valor y las direcciones de la variable de entorno var\n");
+    else if(strcmp(comando.comando, "changevar") == 0){
+        printf("changevar [-a|-e|-p] var valor	Cambia el valor de una variable de entorno\n");
+        printf("	-a: accede por el tercer arg de main\n");
+        printf("	-e: accede mediante environ\n");
+        printf("	-p: accede mediante putenv\n");
+    } else if(strcmp(comando.comando, "showenv") == 0){
+        printf("showenv [-environ|-addr] 	 Muestra el entorno del proceso\n");
+        printf("	-environ: accede usando environ (en lugar del tercer arg de main)\n");
+        printf("	-addr: muestra el valor y donde se almacenan environ y el 3er arg main\n");
+    } else if(strcmp(comando.comando, "fork") == 0) 
+        printf("fork 	El shell hace fork y queda en espera a que su hijo termine\n");
+    else if(strcmp(comando.comando, "jobs") == 0) 
+        printf("jobs 	Lista los procesos en segundo plano\n");
+    else if(strcmp(comando.comando, "execute") == 0){
+        printf("execute VAR1 VAR2 ..prog args....[@pri]	Ejecuta, sin crear proceso,prog con argumentos en un entorno que contiene solo las variables VAR1, VAR2...\n");
+        printf("de todas formas, si quieres ejecutar un programa externo lo puedes hacer si lo introduces con *esta sintaxis* en vez de un comando\n");
+    }else {
+        printf("%s no encontrado\n", comando.comando);
+        printf("de todas formas, si quieres ejecutar un programa externo lo puedes hacer si lo introduces con *esta sintaxis* en vez de un comando\n");
+    }
 }
 
 void infosis() {
@@ -247,7 +284,7 @@ void infosis() {
            informacion.nodename, informacion.machine, informacion.sysname, informacion.release, informacion.version);
 }
 
-void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques) { //comando N
+void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc procesos) { //comando N
 
     tItemT cpos;
     getToken(0, entrada.comandos, cpos);
@@ -261,7 +298,7 @@ void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques) { //comando 
     nuevo.tokens = repeticion.tokens;
 
     if (!insertElement(nuevo, hist)) printf("no se ha insertado el elemento\n");
-    procesarEntrada(hist, &bloques);
+    procesarEntrada(hist, &bloques, &procesos);
 
 }
 
@@ -971,13 +1008,13 @@ void deleteJobs(tItemL comando, tHistProc *procesos) {
 
         if (strcmp("-term", modo) == 0) {
 
-            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i)) {
+            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i, *procesos)) {
                 if (getProc(i).estado == finished) deleteProc(i, procesos);
             }
 
         } else if (strcmp("-sig", modo) == 0) {
 
-            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i)) {
+            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i, *procesos)) {
                 if (getProc(i).estado == signaled) deleteProc(i, procesos);
             }
 
