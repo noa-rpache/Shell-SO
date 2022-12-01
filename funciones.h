@@ -30,6 +30,8 @@
 
 #define TAMANO 2048
 
+extern char **environ;
+
 //tipos de datos a parte
 typedef struct {
     bool largo;
