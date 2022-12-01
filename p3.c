@@ -7,7 +7,7 @@
 #include "funciones.h"
 
 //generales
-bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) ;
+bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, char *envp[]);
 
 void leerEntrada(char *entrada[], tList *historial);
 
@@ -20,7 +20,7 @@ void ayuda(tItemL comando);
 
 void infosis();
 
-void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc procesos);
+void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc procesos, char *envp[]);
 
 void autores(tItemL comando);
 
@@ -63,7 +63,12 @@ void listJobs(tHistProc procesos);
 
 void deleteJobs(tItemL comando, tHistProc *procesos);
 
-int main(int argc, char *arvg[]) {
+void cmd_fork();
+
+void showenv(tItemL comando, char *envp[]);
+
+
+int main(int argc, char *arvg[], char *envp[]) {
 
     tList historial;
     createList(&historial);
@@ -75,7 +80,7 @@ int main(int argc, char *arvg[]) {
 
     while (!salida) {
         leerEntrada(arvg, &historial);
-        salida = procesarEntrada(&historial, &bloques, &procesos);
+        salida = procesarEntrada(&historial, &bloques, &procesos, envp);
     }
 
     deleteList(&historial);
@@ -85,7 +90,7 @@ int main(int argc, char *arvg[]) {
 }
 
 
-bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) {
+bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, char *envp[]) {
 
     if (!isEmptyList(*historial)) {
         tItemL peticion = getItem(last(*historial), *historial);
@@ -95,7 +100,8 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) {
             if (peticion.tokens == 0)
                 deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
             else if (strcmp(peticion.comando, "autores") == 0) autores(peticion); //p0
-            else if (strcmp(peticion.comando, "comando") == 0) repetir_comando(peticion, historial, *bloques, *procesos);
+            else if (strcmp(peticion.comando, "comando") == 0)
+                repetir_comando(peticion, historial, *bloques, *procesos, envp);
             else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
             else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
             else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
@@ -114,16 +120,19 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos) {
             else if (strcmp(peticion.comando, "memory") == 0) memory(peticion, bloques);
             else if (strcmp(peticion.comando, "recurse") == 0) recurse(peticion);
             else if (strcmp(peticion.comando, "i-o") == 0) input_output(peticion);
-            else if (strcmp(peticion.comando, "priority") == 0);//input_output(peticion);
-            else if (strcmp(peticion.comando, "showvar") == 0);//input_output(peticion);
-            else if (strcmp(peticion.comando, "changevar") == 0);//input_output(peticion);
-            else if (strcmp(peticion.comando, "showenv") == 0);//input_output(peticion);
+            else if (strcmp(peticion.comando, "priority") == 0); //
+            else if (strcmp(peticion.comando, "showvar") == 0); //
+            else if (strcmp(peticion.comando, "changevar") == 0); //
+            else if (strcmp(peticion.comando, "showenv") == 0)
+                showenv(peticion, envp); //printf("--showenv en construcción--\n");
             else if (strcmp(peticion.comando, "fork") == 0);//input_output(peticion);
             else if (strcmp(peticion.comando, "listjobs") == 0) printf("--listJobs en construcción--\n");
             else if (strcmp(peticion.comando, "deljobs") == 0) printf("--delJobs en construcción--\n");
             else if (strcmp(peticion.comando, "jobs") == 0);//input_output(peticion);
             else if (strcmp(peticion.comando, "execute") == 0);//input_output(peticion);
-            else printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n", peticion.comando);
+            else
+                printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n",
+                       peticion.comando);
 
             return false;
         }
@@ -172,102 +181,104 @@ bool salir(char cadena[]) {
 
 //comandos
 void
-ayuda(tItemL comando) { //como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
+ayuda(tItemL comando) { // como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
+    tItemT modo;
+    getToken(0, comando.comandos, modo);
 
     if (comando.tokens == 1) {
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
         printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda crear delete deltree stat list\n");
-    } else if (strcmp(comando.comando, "fin") == 0) 
+    } else if (strcmp(modo, "fin") == 0)
         printf("fin\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando.comando, "salir") == 0) 
+    else if (strcmp(modo, "salir") == 0)
         printf("salir\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando.comando, "bye") == 0) 
+    else if (strcmp(modo, "bye") == 0)
         printf("bye\tTermina la ejecucion del shell\n");
-    else if (strcmp(comando.comando, "autores") == 0)
+    else if (strcmp(modo, "autores") == 0)
         printf("autores [-n|-l]\tMuestra los nombres y logins de los autores\n");
-    else if (strcmp(comando.comando, "pid") == 0) 
+    else if (strcmp(modo, "pid") == 0)
         printf("pid [-p]\tMuestra el pid del shell o de su proceso padre\n");
-    else if (strcmp(comando.comando, "carpeta") == 0)
+    else if (strcmp(modo, "carpeta") == 0)
         printf("carpeta [dir]\tCambia (o muestra) el directorio actual del shell\n");
-    else if (strcmp(comando.comando, "fecha") == 0) 
+    else if (strcmp(modo, "fecha") == 0)
         printf("fecha [-d|-h]\tMuestra la fecha y o la hora actual\n");
-    else if (strcmp(comando.comando, "hist") == 0)
+    else if (strcmp(modo, "hist") == 0)
         printf("hist [-c|-N]\tMuestra el historico de comandos, con -c lo borra\n");
-    else if (strcmp(comando.comando, "comando") == 0) 
+    else if (strcmp(modo, "comando") == 0)
         printf("comando [-N]\tRepite el comando N (del historico)\n");
-    else if (strcmp(comando.comando, "infosis") == 0)
+    else if (strcmp(modo, "infosis") == 0)
         printf("infosis \tMuestra informacion de la maquina donde corre el shell\n");
-    else if (strcmp(comando.comando, "crear") == 0) 
+    else if (strcmp(modo, "crear") == 0)
         printf("crear [-f] [name]\tCrea un directorio o un fichero (-f)\n");
-    else if (strcmp(comando.comando, "delete") == 0)
+    else if (strcmp(modo, "delete") == 0)
         printf("delete [name1 name2 ..]\tBorra ficheros o directorios vacios\n");
-    else if (strcmp(comando.comando, "deltree") == 0)
+    else if (strcmp(modo, "deltree") == 0)
         printf("deltree [name1 name2 ..]\tBorra ficheros o directorios no vacios recursivamente\n");
-    else if (strcmp(comando.comando, "stat") == 0) {
+    else if (strcmp(modo, "stat") == 0) {
         printf("stat [-long][-link][-acc] name1 name2 ..\tlista ficheros;\n");
         printf("\t\t-long: listado largo\n");
         printf("\t\t-acc: acesstime\n");
         printf("\t\t-link: si es enlace simbolico, el path contenido\n");
-    } else if (strcmp(comando.comando, "list") == 0) {
+    } else if (strcmp(modo, "list") == 0) {
         printf("list [-reca] [-recb] [-hid][-long][-link][-acc] n1 n2 ..\tlista contenidos de directorios\n");
         printf("\t\t-hid: incluye los ficheros ocultos\n");
         printf("\t\t-reca: recursivo (antes)\n");
         printf("\t\t-recb: recursivo (despues)\n");
         printf("\t\tresto parametros como stat\n");
-    } else if (strcmp(comando.comando, "allocate") == 0) {
+    } else if (strcmp(modo, "allocate") == 0) {
         printf("allocate [-malloc|-shared|-createshared|-mmap]... Asigna un bloque de memoria\n");
         printf("\t-malloc tam: asigna un bloque malloc de tamano tam\n");
         printf("\t-createshared cl tam: asigna (creando) el bloque de memoria compartida de clave cl y tamano tam\n");
         printf("\t-shared cl: asigna el bloque de memoria compartida (ya existente) de clave cl\n");
         printf("\t-mmap fich perm: mapea el fichero fich, perm son los permisos\n");
-    } else if (strcmp(comando.comando, "deallocate") == 0) {
+    } else if (strcmp(modo, "deallocate") == 0) {
         printf("deallocate [-malloc|-shared|-delkey|-mmap|addr]..\tDesasigna un bloque de memoria\n");
         printf("\t-malloc tam: desasigna el bloque malloc de tamano tam\n");
         printf("\t-shared cl: desasigna (desmapea) el bloque de memoria compartida de clave cl\n");
         printf("\t-delkey cl: elimina del sistema (sin desmapear) la clave de memoria cl\n");
         printf("\t-mmap fich: desmapea el fichero mapeado fich\n");
         printf("\taddr: desasigna el bloque de memoria en la direccion addr\n");
-    } else if (strcmp(comando.comando, "memdump") == 0)
+    } else if (strcmp(modo, "memdump") == 0)
         printf("memdump addr cont \tVuelca en pantallas los contenidos (cont bytes) de la posicion de memoria addr\n");
-    else if (strcmp(comando.comando, "memfill") == 0)
+    else if (strcmp(modo, "memfill") == 0)
         printf("memfill addr cont byte \tLlena la memoria a partir de addr con byte\n");
-    else if (strcmp(comando.comando, "memory") == 0) {
+    else if (strcmp(modo, "memory") == 0) {
         printf("memory [-blocks|-funcs|-vars|-all|-pmap] ..\tMuestra muestra detalles de la memoria del proceso\n");
         printf("\t\t-blocks: los bloques de memoria asignados\n");
         printf("\t\t-funcs: las direcciones de las funciones\n");
         printf("\t\t-vars: las direcciones de las variables\n");
         printf("\t\t-all: todo\n");
         printf("\t\t-pmap: muestra la salida del comando pmap(o similar)\n");
-    } else if (strcmp(comando.comando, "recurse") == 0) 
+    } else if (strcmp(modo, "recurse") == 0)
         printf("recurse [n]\tInvoca a la funcion recursiva n veces\n");
-    else if (strcmp(comando.comando, "listjobs") == 0) 
+    else if (strcmp(modo, "listjobs") == 0)
         printf("listjobs 	Lista los procesos en segundo plano\n");
-    else if(strcmp(comando.comando, "deljobs") == 0){
+    else if (strcmp(modo, "deljobs") == 0) {
         printf("deljobs [-term][-sig]	Elimina los procesos de la lista procesos en sp\n");
         printf("	-term: los terminados\n");
         printf("	-sig: los terminados por senal\n");
-    } else if(strcmp(comando.comando, "priority") == 0) 
+    } else if (strcmp(modo, "priority") == 0)
         printf("priority [pid] [valor] 	Muestra o cambia la prioridad del proceso pid a valor\n");
-    else if(strcmp(comando.comando, "showvar") == 0) 
+    else if (strcmp(modo, "showvar") == 0)
         printf("showvar var	Muestra el valor y las direcciones de la variable de entorno var\n");
-    else if(strcmp(comando.comando, "changevar") == 0){
+    else if (strcmp(modo, "changevar") == 0) {
         printf("changevar [-a|-e|-p] var valor	Cambia el valor de una variable de entorno\n");
         printf("	-a: accede por el tercer arg de main\n");
         printf("	-e: accede mediante environ\n");
         printf("	-p: accede mediante putenv\n");
-    } else if(strcmp(comando.comando, "showenv") == 0){
+    } else if (strcmp(modo, "showenv") == 0) {
         printf("showenv [-environ|-addr] 	 Muestra el entorno del proceso\n");
         printf("	-environ: accede usando environ (en lugar del tercer arg de main)\n");
         printf("	-addr: muestra el valor y donde se almacenan environ y el 3er arg main\n");
-    } else if(strcmp(comando.comando, "fork") == 0) 
+    } else if (strcmp(modo, "fork") == 0)
         printf("fork 	El shell hace fork y queda en espera a que su hijo termine\n");
-    else if(strcmp(comando.comando, "jobs") == 0) 
+    else if (strcmp(modo, "jobs") == 0)
         printf("jobs 	Lista los procesos en segundo plano\n");
-    else if(strcmp(comando.comando, "execute") == 0){
+    else if (strcmp(modo, "execute") == 0) {
         printf("execute VAR1 VAR2 ..prog args....[@pri]	Ejecuta, sin crear proceso,prog con argumentos en un entorno que contiene solo las variables VAR1, VAR2...\n");
         printf("de todas formas, si quieres ejecutar un programa externo lo puedes hacer si lo introduces con *esta sintaxis* en vez de un comando\n");
-    }else {
-        printf("%s no encontrado\n", comando.comando);
+    } else {
+        printf("%s no encontrado\n", modo);
         printf("de todas formas, si quieres ejecutar un programa externo lo puedes hacer si lo introduces con *esta sintaxis* en vez de un comando\n");
     }
 }
@@ -284,7 +295,7 @@ void infosis() {
            informacion.nodename, informacion.machine, informacion.sysname, informacion.release, informacion.version);
 }
 
-void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc procesos) { //comando N
+void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc procesos, char *envp[]) { //comando N
 
     tItemT cpos;
     getToken(0, entrada.comandos, cpos);
@@ -298,7 +309,7 @@ void repetir_comando(tItemL entrada, tList *hist, tHistMem bloques, tHistProc pr
     nuevo.tokens = repeticion.tokens;
 
     if (!insertElement(nuevo, hist)) printf("no se ha insertado el elemento\n");
-    procesarEntrada(hist, &bloques, &procesos);
+    procesarEntrada(hist, &bloques, &procesos, envp);
 
 }
 
@@ -1008,18 +1019,57 @@ void deleteJobs(tItemL comando, tHistProc *procesos) {
 
         if (strcmp("-term", modo) == 0) {
 
-            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i, *procesos)) {
+            for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
                 if (getProc(i).estado == finished) deleteProc(i, procesos);
             }
-
         } else if (strcmp("-sig", modo) == 0) {
 
-            for (tPosP i = primerProc(*procesos); i != PNULL; i = next(i, *procesos)) {
+            for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
                 if (getProc(i).estado == signaled) deleteProc(i, procesos);
             }
-
         } else {
             perror("no has introducido un modo correcto");
         }
+    }
+}
+
+void cmd_fork() { //¿¿cómo funciona la lista aquí???
+    pid_t pid;
+
+    if ((pid = fork()) == 0) { //ha habido éxito y estás situado en el proceso hijo
+/*		VaciarListaProcesos(&LP); Depende de la implementación de cada uno*/
+        printf("ejecutando proceso %d\n", getpid());
+    } else if (pid != -1) waitpid(pid, NULL, 0);
+    else strerror(errno);
+
+}
+
+void showenv(tItemL comando, char *envp[]) {
+    if (comando.tokens == 1) { //accede por el 3er argumento de main
+        for (int i = 0; envp[i] != NULL; i++) {
+            printf("%p -> main arg3[%d] = %p %s\n", &envp[i], i, envp[i], envp[i]);;
+        }
+
+    } else {
+        tItemT modo;
+        getToken(0, comando.comandos, modo);
+
+        if (strcmp(modo, "-environ") == 0) { //recorres el array de environ
+
+            for (int i = 0; environ[i] != NULL; i++) {
+                printf("%p -> environ[%d] = %p %s\n", &environ[i], i, environ[i], environ[i]);;
+            }
+
+        } else if (strcmp(modo, "-addr") == 0) { //muestras las direcciones de memoria
+
+            printf("environ:   %p (almacenado en %p)\n", &environ[0], &environ);
+            printf("main arg3: %p (almacenado en %p)\n", &envp[0], &envp);
+
+        } else {
+
+            printf("no has introducido un modo válido, puede que te hayas olvidado del '-'\n");
+
+        }
+
     }
 }
