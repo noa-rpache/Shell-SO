@@ -56,8 +56,7 @@ tPosM previousBlock(tPosM p, tHistMem L) {
 }
 
 
-bool insertMemoryBlock(tItemM d,
-                       tHistMem *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
+bool insertMemoryBlock(tItemM d, tHistMem *L) { //en este caso siempre se va a insertar por el final, es decir, después del último nodo
 
     tPosM q, r;
 

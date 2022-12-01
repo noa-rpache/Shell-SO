@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h> //para el strftime
+#include <time.h>
 #include <unistd.h> //para el pid
 #include "static_tokens.h"
 
