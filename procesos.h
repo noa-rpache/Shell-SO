@@ -9,18 +9,19 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 //#include "historial.h"
 
 #define PNULL NULL
 
 typedef enum {
     finished, stopped, signaled, active
-}status;
+}estadio;
 
 typedef struct {
     int pid;
     struct tm tiempo;
-    status estado;
+    estadio estado;
     //tPosL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
     // -> se añadirá cuando se haya probado bien esta lista, para comprobar que no hay coincidencias con la otra implementación
     int prioridad;
@@ -55,10 +56,10 @@ tItemP getProc(tPosP p);
 
 //tPosP findProc(int num, tHistProc L);
 
-bool deleteProc(tPosP p, tHistProc *L);
+void deleteProc(tPosP p, tHistProc *L);
 
 //el ítem esta al final de la lista
-bool deleteLastProc(tHistProc *L);
+void deleteLastProc(tHistProc *L);
 
 void deletePrimeroProc(tHistProc *L);
 

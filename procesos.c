@@ -79,10 +79,10 @@ tItemP getProc(tPosP p) {
 
 //tPosP findProc(int num, tHistProc L);
 
-bool deleteProc(tPosP p, tHistProc *L) {
+void deleteProc(tPosP p, tHistProc *L) {
     if (p == (*L)->next) deletePrimeroProc(L);
     else {
-        if (p->next == PNULL) deleteLastProc(p, L);
+        if (p->next == PNULL) deleteLastProc(L);
         else {
             tPosP q;
 
@@ -98,7 +98,7 @@ bool deleteProc(tPosP p, tHistProc *L) {
 }
 
 //el ítem esta al final de la lista
-bool deleteLastProc(tHistProc *L) {
+void deleteLastProc(tHistProc *L) {
     tPosP q, p = (*L)->last;
 
     for (q = *L; q->next != p; q = q->next); //buscamos el penúltimo
