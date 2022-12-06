@@ -55,7 +55,7 @@ int TrocearCadena(char *cadena, char *trozos[]);
 
 int int_convert(tItemT cadena);
 
-void printComand(tItemL impresion);
+void printComand(tItemL impresion, bool puesto, bool salto);
 
 char LetraTF(mode_t m);
 
@@ -120,5 +120,9 @@ ssize_t LeerFichero(char *f, void *p, size_t cont);
 
 ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
 
+//sobre procesos
+int BuscarVariable(char *var, char *e[]); //se busca *var en el entorno *e y se devuelve su posición
+
+int OurExecvpe(const char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
 
 #endif //P0_SO_FUNCIONES_H

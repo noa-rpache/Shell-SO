@@ -25,14 +25,17 @@ int int_convert(tItemT cadena) {
     return convertido * (-1);
 }
 
-void printComand(tItemL impresion) {
-    printf("%d: %s", impresion.puesto, impresion.comando);
+void printComand(tItemL impresion, bool puesto, bool salto) {
+    if (puesto) printf("%d: ", impresion.puesto);
+
+    printf("%s", impresion.comando);
     if (impresion.tokens > 1) { //si hay algún token más que el comando ppal
         for (int i = 0; i < impresion.tokens - 1; i++) { //ntokens -1 == nº de especificadores
             printf(" %s", impresion.comandos.data[i]);
         }
     }
-    printf("\n");
+
+    if (salto) printf("\n");
 }
 
 char LetraTF(mode_t m) {//devuelve el tipo de un fichero
@@ -610,7 +613,8 @@ void *MapearFichero(char *fichero, int protection, tItemM *datos) {
 int asignarMap(tItemL entrada, tItemM *datos) {
     tItemT permisos, nombre;
     getToken(1, entrada.comandos, nombre);
-    getToken(2, entrada.comandos, permisos);
+    if (entrada.tokens == 3) strcpy(permisos, "---"); //permisos por defecto
+    else getToken(2, entrada.comandos, permisos);
     void *p;
     int protection = 0;
     time_t now;
@@ -678,7 +682,7 @@ void desasignarClave(key_t clave, tHistMem *bloques) { //elimina un bloque, no l
 }
 
 void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de fichero
-    tPosM posicion = findBlockMapped(*bloques, nombre);
+    tPosM posicion = findBlockMapped(*bloques, nombre); //problemas aquí
 
     if (posicion == MNULL) {
         printf("Fichero %s no mapeado\n", nombre);
@@ -691,7 +695,7 @@ void desasignarMapped(tItemT nombre, tHistMem *bloques) { //fich es un nombre de
             return;
         } else {
             //free(bloque.direccion); //esto no es redundante??
-            deleteMemBlock(posicion, bloques);
+            deleteMemBlock(posicion, bloques); //problemas aquí
             printf("borrando el fichero %s\n", nombre);
             return;
         }
@@ -771,7 +775,8 @@ ssize_t LeerFichero(char *f, void *p, size_t cont) { //nombre del fichero, direc
     return n;
 }
 
-ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
+ssize_t
+EscribirFichero(char *f, const void *p, size_t cont, int overwrite) { //nombre, dirección, tamaño y si se sobreescribe
     ssize_t n;
     int df, aux, flags = O_CREAT | O_EXCL | O_WRONLY;
 
@@ -829,7 +834,25 @@ void dopmap() {
 
 }
 
+int BuscarVariable(char *var, char *e[]) {
+    int pos = 0;
+    char aux[MAXVAR];
 
+    strcpy(aux, var);
+    strcat(aux, "=");
 
+    while (e[pos] != NULL)
+        if (!strncmp(e[pos], aux, strlen(aux)))
+            return (pos);
+        else
+            pos++;
+    errno = ENOENT;   /*no hay tal variable*/
+    return (-1);
+}
+
+//ejecutar en 1er plano
+int OurExecvpe(const char *file, char *const argv[], char *const envp[]) {
+    return (execve(Ejecutable(file), argv, envp));
+}
 
 
