@@ -67,6 +67,7 @@ void cmd_fork();
 
 void showenv(tItemL comando, char *envp[]);
 
+void execute(tItemL comando, tHistProc *procesos, bool create);
 
 int main(int argc, char *arvg[], char *envp[]) {
 
@@ -98,41 +99,68 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
         if (salir(peticion.comando)) return true;
         else {
             if (peticion.tokens == 0)
-                deleteLast(last(*historial), historial); //esto solo ocurre cuando se introduce un \n en la entrada
-            else if (strcmp(peticion.comando, "autores") == 0) autores(peticion); //p0
+                deleteLast(last(*historial), historial);
+            else if (strcmp(peticion.comando, "autores") == 0)
+                autores(peticion); //p0
             else if (strcmp(peticion.comando, "comando") == 0)
                 repetir_comando(peticion, historial, *bloques, *procesos, envp);
-            else if (strcmp(peticion.comando, "pid") == 0) pillar_pid(peticion);
-            else if (strcmp(peticion.comando, "carpeta") == 0) carpeta(peticion);
-            else if (strcmp(peticion.comando, "fecha") == 0) fecha(peticion);
-            else if (strcmp(peticion.comando, "infosis") == 0) infosis();
-            else if (strcmp(peticion.comando, "ayuda") == 0) ayuda(peticion);
-            else if (strcmp(peticion.comando, "hist") == 0) hist(peticion, historial);
-            else if (strcmp(peticion.comando, "crear") == 0) create(peticion); //p1
-            else if (strcmp(peticion.comando, "stat") == 0) status(peticion);
-            else if (strcmp(peticion.comando, "list") == 0) listar(peticion);
-            else if (strcmp(peticion.comando, "delete") == 0) delete(peticion);
-            else if (strcmp(peticion.comando, "deltree") == 0) deleteTree(peticion);
-            else if (strcmp(peticion.comando, "allocate") == 0) allocate(peticion, bloques); //p2
-            else if (strcmp(peticion.comando, "deallocate") == 0) deallocate(peticion, bloques);
-            else if (strcmp(peticion.comando, "memdump") == 0) volcarmem(peticion);
-            else if (strcmp(peticion.comando, "memfill") == 0) memfill(peticion);
-            else if (strcmp(peticion.comando, "memory") == 0) memory(peticion, bloques);
-            else if (strcmp(peticion.comando, "recurse") == 0) recurse(peticion);
-            else if (strcmp(peticion.comando, "i-o") == 0) input_output(peticion);
-            else if (strcmp(peticion.comando, "priority") == 0); //
-            else if (strcmp(peticion.comando, "showvar") == 0); //
-            else if (strcmp(peticion.comando, "changevar") == 0); //
+            else if (strcmp(peticion.comando, "pid") == 0)
+                pillar_pid(peticion);
+            else if (strcmp(peticion.comando, "carpeta") == 0)
+                carpeta(peticion);
+            else if (strcmp(peticion.comando, "fecha") == 0)
+                fecha(peticion);
+            else if (strcmp(peticion.comando, "infosis") == 0)
+                infosis();
+            else if (strcmp(peticion.comando, "ayuda") == 0)
+                ayuda(peticion);
+            else if (strcmp(peticion.comando, "hist") == 0)
+                hist(peticion, historial);
+            else if (strcmp(peticion.comando, "crear") == 0)
+                create(peticion); //p1
+            else if (strcmp(peticion.comando, "stat") == 0)
+                status(peticion);
+            else if (strcmp(peticion.comando, "list") == 0)
+                listar(peticion);
+            else if (strcmp(peticion.comando, "delete") == 0)
+                delete(peticion);
+            else if (strcmp(peticion.comando, "deltree") == 0)
+                deleteTree(peticion);
+            else if (strcmp(peticion.comando, "allocate") == 0)
+                allocate(peticion, bloques); //p2
+            else if (strcmp(peticion.comando, "deallocate") == 0)
+                deallocate(peticion, bloques);
+            else if (strcmp(peticion.comando, "memdump") == 0)
+                volcarmem(peticion);
+            else if (strcmp(peticion.comando, "memfill") == 0)
+                memfill(peticion);
+            else if (strcmp(peticion.comando, "memory") == 0)
+                memory(peticion, bloques);
+            else if (strcmp(peticion.comando, "recurse") == 0)
+                recurse(peticion);
+            else if (strcmp(peticion.comando, "i-o") == 0)
+                input_output(peticion);
+            else if (strcmp(peticion.comando, "priority") == 0)
+                printf("--priority en construcción--\n"); //p3
+            else if (strcmp(peticion.comando, "showvar") == 0)
+                printf("--showvar en construcción--\n");
+            else if (strcmp(peticion.comando, "changevar") == 0)
+                printf("--changevar en construcción--\n");
             else if (strcmp(peticion.comando, "showenv") == 0)
-                showenv(peticion, envp); //printf("--showenv en construcción--\n");
-            else if (strcmp(peticion.comando, "fork") == 0);//input_output(peticion);
-            else if (strcmp(peticion.comando, "listjobs") == 0) printf("--listJobs en construcción--\n");
-            else if (strcmp(peticion.comando, "deljobs") == 0) printf("--delJobs en construcción--\n");
-            else if (strcmp(peticion.comando, "jobs") == 0);//input_output(peticion);
-            else if (strcmp(peticion.comando, "execute") == 0);//input_output(peticion);
+                showenv(peticion, envp);
+            else if (strcmp(peticion.comando, "fork") == 0)
+                cmd_fork();
+            else if (strcmp(peticion.comando, "listjobs") == 0)
+                listJobs(*procesos);
+            else if (strcmp(peticion.comando, "deljobs") == 0)
+                deleteJobs(peticion, procesos);
+            else if (strcmp(peticion.comando, "jobs") == 0)
+                printf("--jobs en construcción--\n");
+            else if (strcmp(peticion.comando, "execute") == 0)
+                printf("--execute en construcción--\n"); //execute(peticion, procesos, false;)
             else
-                printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n",
-                       peticion.comando);
+                printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n", peticion.comando);
+                //execute(peticion, procesos, true);
 
             return false;
         }
@@ -187,7 +215,10 @@ ayuda(tItemL comando) { // como manda el mismo mensaje dando igual los especific
 
     if (comando.tokens == 1) {
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n");
-        printf("fin salir bye fecha pid autores hist comando carpeta infosis ayuda crear delete deltree stat list\n");
+        printf("\tfin salir bye fecha pid autores hist comando carpeta infosis ayuda\n"
+               "\tcrear delete deltree stat list\n"
+               "\tallocate deallocate memdump memfill memory recurse\n"
+               "\tlistjobs deljobs priority showvar changevar showenv fork jobs execute ****\n");
     } else if (strcmp(modo, "fin") == 0)
         printf("fin\tTermina la ejecucion del shell\n");
     else if (strcmp(modo, "salir") == 0)
@@ -425,7 +456,7 @@ void hist(tItemL comando, tList *hist) {
         tPosL LastNode = primero(*hist);
         while (LastNode != LNULL) {
             tItemL objeto = getItem(LastNode, *hist);
-            printComand(objeto);
+            printComand(objeto,true, true);
             LastNode = LastNode->next;
         }
     } else {
@@ -1003,7 +1034,35 @@ void input_output(tItemL comando) {
 void listJobs(tHistProc procesos) {
 
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
-        printf("información del proceso\n");
+        tItemP p = getProc(i);
+        char *tiempo;
+        strftime(tiempo, 100,"%Y/%m/%d %H:%M:%S", p.tiempo);
+
+        printf("%d %d %s ", p.pid, /*user,*/ p.prioridad, tiempo);
+
+        switch(p.estado){
+            case finished:
+                printf("FINISHED");
+                break;
+            case stopped:
+                printf("STOPPED");
+                break;
+            case signaled:
+                printf("SIGNALED");
+                break;
+            case active:
+                printf("ACTIVE");
+                break;
+            default:
+                perror("error en el estado");
+                break
+        }
+
+        //printf( número entre paréntesis que no tengo claro lo que es )
+        //printComand(p.comando,false,false);
+
+        printf(" @%d",p.prioridad);
+        printf("\n");
     }
 
 }
@@ -1070,6 +1129,52 @@ void showenv(tItemL comando, char *envp[]) {
             printf("no has introducido un modo válido, puede que te hayas olvidado del '-'\n");
 
         }
+
+    }
+}
+
+void execute(tItemL comando, tHistProc *procesos, bool create){
+
+    //1º saber las variables -> devolver el total de variables, así las puedes sacar de los tokens
+        // usar BuscarVariable del ayudaP3
+    //2º el programa será el sig token
+    //3º los argumentos serán hasta que empiece la prioridad con el @
+
+}
+
+int convierteProc(tItemL entrada, bool create){
+    if(create){ // se comprueba el comando, se tiene que crear un proceso y se comprueba si hay un &, se añade a la lista de procesos
+        int salir = BuscarVariable(entrada.comando, environ), salir2 = 1, salir3 = 1;
+        int auxPri = 0, auxPlano = 0;
+        tPosT i = firstToken(entrada.comandos);
+
+        while(salir != -1 && i != TNULL){ //mientras no terminen las variables ni se acabe el array de tokens
+            salir = BuscarVariable(entrada.comandos.data[i],environ);
+            i = nextToken(i, entrada.comandos);
+        }
+
+        while(i != TNULL){ //mientras no se acabe el array -> hay que guardar el comando en algún sitio
+
+            if (strncmp("@",entrada.comandos.data[i],1) == 0) auxPri = i;
+            if (strcmp("&",entrada.comandos.data[i]) == 0) auxPlano = i;
+            i = nextToken(i, entrada.comandos);
+
+        }
+
+        if(auxPri != 0){
+            tItemT prioridad;
+            getToken(auxp, entrada.comandos, prioridad);
+            int priority = atoi(prioridad); //hay que quitarle el @
+        }
+
+        if(auxPlano != 0){
+            //ejecutar en 2º plano
+        }else{
+            //ejecutar en 1er plano
+        }
+
+
+    }else{  //no se comprueba el comando, solo los tokens //no se crea ningún proceso
 
     }
 }
