@@ -850,6 +850,25 @@ int BuscarVariable(char *var, char *e[]) {
     return (-1);
 }
 
+int CambiarVariable(char *var, char *valor, char *e[]){
+    int pos;
+    char *aux;
+    if((pos= BuscarVariable(var,e))==-1)//se busca la variable en el entorno e
+        return -1;//sino esta se devuelve -1
+
+    if((aux=(char *)malloc(strlen(var)+ strlen(valor)+2))==NULL)
+        return -1;
+    strcpy(aux,var); strcat(aux,"=");
+    strcat(aux,valor);
+    e[pos]=aux;
+    return (pos);
+
+}
+
+
+
+//ejecutar en 1er plano
+int OurExecvpe(const char *file, char *const argv[], char *const envp[]) {
 char *Ejecutable(char *s) {
     char path[MAX_LENGHT_PATH];
     static char aux2[MAX_LENGHT_PATH];

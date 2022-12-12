@@ -16,6 +16,7 @@
 #include <errno.h> //para errores
 #include <sys/types.h>
 #include <sys/stat.h> //para struct stat
+#include <sys/resource.h>//para las funciones de prioridad
 #include <grp.h> //utilidades sobre grupos
 #include <pwd.h> //utilidades fichero password -> para gid y uid
 #include <sys/dir.h> //utilidades sobre directorios
@@ -124,6 +125,8 @@ ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
 
 //sobre procesos
 int BuscarVariable(char *var, char *e[]); //se busca *var en el entorno *e y se devuelve su posición
+int CambiarVariable(char *var, char *valor, char *e[]);
+int OurExecvpe(const char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
 
 char *Ejecutable(char *s);//entiendo que busca el ejecutable en el sistema
 

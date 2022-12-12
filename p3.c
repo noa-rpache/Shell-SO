@@ -1031,6 +1031,110 @@ void input_output(tItemL comando) {
     }
 }
 
+
+//priority
+
+int priority(tItemL comando){
+
+int priority, pid;
+
+tItemT modo;
+tItemT prioridad;
+
+getToken(0,comando.comandos,modo);
+
+    if(comando.tokens !=0 && isNumber(modo)){
+    pid= atoi(modo);
+
+        if(comando.tokens==1){
+        //conseguimos la prioridad del proceso
+
+        priority = getpriority(PRIO_PROCESS,pid);
+
+            }
+        else{
+        getToken(1,comando.comandos,prioridad);
+        priority= atoi(prioridad);}
+
+}
+    else {
+        //sino cambiamos la prioridad del proceso
+        priority = atoi(prioridad);
+        setpriority(PRIO_PROCESS, pid, priority);
+    }
+    printf("El proceso %d tiene prioridad %d\n",pid,priority);
+    return 0;
+
+}
+
+
+
+//funcion mostrarvariable
+
+int showvar(tItemL comando,char *envp[]){
+    tItemT variable;
+    int pos;
+    getToken(0,comando.comandos,variable);
+    if(comando.tokens!=0){
+        if((pos= BuscarVariable(variable,environ))==-1){
+           //si devuelve -1 imposible encontrar la variable, salta el error
+
+           perror("es imposible encontrar la variable");
+           return 0;
+        }
+
+        printf("Con arg3 main %s(%p) @%p\n",environ[pos],environ[pos],envp[pos]);
+        printf("Con environ $s(%p) @%p\n", getenv(variable),environ[pos]);
+    }
+    else showenv(comando,envp);
+return 0;
+}
+
+
+
+int changevar(tItemL comando,char *envp[]){
+
+char *aux= malloc(MAX_LENGHT_PATH);
+tItemT Comando;
+tItemT variable;
+tItemT valor;
+getToken(0,comando.comandos,Comando);
+
+if(comando.tokens!=0){
+    if(comando.tokens==3){
+
+        if(strcmp(Comando,"-a")==0){
+            getToken(1,comando.comandos,variable);
+            getToken(2,comando.comandos,valor);
+            CambiarVariable(variable,valor,envp);
+
+        }else if(strcmp(Comando,"-e")==0){
+            CambiarVariable(variable,valor,environ);
+        }else if(strcmp(Comando,"-p")==0){
+
+            strcpy(aux,variable);
+            strcat(aux,"="); //concateno con el simbolo =
+            strcat(aux,valor); //le incluyo = valor
+            putenv(aux);//añade o cambia el valor de variables de entorno o ambiente.
+            // El argumento cadena es de la forma nombre=valor
+        }
+    }
+}
+
+return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 void listJobs(tHistProc procesos) {
 
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
@@ -1055,7 +1159,7 @@ void listJobs(tHistProc procesos) {
                 break;
             default:
                 perror("error en el estado");
-                break
+                break;
         }
 
         //printf( número entre paréntesis que no tengo claro lo que es )
