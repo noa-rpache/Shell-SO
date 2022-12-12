@@ -67,7 +67,7 @@ void cmd_fork();
 
 void showenv(tItemL comando, char *envp[]);
 
-void execute(tItemL comando, tHistProc *procesos, bool create);
+void inputExecute(tItemL entrada);
 
 int main(int argc, char *arvg[], char *envp[]) {
 
@@ -157,10 +157,11 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
             else if (strcmp(peticion.comando, "jobs") == 0)
                 printf("--jobs en construcción--\n");
             else if (strcmp(peticion.comando, "execute") == 0)
-                printf("--execute en construcción--\n"); //execute(peticion, procesos, false;)
+                inputExecute(peticion);
             else
-                printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n", peticion.comando);
-                //execute(peticion, procesos, true);
+                printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n",
+                       peticion.comando);
+            //execute(peticion, procesos, true);//execCreate(peticion,procesos)
 
             return false;
         }
@@ -208,8 +209,7 @@ bool salir(char cadena[]) {
 
 
 //comandos
-void
-ayuda(tItemL comando) { // como manda el mismo mensaje dando igual los especificadores del comando solo hace falta el comando
+void ayuda(tItemL comando) {
     tItemT modo;
     getToken(0, comando.comandos, modo);
 
@@ -456,7 +456,7 @@ void hist(tItemL comando, tList *hist) {
         tPosL LastNode = primero(*hist);
         while (LastNode != LNULL) {
             tItemL objeto = getItem(LastNode, *hist);
-            printComand(objeto,true, true);
+            printComand(objeto, true, true);
             LastNode = LastNode->next;
         }
     } else {
@@ -472,7 +472,7 @@ void hist(tItemL comando, tList *hist) {
             int i = 0;
             do {
                 tItemL objeto = getItem(LastNode, *hist);
-                printComand(objeto);
+                printComand(objeto, true, true);
                 LastNode = next(LastNode, *hist);
                 i++;
             } while (i <= N - 1 && LastNode != NULL);
@@ -492,8 +492,8 @@ void status(tItemL comando) { //y si pasamos directorios y archivos a la vez??
         modo.recb = false;
         modo.hid = false;
         modo.listar = false;
-        int controlador = opciones(comando,
-                                   &modo); //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
+        int controlador = opciones(comando, &modo);
+        //controlador cuenta el número de -long, -link, -acc que hay; además de que es la posición del 1er path en el array de tokens
 
         if (comando.tokens - 1 ==
             controlador) { //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
@@ -530,9 +530,8 @@ void listar(tItemL comando) {
         int controlador = opciones(comando, &modo);
 
         //impresión de la petición
-        if (comando.tokens - 1 ==
-            controlador) { //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
-            getDir();
+        if (comando.tokens - 1 == controlador) {
+            getDir(); //se ha terminado el bucle sin ningún path/file posible -> imprimir ruta actual
         } else {
             char path[MAX_LENGHT_PATH];
             getToken(controlador, comando.comandos, path);
@@ -633,7 +632,7 @@ int delete(tItemL comando) {//borra documentos o directorios vacios
     return 0;
 }
 
-int deleteTree(tItemL comando) {//borra recursivamente documentos y directorios no vacios
+int deleteTree(tItemL comando) { //borra recursivamente documentos y directorios no vacios
 
     int controlador1, controlador2, controlador3, auxiliar;
     char error[MAX_LENGHT_PATH] = "no se ha podido borrar";
@@ -1034,35 +1033,34 @@ void input_output(tItemL comando) {
 
 //priority
 
-int priority(tItemL comando){
+int priority(tItemL comando) {
 
-int priority, pid;
+    int priority, pid;
 
-tItemT modo;
-tItemT prioridad;
+    tItemT modo;
+    tItemT prioridad;
 
-getToken(0,comando.comandos,modo);
+    getToken(0, comando.comandos, modo);
 
-    if(comando.tokens !=0 && isNumber(modo)){
-    pid= atoi(modo);
+    if (comando.tokens != 0 && isNumber(modo)) {
+        pid = atoi(modo);
 
-        if(comando.tokens==1){
-        //conseguimos la prioridad del proceso
+        if (comando.tokens == 1) {
+            //conseguimos la prioridad del proceso
 
-        priority = getpriority(PRIO_PROCESS,pid);
+            priority = getpriority(PRIO_PROCESS, pid);
 
-            }
-        else{
-        getToken(1,comando.comandos,prioridad);
-        priority= atoi(prioridad);}
+        } else {
+            getToken(1, comando.comandos, prioridad);
+            priority = atoi(prioridad);
+        }
 
-}
-    else {
+    } else {
         //sino cambiamos la prioridad del proceso
         priority = atoi(prioridad);
         setpriority(PRIO_PROCESS, pid, priority);
     }
-    printf("El proceso %d tiene prioridad %d\n",pid,priority);
+    printf("El proceso %d tiene prioridad %d\n", pid, priority);
     return 0;
 
 }
@@ -1071,68 +1069,56 @@ getToken(0,comando.comandos,modo);
 
 //funcion mostrarvariable
 
-int showvar(tItemL comando,char *envp[]){
+int showvar(tItemL comando, char *envp[]) {
     tItemT variable;
     int pos;
-    getToken(0,comando.comandos,variable);
-    if(comando.tokens!=0){
-        if((pos= BuscarVariable(variable,environ))==-1){
-           //si devuelve -1 imposible encontrar la variable, salta el error
+    getToken(0, comando.comandos, variable);
+    if (comando.tokens != 0) {
+        if ((pos = BuscarVariable(variable, environ)) == -1) {
+            //si devuelve -1 imposible encontrar la variable, salta el error
 
-           perror("es imposible encontrar la variable");
-           return 0;
+            perror("es imposible encontrar la variable");
+            return 0;
         }
 
-        printf("Con arg3 main %s(%p) @%p\n",environ[pos],environ[pos],envp[pos]);
-        printf("Con environ $s(%p) @%p\n", getenv(variable),environ[pos]);
-    }
-    else showenv(comando,envp);
-return 0;
+        printf("Con arg3 main %s(%p) @%p\n", environ[pos], environ[pos], envp[pos]);
+        printf("Con environ $s(%p) @%p\n", getenv(variable), environ[pos]);
+    } else showenv(comando, envp);
+    return 0;
 }
 
 
+int changevar(tItemL comando, char *envp[]) {
 
-int changevar(tItemL comando,char *envp[]){
+    char *aux = malloc(MAX_LENGHT_PATH);
+    tItemT Comando;
+    tItemT variable;
+    tItemT valor;
+    getToken(0, comando.comandos, Comando);
 
-char *aux= malloc(MAX_LENGHT_PATH);
-tItemT Comando;
-tItemT variable;
-tItemT valor;
-getToken(0,comando.comandos,Comando);
+    if (comando.tokens != 0) {
+        if (comando.tokens == 3) {
 
-if(comando.tokens!=0){
-    if(comando.tokens==3){
+            if (strcmp(Comando, "-a") == 0) {
+                getToken(1, comando.comandos, variable);
+                getToken(2, comando.comandos, valor);
+                CambiarVariable(variable, valor, envp);
 
-        if(strcmp(Comando,"-a")==0){
-            getToken(1,comando.comandos,variable);
-            getToken(2,comando.comandos,valor);
-            CambiarVariable(variable,valor,envp);
+            } else if (strcmp(Comando, "-e") == 0) {
+                CambiarVariable(variable, valor, environ);
+            } else if (strcmp(Comando, "-p") == 0) {
 
-        }else if(strcmp(Comando,"-e")==0){
-            CambiarVariable(variable,valor,environ);
-        }else if(strcmp(Comando,"-p")==0){
-
-            strcpy(aux,variable);
-            strcat(aux,"="); //concateno con el simbolo =
-            strcat(aux,valor); //le incluyo = valor
-            putenv(aux);//añade o cambia el valor de variables de entorno o ambiente.
-            // El argumento cadena es de la forma nombre=valor
+                strcpy(aux, variable);
+                strcat(aux, "="); //concateno con el simbolo =
+                strcat(aux, valor); //le incluyo = valor
+                putenv(aux);//añade o cambia el valor de variables de entorno o ambiente.
+                // El argumento cadena es de la forma nombre=valor
+            }
         }
     }
+
+    return 0;
 }
-
-return 0;
-}
-
-
-
-
-
-
-
-
-
-
 
 
 void listJobs(tHistProc procesos) {
@@ -1140,11 +1126,11 @@ void listJobs(tHistProc procesos) {
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
         tItemP p = getProc(i);
         char *tiempo;
-        strftime(tiempo, 100,"%Y/%m/%d %H:%M:%S", p.tiempo);
+        strftime(tiempo, 100, "%Y/%m/%d %H:%M:%S", &p.tiempo);
 
         printf("%d %d %s ", p.pid, /*user,*/ p.prioridad, tiempo);
 
-        switch(p.estado){
+        switch (p.estado) {
             case finished:
                 printf("FINISHED");
                 break;
@@ -1165,7 +1151,7 @@ void listJobs(tHistProc procesos) {
         //printf( número entre paréntesis que no tengo claro lo que es )
         //printComand(p.comando,false,false);
 
-        printf(" @%d",p.prioridad);
+        printf(" @%d", p.prioridad);
         printf("\n");
     }
 
@@ -1210,7 +1196,7 @@ void cmd_fork() { //¿¿cómo funciona la lista aquí???
 void showenv(tItemL comando, char *envp[]) {
     if (comando.tokens == 1) { //accede por el 3er argumento de main
         for (int i = 0; envp[i] != NULL; i++) {
-            printf("%p -> main arg3[%d] = %p %s\n", &envp[i], i, envp[i], envp[i]);;
+            printf("%p -> main arg3[%d] = %p %s\n", &envp[i], i, envp[i], envp[i]);
         }
 
     } else {
@@ -1220,7 +1206,7 @@ void showenv(tItemL comando, char *envp[]) {
         if (strcmp(modo, "-environ") == 0) { //recorres el array de environ
 
             for (int i = 0; environ[i] != NULL; i++) {
-                printf("%p -> environ[%d] = %p %s\n", &environ[i], i, environ[i], environ[i]);;
+                printf("%p -> environ[%d] = %p %s\n", &environ[i], i, environ[i], environ[i]);
             }
 
         } else if (strcmp(modo, "-addr") == 0) { //muestras las direcciones de memoria
@@ -1237,48 +1223,118 @@ void showenv(tItemL comando, char *envp[]) {
     }
 }
 
-void execute(tItemL comando, tHistProc *procesos, bool create){
+void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sale al no meter comandos
 
-    //1º saber las variables -> devolver el total de variables, así las puedes sacar de los tokens
-        // usar BuscarVariable del ayudaP3
-    //2º el programa será el sig token
-    //3º los argumentos serán hasta que empiece la prioridad con el @
+    //nenvp es el nº de VAR, nargv es el nº de comandos, los aux es para saber si hay prioridad y/o 2º plano
+    int salir = BuscarVariable(entrada.comando, environ);
+    int nenvp = 0, nargv = 0, auxPri = 0, auxPlano = 0;
+    char prog[MAX_LENGHT_PATH];
+    tPosT i = firstToken(entrada.comandos);
 
-}
-
-int convierteProc(tItemL entrada, bool create){
-    if(create){ // se comprueba el comando, se tiene que crear un proceso y se comprueba si hay un &, se añade a la lista de procesos
-        int salir = BuscarVariable(entrada.comando, environ), salir2 = 1, salir3 = 1;
-        int auxPri = 0, auxPlano = 0;
-        tPosT i = firstToken(entrada.comandos);
-
-        while(salir != -1 && i != TNULL){ //mientras no terminen las variables ni se acabe el array de tokens
-            salir = BuscarVariable(entrada.comandos.data[i],environ);
-            i = nextToken(i, entrada.comandos);
-        }
-
-        while(i != TNULL){ //mientras no se acabe el array -> hay que guardar el comando en algún sitio
-
-            if (strncmp("@",entrada.comandos.data[i],1) == 0) auxPri = i;
-            if (strcmp("&",entrada.comandos.data[i]) == 0) auxPlano = i;
-            i = nextToken(i, entrada.comandos);
-
-        }
-
-        if(auxPri != 0){
-            tItemT prioridad;
-            getToken(auxp, entrada.comandos, prioridad);
-            int priority = atoi(prioridad); //hay que quitarle el @
-        }
-
-        if(auxPlano != 0){
-            //ejecutar en 2º plano
-        }else{
-            //ejecutar en 1er plano
-        }
-
-
-    }else{  //no se comprueba el comando, solo los tokens //no se crea ningún proceso
-
+    //a saber la entrada
+    while (salir == -1 && i != TNULL) {
+        salir = BuscarVariable(entrada.comandos.data[i], environ);
+        nenvp++;
+        i = nextToken(i, entrada.comandos);
     }
+
+    if (i == TNULL) {
+        perror("solo se han introducido variables de entorno");
+        return;
+    }
+
+    tItemT auxprog;
+    getToken(i, entrada.comandos, auxprog);
+    strcpy(prog, auxprog);
+
+    while (i != TNULL) {
+
+        if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
+            auxPri = i; //para saber que hay una prioridad y dónde está
+            nargv--;
+        }
+
+        if (strcmp("&", entrada.comandos.data[i]) == 0 && auxPlano == 0) {
+            auxPlano = i;
+            nargv--;
+        }
+
+        nargv++;
+        i = nextToken(i, entrada.comandos);
+    }
+
+    //a copiar los arrays
+    //char *envp[nenvp + 1];
+    //char *argv[nargv];
+
+
+    //ejecución del programa
+    /*if (OurExecvpe(prog,) == -1) {
+        strerror(errno);
+        perror("no ejecutado");
+    }*/
+
+    //tItemP aux;
+
+    //if( !insertProc(aux,procesos) ) perror("no se ha podido introducir el proceso en la lista");
+
 }
+
+void inputExecute(tItemL entrada) {
+    //no se crea un proceso, esto es como un comando al uso -> hacer if para entorno
+    //la prioridad es lo único opcional
+
+    if (entrada.tokens == 1) {
+        printf("execute VAR1 VAR2... prog arg1 arg2... [@pri]\n");
+        return;
+    }
+
+    int salir = 0, auxPri = 0, prioridad = 0;
+    char *envp[MAX_TOKENS] = {}, prog[MAX_LENGHT_PATH], *argv[MAX_TOKENS] = {};
+    tItemT auxprog;
+    tPosT i = firstToken(entrada.comandos);
+
+    while (salir != -1 && i != TNULL) {
+        if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
+            envp[i] = entrada.comandos.data[i];
+        } else {
+            i = nextToken(i, entrada.comandos);
+        }
+    }
+
+    if (i == TNULL) {
+        perror("solo se han introducido variables de entorno");
+        return;
+    }
+
+    getToken(i, entrada.comandos, auxprog);
+    strcpy(prog, auxprog); //este es el nombre del programa
+
+    while (i < entrada.comandos.lastPos) {
+
+        if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
+            auxPri = i; //para saber que hay una prioridad y dónde está
+            printf("hey prioridad\n");
+        } else { //copiar el array de argumentos
+            argv[i] = entrada.comandos.data[i];
+        }
+
+        i = nextToken(i, entrada.comandos);
+    }
+
+
+    if (auxPri != 0) {
+        tItemT aux;
+        getToken(auxPri, entrada.comandos, aux);
+        prioridad = atoi(aux);
+        printf("esta es la prioridad sin restarle nada %d\nesta al restarle el valor del @ (64): %d\n",
+               prioridad, prioridad - 64);
+        return;
+    }
+    printf("y aquí se ejecutaría\n");
+
+    //pero no hace falta el fork para que haga como una burbuja, tiene que salir de la shell el terminar
+    //OurExecvpe(prog, argv,envp);
+
+}
+
