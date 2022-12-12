@@ -69,6 +69,8 @@ void showenv(tItemL comando, char *envp[]);
 
 void inputExecute(tItemL entrada);
 
+void inputExecCreate(tItemL entrada, tHistProc *procesos);
+
 int priority(tItemL comando);
 
 int showvar(tItemL comando, char *envp[]);
@@ -152,7 +154,7 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
             else if (strcmp(peticion.comando, "showvar") == 0)
                 showvar(peticion, envp);
             else if (strcmp(peticion.comando, "changevar") == 0)
-                changevar(peticion,envp);
+                changevar(peticion, envp);
             else if (strcmp(peticion.comando, "showenv") == 0)
                 showenv(peticion, envp);
             else if (strcmp(peticion.comando, "fork") == 0)
@@ -166,9 +168,8 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
             else if (strcmp(peticion.comando, "execute") == 0)
                 inputExecute(peticion);
             else
-                printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n",
-                       peticion.comando);
-            //execute(peticion, procesos, true);//execCreate(peticion,procesos)
+                inputExecCreate(peticion, procesos);
+            //printf("%s es ahora un posible programa externo y se le tratará como tal en próximas ediciones\n", peticion.comando);
 
             return false;
         }
@@ -1232,64 +1233,68 @@ void showenv(tItemL comando, char *envp[]) {
 
 void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sale al no meter comandos
 
-    //nenvp es el nº de VAR, nargv es el nº de comandos, los aux es para saber si hay prioridad y/o 2º plano
-    int salir = BuscarVariable(entrada.comando, environ);
-    int nenvp = 0, nargv = 0, auxPri = 0, auxPlano = 0;
-    char prog[MAX_LENGHT_PATH];
-    tPosT i = firstToken(entrada.comandos);
+    if (entrada.tokens == 1) {
+        printf("el programa es %s\n", entrada.comando);
+    } else {
 
-    //a saber la entrada
-    while (salir == -1 && i != TNULL) {
-        salir = BuscarVariable(entrada.comandos.data[i], environ);
-        nenvp++;
-        i = nextToken(i, entrada.comandos);
-    }
+        int salir, auxPri = 0, prioridad = 0, auxPlano = 0;
+        char prog[MAX_LENGHT_PATH], *envp[MAX_TOKENS] = {}, *argv[MAX_TOKENS] = {};
+        tPosT i = firstToken(entrada.comandos);
+        tItemT auxprog;
+        tItemP aux;
+        time_t now;
 
-    if (i == TNULL) {
-        perror("solo se han introducido variables de entorno");
-        return;
-    }
+        salir = BuscarVariable(entrada.comando, environ);
 
-    tItemT auxprog;
-    getToken(i, entrada.comandos, auxprog);
-    strcpy(prog, auxprog);
-
-    while (i != TNULL) {
-
-        if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
-            auxPri = i; //para saber que hay una prioridad y dónde está
-            nargv--;
+        while (salir != -1 && i != TNULL) {
+            if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
+                envp[i] = entrada.comandos.data[i];
+            }
+            i = nextToken(i, entrada.comandos);
         }
 
-        if (strcmp("&", entrada.comandos.data[i]) == 0 && auxPlano == 0) {
-            auxPlano = i;
-            nargv--;
+        if (i == TNULL) {
+            perror("solo se han introducido variables de entorno");
+            return;
         }
 
-        nargv++;
-        i = nextToken(i, entrada.comandos);
+        getToken(i, entrada.comandos, auxprog);
+        strcpy(prog, auxprog);
+
+        while (i != TNULL) {
+
+            if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
+                auxPri = i; //para saber que hay una prioridad y dónde está
+            } else if (strncmp("&", entrada.comandos.data[i], 1) == 0 && auxPlano == 0) {
+                auxPlano = i;
+            } else {
+                argv[i] = entrada.comandos.data[i];
+            }
+            i = nextToken(i, entrada.comandos);
+        }
+
+
+        printf("se llegaría a ejecutar el programa\n");
+
+
+        /*time(&now);
+        if(errno == -1){
+            perror("error al obtener el tiempo");
+            return ;
+        }
+
+        //aux.pid = ;
+        struct tm *local = localtime(&now); aux.tiempo = *local;
+        //aux.comando = entrada;
+        aux.estado = active; //creo
+        //aux.prioridad = ; //depende de si hay prioridad
+
+        if( !insertProc(aux,procesos) ) perror("no se ha podido introducir el proceso en la lista");*/
+
     }
-
-    //a copiar los arrays
-    //char *envp[nenvp + 1];
-    //char *argv[nargv];
-
-
-    //ejecución del programa
-    /*if (OurExecvpe(prog,) == -1) {
-        strerror(errno);
-        perror("no ejecutado");
-    }*/
-
-    //tItemP aux;
-
-    //if( !insertProc(aux,procesos) ) perror("no se ha podido introducir el proceso en la lista");
-
 }
 
 void inputExecute(tItemL entrada) {
-    //no se crea un proceso, esto es como un comando al uso -> hacer if para entorno
-    //la prioridad es lo único opcional
 
     if (entrada.tokens == 1) {
         printf("execute VAR1 VAR2... prog arg1 arg2... [@pri]\n");
@@ -1301,12 +1306,13 @@ void inputExecute(tItemL entrada) {
     tItemT auxprog;
     tPosT i = firstToken(entrada.comandos);
 
-    while (salir != -1 && i != TNULL) {
+    while (salir == -1 && i != TNULL) {
         if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
             envp[i] = entrada.comandos.data[i];
-        } else {
-            i = nextToken(i, entrada.comandos);
         }
+
+        i = nextToken(i, entrada.comandos);
+
     }
 
     if (i == TNULL) {
@@ -1317,11 +1323,10 @@ void inputExecute(tItemL entrada) {
     getToken(i, entrada.comandos, auxprog);
     strcpy(prog, auxprog); //este es el nombre del programa
 
-    while (i < entrada.comandos.lastPos) {
+    while (i != TNULL) {
 
         if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
             auxPri = i; //para saber que hay una prioridad y dónde está
-            printf("hey prioridad\n");
         } else { //copiar el array de argumentos
             argv[i] = entrada.comandos.data[i];
         }
@@ -1330,7 +1335,7 @@ void inputExecute(tItemL entrada) {
     }
 
 
-    if (auxPri != 0) {
+    if (auxPri != 0) { //"encontrar forma de convetirla"
         tItemT aux;
         getToken(auxPri, entrada.comandos, aux);
         prioridad = atoi(aux);
@@ -1338,10 +1343,8 @@ void inputExecute(tItemL entrada) {
                prioridad, prioridad - 64);
         return;
     }
-    printf("y aquí se ejecutaría\n");
 
-    //pero no hace falta el fork para que haga como una burbuja, tiene que salir de la shell el terminar
-    //OurExecvpe(prog, argv,envp);
+    OurExecvpe(prog, argv, envp);
 
 }
 
