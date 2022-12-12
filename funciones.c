@@ -850,25 +850,22 @@ int BuscarVariable(char *var, char *e[]) {
     return (-1);
 }
 
-int CambiarVariable(char *var, char *valor, char *e[]){
+int CambiarVariable(char *var, char *valor, char *e[]) {
     int pos;
     char *aux;
-    if((pos= BuscarVariable(var,e))==-1)//se busca la variable en el entorno e
+    if ((pos = BuscarVariable(var, e)) == -1)//se busca la variable en el entorno e
         return -1;//sino esta se devuelve -1
 
-    if((aux=(char *)malloc(strlen(var)+ strlen(valor)+2))==NULL)
+    if ((aux = (char *) malloc(strlen(var) + strlen(valor) + 2)) == NULL)
         return -1;
-    strcpy(aux,var); strcat(aux,"=");
-    strcat(aux,valor);
-    e[pos]=aux;
+    strcpy(aux, var);
+    strcat(aux, "=");
+    strcat(aux, valor);
+    e[pos] = aux;
     return (pos);
 
 }
 
-
-
-//ejecutar en 1er plano
-int OurExecvpe(const char *file, char *const argv[], char *const envp[]) {
 char *Ejecutable(char *s) {
     char path[MAX_LENGHT_PATH];
     static char aux2[MAX_LENGHT_PATH];
@@ -896,20 +893,21 @@ char *Ejecutable(char *s) {
 }
 
 //ejecutar en 1er plano con variables
-int OurExecvpe( char *file, char *const argv[], char *const envp[]) {
+int OurExecvpe(char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
-void execute(char *prog, char *argv, char *envp, int prioridad){
+int execute(char *prog, char *argv, char *envp, int prioridad) {
     int pid;
 
-    if((pid = fork())== 0){
-        if(prioridad != 0){
+    if ((pid = fork()) == 0) {
+        if (prioridad != 0) {
             //convertir la prioridad
         }
         OurExecvpe(prog, &argv, &envp);
 
-        waitpid(pid,NULL,0);
+        waitpid(pid, NULL, 0);
     }
 
+    return 0; //va a devolver el pid del proceso creado
 }
