@@ -24,6 +24,8 @@
 #include <sys/shm.h> //para memoria compartida
 #include <sys/mman.h> //para (des)mapear
 #include <sys/wait.h> //para waitpid
+#include <sys/time.h>
+#include <sys/resource.h>
 #include "historial.h" //lista historial
 #include "memoria.h" //lista bloques de memoria
 #include "procesos.h" //para los procesos
@@ -123,6 +125,10 @@ ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
 //sobre procesos
 int BuscarVariable(char *var, char *e[]); //se busca *var en el entorno *e y se devuelve su posición
 
-int OurExecvpe(const char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
+char *Ejecutable(char *s);//entiendo que busca el ejecutable en el sistema
+
+int OurExecvpe( char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
+
+void execute(char *prog, char *argv, char *envp, int prioridad);
 
 #endif //P0_SO_FUNCIONES_H

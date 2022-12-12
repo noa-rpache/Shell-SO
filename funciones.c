@@ -836,7 +836,7 @@ void dopmap() {
 
 int BuscarVariable(char *var, char *e[]) {
     int pos = 0;
-    char aux[MAXVAR];
+    char aux[MAX_LENGHT_PATH];
 
     strcpy(aux, var);
     strcat(aux, "=");
@@ -850,9 +850,47 @@ int BuscarVariable(char *var, char *e[]) {
     return (-1);
 }
 
-//ejecutar en 1er plano
-int OurExecvpe(const char *file, char *const argv[], char *const envp[]) {
+char *Ejecutable(char *s) {
+    char path[MAX_LENGHT_PATH];
+    static char aux2[MAX_LENGHT_PATH];
+    struct stat st;
+    char *p;
+
+    if (s == NULL || (p = getenv("PATH")) == NULL)
+        return s;
+
+    if (s[0] == '/' || !strncmp(s, "./", 2) || !strncmp(s, "../", 3))
+        return s;       /*is an absolute pathname*/
+
+    strncpy(path, p, MAX_LENGHT_PATH);
+
+    for (p = strtok(path, ":"); p != NULL; p = strtok(NULL, ":")) {
+
+        sprintf(aux2, "%s/%s", p, s);
+
+        if (lstat(aux2, &st) != -1)
+            return aux2;
+
+    }
+
+    return s;
+}
+
+//ejecutar en 1er plano con variables
+int OurExecvpe( char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
+void execute(char *prog, char *argv, char *envp, int prioridad){
+    int pid;
 
+    if((pid = fork())== 0){
+        if(prioridad != 0){
+            //convertir la prioridad
+        }
+        OurExecvpe(prog, &argv, &envp);
+
+        waitpid(pid,NULL,0);
+    }
+
+}
