@@ -1066,7 +1066,7 @@ int priority(tItemL comando) {
     } else {
         //sino cambiamos la prioridad del proceso
         priority = atoi(prioridad);
-        setpriority(PRIO_PROCESS, pid, priority);
+        //setpriority(PRIO_PROCESS, pid, priority);
     }
     printf("El proceso %d tiene prioridad %d\n", pid, priority);
     return 0;
@@ -1133,10 +1133,10 @@ void listJobs(tHistProc procesos) {
 
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
         tItemP p = getProc(i);
-        char *tiempo;
-        strftime(tiempo, 100, "%Y/%m/%d %H:%M:%S", &p.tiempo);
+        //char *tiempo;
+        //strftime(tiempo, 100, "%Y/%m/%d %H:%M:%S", &p.tiempo);
 
-        printf("%d %d %s ", p.pid, /*user,*/ p.prioridad, tiempo);
+        printf("%d %d ", p.pid, /*user,*/ p.prioridad /*, tiempo*/);
 
         switch (p.estado) {
             case finished:
@@ -1235,10 +1235,12 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
 
     if (entrada.tokens == 1) {
         printf("el programa es %s\n", entrada.comando);
+        execute(entrada.comando,NULL,NULL,0,0,false);
     } else {
 
-        int salir, auxPri = 0, prioridad = 0, auxPlano = 0;
+        int salir, prioridad = 0, auxPlano = 0;
         char prog[MAX_LENGHT_PATH], *envp[MAX_TOKENS] = {}, *argv[MAX_TOKENS] = {};
+        bool env = false;
         tPosT i = firstToken(entrada.comandos);
         tItemT auxprog;
         tItemP aux;
@@ -1249,6 +1251,7 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
         while (salir != -1 && i != TNULL) {
             if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
                 envp[i] = entrada.comandos.data[i];
+                env = true;
             }
             i = nextToken(i, entrada.comandos);
         }
@@ -1263,8 +1266,8 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
 
         while (i != TNULL) {
 
-            if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
-                auxPri = i; //para saber que hay una prioridad y dónde está
+            if (strncmp("@", entrada.comandos.data[i], 1) == 0 && prioridad == 0) {
+                prioridad = convertPriority(entrada.comandos.data[i]);
             } else if (strncmp("&", entrada.comandos.data[i], 1) == 0 && auxPlano == 0) {
                 auxPlano = i;
             } else {
@@ -1273,23 +1276,21 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
             i = nextToken(i, entrada.comandos);
         }
 
+        if ((aux.pid = execute(prog, *argv, *envp, prioridad, auxPlano, env)) == -1)
+            return;
 
-        printf("se llegaría a ejecutar el programa\n");
-
-
-        /*time(&now);
-        if(errno == -1){
+        time(&now);
+        if (errno == -1) {
             perror("error al obtener el tiempo");
-            return ;
+            return;
         }
-
-        //aux.pid = ;
-        struct tm *local = localtime(&now); aux.tiempo = *local;
+        struct tm *local = localtime(&now);
+        aux.tiempo = *local;
         //aux.comando = entrada;
         aux.estado = active; //creo
-        //aux.prioridad = ; //depende de si hay prioridad
+        aux.prioridad = prioridad; //depende de si hay prioridad
 
-        if( !insertProc(aux,procesos) ) perror("no se ha podido introducir el proceso en la lista");*/
+        if (!insertProc(aux, procesos)) perror("no se ha podido introducir el proceso en la lista");
 
     }
 }
@@ -1301,7 +1302,7 @@ void inputExecute(tItemL entrada) {
         return;
     }
 
-    int salir = 0, auxPri = 0, prioridad = 0;
+    int salir = 0, prioridad = 0;
     char *envp[MAX_TOKENS] = {}, prog[MAX_LENGHT_PATH], *argv[MAX_TOKENS] = {};
     tItemT auxprog;
     tPosT i = firstToken(entrada.comandos);
@@ -1325,8 +1326,8 @@ void inputExecute(tItemL entrada) {
 
     while (i != TNULL) {
 
-        if (strncmp("@", entrada.comandos.data[i], 1) == 0 && auxPri == 0) {
-            auxPri = i; //para saber que hay una prioridad y dónde está
+        if (strncmp("@", entrada.comandos.data[i], 1) == 0 && prioridad == 0) {
+            prioridad = convertPriority(entrada.comandos.data[i]);
         } else { //copiar el array de argumentos
             argv[i] = entrada.comandos.data[i];
         }
@@ -1335,10 +1336,7 @@ void inputExecute(tItemL entrada) {
     }
 
 
-    if (auxPri != 0) { //"encontrar forma de convetirla"
-        tItemT aux;
-        getToken(auxPri, entrada.comandos, aux);
-        prioridad = atoi(aux);
+    if (prioridad != 0) { //"encontrar forma de convetirla"
         printf("esta es la prioridad sin restarle nada %d\nesta al restarle el valor del @ (64): %d\n",
                prioridad, prioridad - 64);
         return;

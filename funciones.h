@@ -128,10 +128,12 @@ int BuscarVariable(char *var, char *e[]); //se busca *var en el entorno *e y se 
 
 int CambiarVariable(char *var, char *valor, char *e[]);
 
-int OurExecvpe( char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
+int OurExecvpe(char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
 
 char *Ejecutable(char *s);//entiendo que busca el ejecutable en el sistema
 
-int execute(char *prog, char *argv, char *envp, int prioridad);
+int execute(char *prog, char *argv, char *envp, int prioridad, int plano2, bool env);
+
+int convertPriority(tItemT prioridad);
 
 #endif //P0_SO_FUNCIONES_H

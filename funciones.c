@@ -897,17 +897,50 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
-int execute(char *prog, char *argv, char *envp, int prioridad) {
-    int pid;
+int execute(char *prog, char *argv, char *envp, int prioridad, int plano2, bool env) {
+    int pid, currentPid;
 
-    if ((pid = fork()) == 0) {
-        if (prioridad != 0) {
-            //convertir la prioridad
+    if (plano2 == 0) { //se tiene que ejecutar en 1er plano
+
+        if ((pid = fork()) == 0) {
+            if (prioridad != 0) {
+                currentPid = getpid();
+                if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1){
+                    strerror(errno);
+                    return -1;
+                }
+            }
         }
-        OurExecvpe(prog, &argv, &envp);
 
-        waitpid(pid, NULL, 0);
+    } else { //se tiene que ejecutar en 2º plano
+
+        if (prioridad != 0) {
+            currentPid = getpid();
+            if( setpriority(PRIO_PROCESS, currentPid, prioridad) == -1){
+                strerror(errno);
+                return ;
+            }
+        }
+
     }
 
-    return 0; //va a devolver el pid del proceso creado
+    if (env) { //ejecutar con variables de entorno
+        if (OurExecvpe(prog, &argv, &envp) == -1) {
+            perror("fallo al ejecutar el programa");
+            return -1;
+        }
+    } else { //ejecutar sin pasarle variables de entorno
+        if (execvp(prog, &argv) == -1) {
+            perror("fallo al ejecutar el programa");
+            return -1;
+        }
+    }
+
+    waitpid(pid, NULL, 0);
+
+    return pid; //va a devolver el pid del proceso creado
+}
+
+int convertPriority(tItemT prioridad) {
+    return 0;
 }
