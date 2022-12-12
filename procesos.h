@@ -19,12 +19,12 @@ typedef enum {
 }estadio;
 
 typedef struct {
-    int pid;
+    int pid; //esto es el PID del propio proceso
     struct tm tiempo;
     estadio estado;
     //tPosL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
-    // -> se añadirá cuando se haya probado bien esta lista, para comprobar que no hay coincidencias con la otra implementación
-    int prioridad;
+        // -> se añadirá cuando se haya probado bien esta lista, para comprobar que no hay coincidencias con la otra implementación
+    int prioridad; //hay alguna por defecto??
 } tItemP;
 
 typedef struct tNodeP *tPosP;
@@ -54,7 +54,7 @@ bool insertProc(tItemP d, tHistProc *L);
 
 tItemP getProc(tPosP p);
 
-//tPosP findProc(int num, tHistProc L);
+//tPosP findProc(int PID, tHistProc L);
 
 void deleteProc(tPosP p, tHistProc *L);
 
