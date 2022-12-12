@@ -69,6 +69,13 @@ void showenv(tItemL comando, char *envp[]);
 
 void inputExecute(tItemL entrada);
 
+int priority(tItemL comando);
+
+int showvar(tItemL comando, char *envp[]);
+
+int changevar(tItemL comando, char *envp[]);
+
+
 int main(int argc, char *arvg[], char *envp[]) {
 
     tList historial;
@@ -141,11 +148,11 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
             else if (strcmp(peticion.comando, "i-o") == 0)
                 input_output(peticion);
             else if (strcmp(peticion.comando, "priority") == 0)
-                printf("--priority en construcción--\n"); //p3
+                priority(peticion); //p3
             else if (strcmp(peticion.comando, "showvar") == 0)
-                printf("--showvar en construcción--\n");
+                showvar(peticion, envp);
             else if (strcmp(peticion.comando, "changevar") == 0)
-                printf("--changevar en construcción--\n");
+                changevar(peticion,envp);
             else if (strcmp(peticion.comando, "showenv") == 0)
                 showenv(peticion, envp);
             else if (strcmp(peticion.comando, "fork") == 0)
