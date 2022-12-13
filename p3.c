@@ -1233,18 +1233,20 @@ void showenv(tItemL comando, char *envp[]) {
 
 void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sale al no meter comandos
 
+    tItemP aux;
+    time_t now;
+    int prioridad = 0; //pendiente de cambiar por un valor "neutral" a la prioridad
+    bool env = false;
+
     if (entrada.tokens == 1) {
-        printf("el programa es %s\n", entrada.comando);
-        execute(entrada.comando,NULL,NULL,0,0,false);
+        if ((aux.pid = execute(entrada.comando, NULL, NULL, 0, 0, env) == -1))
+            return;
     } else {
 
-        int salir, prioridad = 0, auxPlano = 0;
+        int salir, auxPlano = 0;
         char prog[MAX_LENGHT_PATH], *envp[MAX_TOKENS] = {}, *argv[MAX_TOKENS] = {};
-        bool env = false;
         tPosT i = firstToken(entrada.comandos);
         tItemT auxprog;
-        tItemP aux;
-        time_t now;
 
         salir = BuscarVariable(entrada.comando, environ);
 
@@ -1278,21 +1280,21 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
 
         if ((aux.pid = execute(prog, *argv, *envp, prioridad, auxPlano, env)) == -1)
             return;
-
-        time(&now);
-        if (errno == -1) {
-            perror("error al obtener el tiempo");
-            return;
-        }
-        struct tm *local = localtime(&now);
-        aux.tiempo = *local;
-        //aux.comando = entrada;
-        aux.estado = active; //creo
-        aux.prioridad = prioridad; //depende de si hay prioridad
-
-        if (!insertProc(aux, procesos)) perror("no se ha podido introducir el proceso en la lista");
-
     }
+
+    time(&now);
+    if (errno == -1) {
+        perror("error al obtener el tiempo");
+        return;
+    }
+    struct tm *local = localtime(&now);
+    aux.tiempo = *local;
+    //aux.comando = entrada;
+    aux.estado = active; //creo
+    aux.prioridad = prioridad; //depende de si hay prioridad
+
+    if (!insertProc(aux, procesos)) perror("no se ha podido introducir el proceso en la lista");
+
 }
 
 void inputExecute(tItemL entrada) {

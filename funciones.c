@@ -866,7 +866,7 @@ int CambiarVariable(char *var, char *valor, char *e[]) {
 
 }
 
-char *Ejecutable(char *s) {
+char *Ejecutable(char *s) { //te devuelve el programa al que tiene que llamar la llamada tipo exec
     char path[MAX_LENGHT_PATH];
     static char aux2[MAX_LENGHT_PATH];
     struct stat st;
@@ -897,46 +897,65 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
-int execute(char *prog, char *argv, char *envp, int prioridad, int plano2, bool env) {
-    int pid, currentPid;
+int execute
+(char *prog, char *argv, char *envp, int prioridad, int plano2, bool env) {
+    int pid, currentPid; 
+    //pid que se obtendrá del hijo y currentPid con el que trabajamos para 
+    //setear la prioridad
 
-    if (plano2 == 0) { //se tiene que ejecutar en 1er plano
+    if (plano2 == 0) { 
+    //se tiene que ejecutar en 1er plano 
+        //-> el prompt está en pausa hasta que termina
 
-        if ((pid = fork()) == 0) {
+        if ((pid = fork()) == 0) { //este el código que ejecutará el hijo
+            currentPid = getpid();
             if (prioridad != 0) {
-                currentPid = getpid();
-                if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1){
+                if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
                     strerror(errno);
+                    exit(0); //salir del proceso hijo
+                    return -1;
+                }
+            }
+            
+            if (env) { //ejecutar con variables de entorno
+                if (OurExecvpe(prog, &argv, &envp) == -1) {
+                    perror("fallo al ejecutar el programa");
+                    return -1;
+                }
+            } else { //ejecutar sin pasarle variables de entorno
+                if (execvp(Ejecutable(prog), &argv) == -1) {
+                    perror("fallo al ejecutar el programa");
                     return -1;
                 }
             }
         }
 
-    } else { //se tiene que ejecutar en 2º plano
-
+    } else { 
+    //se tiene que ejecutar en 2º plano -> el prompt y la shell siguen de chill
+        currentPid = getpid();
         if (prioridad != 0) {
-            currentPid = getpid();
-            if( setpriority(PRIO_PROCESS, currentPid, prioridad) == -1){
+            if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
                 strerror(errno);
-                return ;
+                return -1;
+            }
+        }
+        
+        if (env) { //ejecutar con variables de entorno
+            if (OurExecvpe(prog, &argv, &envp) == -1) {
+                perror("fallo al ejecutar el programa");
+                return -1;
+            }
+        } else { //ejecutar sin pasarle variables de entorno
+            if (execvp(Ejecutable(prog), &argv) == -1) {
+                perror("fallo al ejecutar el programa");
+                return -1;
             }
         }
 
     }
 
-    if (env) { //ejecutar con variables de entorno
-        if (OurExecvpe(prog, &argv, &envp) == -1) {
-            perror("fallo al ejecutar el programa");
-            return -1;
-        }
-    } else { //ejecutar sin pasarle variables de entorno
-        if (execvp(prog, &argv) == -1) {
-            perror("fallo al ejecutar el programa");
-            return -1;
-        }
-    }
-
-    waitpid(pid, NULL, 0);
+    if (plano2 == 0) waitpid(pid, NULL, 0); 
+    //esperar => prompt espera => el proceso padre
 
     return pid; //va a devolver el pid del proceso creado
 }
