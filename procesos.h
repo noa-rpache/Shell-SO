@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-//#include "historial.h"
+#include "historial.h"
 
 #define PNULL NULL
 
@@ -20,11 +20,11 @@ typedef enum {
 
 typedef struct {
     int pid; //esto es el PID del propio proceso
+    int info; //int con información sobre la salida
     struct tm tiempo;
     estadio estado;
-    //tPosL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
+    tItemL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
         // -> se añadirá cuando se haya probado bien esta lista, para comprobar que no hay coincidencias con la otra implementación
-    int prioridad; //hay alguna por defecto??
 } tItemP;
 
 typedef struct tNodeP *tPosP;
