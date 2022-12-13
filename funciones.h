@@ -27,9 +27,9 @@
 #include <sys/wait.h> //para waitpid
 #include <sys/time.h>
 #include <sys/resource.h>
-#include "historial.h" //lista historial
+//#include "historial.h" //lista historial
 #include "memoria.h" //lista bloques de memoria
-#include "procesos.h" //para los procesos
+#include "procesos.h" //para los procesos, este tiene incluido el historial.h
 
 #define TAMANO 2048
 
@@ -132,7 +132,7 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]); //para ejecu
 
 char *Ejecutable(char *s);//entiendo que busca el ejecutable en el sistema
 
-int execute(char *prog, char *argv, char *envp, int prioridad, int plano2, bool env);
+int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool env);
 
 int convertPriority(tItemT prioridad);
 

@@ -1133,33 +1133,41 @@ void listJobs(tHistProc procesos) {
 
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
         tItemP p = getProc(i);
-        //char *tiempo;
-        //strftime(tiempo, 100, "%Y/%m/%d %H:%M:%S", &p.tiempo);
+        char tiempo[15] = {};
+        int result;
+        strftime(tiempo, 100, "%Y/%m/%d %H:%M:%S", &p.tiempo);
+              
+        printf("%10d p = %d %s ", p.pid, /*user,*/ getpriority(PRIO_PROCESS,p.pid), tiempo);
 
-        printf("%d %d ", p.pid, /*user,*/ p.prioridad /*, tiempo*/);
-
-        switch (p.estado) {
-            case finished:
-                printf("FINISHED");
-                break;
-            case stopped:
-                printf("STOPPED");
-                break;
-            case signaled:
-                printf("SIGNALED");
-                break;
-            case active:
-                printf("ACTIVE");
-                break;
-            default:
-                perror("error en el estado");
-                break;
+        if ((result = waitpid(p.pid,&(p.info), WNOHANG |WUNTRACED |WCONTINUED) ) == p.pid ){
+            if(WIFEXITED(p.info)){
+                printf(" FINISHED ");
+                p.estado = finished;
+                p.info = WEXITSTATUS(p.info);
+            }else if(WIFSIGNALED(p.info)){
+                printf(" SIGNALED ");
+                p.estado = signaled;
+                p.info = WTERMSIG(p.info);
+            }else if(WIFSTOPPED(p.info)){
+                printf(" STOPPED ");
+                p.estado = stopped;
+                p.info = WTERMSIG(p.info);
+            }else if(WIFCONTINUED(p.info)){
+                printf(" ACTIVE ");
+                p.estado = active;
+                //no hace falta actualizar el int de información
+            }
+        } else {
+            if (result == 0)
+                printf(" NOT AVAILABLE ");
+            else 
+                strerror(errno);
         }
 
         //printf( número entre paréntesis que no tengo claro lo que es )
-        //printComand(p.comando,false,false);
-
-        printf(" @%d", p.prioridad);
+        printf("() ");
+        
+        printComand(p.comando,false,false);
         printf("\n");
     }
 
@@ -1177,12 +1185,12 @@ void deleteJobs(tItemL comando, tHistProc *procesos) {
         if (strcmp("-term", modo) == 0) {
 
             for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
-                if (getProc(i).estado == finished) deleteProc(i, procesos);
+                if (getProc(i).estado == finished || WIFEXITED(getProc(i).info)) deleteProc(i, procesos);
             }
         } else if (strcmp("-sig", modo) == 0) {
 
             for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
-                if (getProc(i).estado == signaled) deleteProc(i, procesos);
+                if (getProc(i).estado == signaled || WIFSIGNALED(getProc(i).info)) deleteProc(i, procesos);
             }
         } else {
             perror("no has introducido un modo correcto");
@@ -1194,7 +1202,6 @@ void cmd_fork() { //¿¿cómo funciona la lista aquí???
     pid_t pid;
 
     if ((pid = fork()) == 0) { //ha habido éxito y estás situado en el proceso hijo
-/*		VaciarListaProcesos(&LP); Depende de la implementación de cada uno*/
         printf("ejecutando proceso %d\n", getpid());
     } else if (pid != -1) waitpid(pid, NULL, 0);
     else strerror(errno);
@@ -1235,53 +1242,65 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
 
     tItemP aux;
     time_t now;
-    int prioridad = 0; //pendiente de cambiar por un valor "neutral" a la prioridad
-    bool env = false;
+    int prioridad = 0; //valor neutral predeterminado
+    bool env = false, plano2 = false;
 
     if (entrada.tokens == 1) {
-        if ((aux.pid = execute(entrada.comando, NULL, NULL, 0, 0, env) == -1))
+        if ((aux.pid = execute(entrada.comando, NULL, NULL, prioridad, plano2, env) == -1))
             return;
     } else {
 
-        int salir, auxPlano = 0;
-        char prog[MAX_LENGHT_PATH], *envp[MAX_TOKENS] = {}, *argv[MAX_TOKENS] = {};
-        tPosT i = firstToken(entrada.comandos);
-        tItemT auxprog;
+        int salir, argCounter = 0, envCounter = 0;
+        char prog[MAX_LENGHT_PATH], *envp[MAX_TOKENS] = {"VACÍO"}, *argv[MAX_TOKENS] = {"VACÍO"};
+        tPosT i = -2;
+        tItemT auxprog, auxString;
 
-        salir = BuscarVariable(entrada.comando, environ);
+        if ((salir = BuscarVariable(entrada.comando, environ) ) != -1){
+            
+            i = firstToken(entrada.comandos);
 
-        while (salir != -1 && i != TNULL) {
-            if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
-                envp[i] = entrada.comandos.data[i];
-                env = true;
+            while (salir != -1 && i != TNULL) {
+                if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
+                    getToken(i,entrada.comandos, auxString);
+                    envp[envCounter] = auxString;
+                    envCounter++;
+                    env = true;
+                    i = nextToken(i, entrada.comandos); //si no se ha encontrado una VAR no se avanza
+                }
+                
             }
-            i = nextToken(i, entrada.comandos);
         }
-
-        if (i == TNULL) {
-            perror("solo se han introducido variables de entorno");
+        
+        if (i == -2){
+            strcpy(prog, entrada.comando);
+            i = firstToken(entrada.comandos);
+        } else if (i == TNULL) {
+            printf("solo se han introducido variables de entorno\n");
             return;
+        }else { //se ha introducido alguna, así que hay que sacarla de los tokens
+            getToken(previousToken(i,entrada.comandos), entrada.comandos, auxprog);
+            strcpy(prog, auxprog);
         }
-
-        getToken(i, entrada.comandos, auxprog);
-        strcpy(prog, auxprog);
+        
 
         while (i != TNULL) {
 
             if (strncmp("@", entrada.comandos.data[i], 1) == 0 && prioridad == 0) {
                 prioridad = convertPriority(entrada.comandos.data[i]);
-            } else if (strncmp("&", entrada.comandos.data[i], 1) == 0 && auxPlano == 0) {
-                auxPlano = i;
+            } else if (strncmp("&", entrada.comandos.data[i], 1) == 0 && plano2 == false) {
+                plano2 = true;
             } else {
-                argv[i] = entrada.comandos.data[i];
+                getToken(i,entrada.comandos, auxString);
+                argv[argCounter] = auxString;
+                argCounter++;
             }
             i = nextToken(i, entrada.comandos);
         }
-
-        if ((aux.pid = execute(prog, *argv, *envp, prioridad, auxPlano, env)) == -1)
+        
+        if ((aux.pid = execute(prog, *argv, *envp, prioridad, plano2, env) ) == -1)
             return;
     }
-
+    
     time(&now);
     if (errno == -1) {
         perror("error al obtener el tiempo");
@@ -1289,11 +1308,11 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
     }
     struct tm *local = localtime(&now);
     aux.tiempo = *local;
-    //aux.comando = entrada;
-    aux.estado = active; //creo
-    aux.prioridad = prioridad; //depende de si hay prioridad
+    aux.estado = active;
+    aux.info = 0;
+    aux.comando = entrada;
 
-    if (!insertProc(aux, procesos)) perror("no se ha podido introducir el proceso en la lista");
+    if (!insertProc(aux, procesos) ) perror("no se ha podido introducir el proceso en la lista");
 
 }
 
@@ -1339,9 +1358,10 @@ void inputExecute(tItemL entrada) {
 
 
     if (prioridad != 0) { //"encontrar forma de convetirla"
-        printf("esta es la prioridad sin restarle nada %d\nesta al restarle el valor del @ (64): %d\n",
-               prioridad, prioridad - 64);
-        return;
+        if (setpriority(PRIO_PROCESS, getpid(), prioridad) == -1) {
+            strerror(errno);
+            return ;
+        }
     }
 
     OurExecvpe(prog, argv, envp);

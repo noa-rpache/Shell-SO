@@ -897,15 +897,13 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
-int execute
-(char *prog, char *argv, char *envp, int prioridad, int plano2, bool env) {
+int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool env) {
     int pid, currentPid; 
-    //pid que se obtendrá del hijo y currentPid con el que trabajamos para 
-    //setear la prioridad
+    //pid que se obtendrá del hijo y currentPid con el que trabajamos para setear la prioridad
+    
+    //printf("prog: %s, argv: %s\n", &prog[0], &argv[0]);
 
-    if (plano2 == 0) { 
-    //se tiene que ejecutar en 1er plano 
-        //-> el prompt está en pausa hasta que termina
+    if (!plano2) { //se tiene que ejecutar en 1er plano -> el prompt está en pausa hasta que termina
 
         if ((pid = fork()) == 0) { //este el código que ejecutará el hijo
             currentPid = getpid();
@@ -917,17 +915,20 @@ int execute
                 }
             }
             
-            if (env) { //ejecutar con variables de entorno
+            if (env) {
                 if (OurExecvpe(prog, &argv, &envp) == -1) {
-                    perror("fallo al ejecutar el programa");
+                    perror("fallo al ejecutar el programa cambiando el entorno en primer plano");
+                    exit(0);
                     return -1;
                 }
-            } else { //ejecutar sin pasarle variables de entorno
+            } else {
                 if (execvp(Ejecutable(prog), &argv) == -1) {
-                    perror("fallo al ejecutar el programa");
+                    perror("fallo al ejecutar el programa sin cambiar el entorno en primer plano");
+                    exit(0);
                     return -1;
                 }
             }
+            exit(0);
         }
 
     } else { 
@@ -936,25 +937,28 @@ int execute
         if (prioridad != 0) {
             if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
                 strerror(errno);
+                exit(0);
                 return -1;
             }
         }
         
-        if (env) { //ejecutar con variables de entorno
+        if (env) {
             if (OurExecvpe(prog, &argv, &envp) == -1) {
-                perror("fallo al ejecutar el programa");
+                perror("fallo al ejecutar el programa cambiando el entorno en segundo plano");
                 return -1;
             }
-        } else { //ejecutar sin pasarle variables de entorno
+        } else {
             if (execvp(Ejecutable(prog), &argv) == -1) {
-                perror("fallo al ejecutar el programa");
+                printf("%s\n", Ejecutable(prog));
+                perror("fallo al ejecutar el programa sin cambiar el entorno en segundo plano");
                 return -1;
             }
         }
-
+        
+        exit(0);
     }
 
-    if (plano2 == 0) waitpid(pid, NULL, 0); 
+    if (!plano2) waitpid(pid, NULL, 0); 
     //esperar => prompt espera => el proceso padre
 
     return pid; //va a devolver el pid del proceso creado
