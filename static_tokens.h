@@ -37,7 +37,7 @@ tPosT lastToken(TokensList L);
 
 tPosT nextToken(tPosT p, TokensList L);
 
-tPosT previousToken(tPosT p, TokensList L);
+tPosT previousToken(tPosT p);
 
 bool insertToken(tItemT d, TokensList *L);
 
