@@ -143,6 +143,8 @@ void getDir();
 
 int convertPriority(tItemT prioridad);
 
+char *currentUser();
+
 //sobre directorios
 int isDirectory(const char *path);
 
@@ -216,5 +218,7 @@ int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prio
 int ValorSenal(char *sen);
 
 char *NombreSenal(int sen);
+
+void procInfo(tItemP p);
 
 #endif //P0_SO_FUNCIONES_H

@@ -901,13 +901,13 @@ int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prio
     int pid, currentPid = getpid();
     //pid que se obtendrá del hijo y currentPid con el que trabajamos para setear la prioridad
 
-    printf("prog: %s, argv:", &prog[0]);
+    /*printf("prog: %s, argv:", &prog[0]);
     int i = 0;
     while (argv[i] != NULL) {
         printf("%s ", argv[i]);
         i++;
     }
-    printf("\n");
+    printf("\n");*/
 
     if (!plano2) { //se tiene que ejecutar en 1er plano -> el prompt está en pausa hasta que termina
 
@@ -917,7 +917,6 @@ int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prio
                 if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
                     strerror(errno);
                     exit(0); //salir del proceso hijo
-                    return -1;
                 }
             }
 
@@ -925,13 +924,11 @@ int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prio
                 if (OurExecvpe(prog, argv, envp) == -1) {
                     perror("fallo al ejecutar el programa cambiando el entorno en primer plano");
                     exit(0);
-                    return -1;
                 }
             } else {
                 if (execvp(Ejecutable(prog), argv) == -1) {
                     perror("fallo al ejecutar el programa sin cambiar el entorno en primer plano");
                     exit(0);
-                    return -1;
                 }
             }
             exit(0);
@@ -944,7 +941,6 @@ int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prio
             if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
                 strerror(errno);
                 exit(0);
-                return -1;
             }
         }
 
@@ -1000,7 +996,47 @@ char *NombreSenal(int sen) {
     return ("SIGUNKNOWN");
 }
 
+char *currentUser() {
+    int pos = BuscarVariable("USER", environ);
 
+    if (pos != -1) {
+        return environ[pos];
+    }
+    return ("UNKNOWN");
+}
 
+void procInfo(tItemP p) {
+    //obtenemos información del estado del proceso
+    if (waitpid(p.pid, &(p.info), WNOHANG | WUNTRACED | WCONTINUED) == p.pid) {
+        if (WIFEXITED(p.info) != 0) {
+            p.estado = finished;
+            p.info = WEXITSTATUS(p.info);
+        } else if (WIFSIGNALED(p.info) != 0) {
+            p.estado = signaled;
+            p.info = WTERMSIG(p.info);
+        } else if (WIFSTOPPED(p.info) != 0) {
+            p.estado = stopped;
+            p.info = WSTOPSIG(p.info);
+        } else if (WIFCONTINUED(p.info) != 0) {
+            p.estado = active;
+            //no hace falta actualizar el int de información
+        }
+    }
 
+    //"constante"
+    printf("%6d %5s p = %d %s ", p.pid, currentUser(), getpriority(PRIO_PROCESS, p.pid), p.fecha);
+
+    //lo que depende del estado
+    if (p.estado == finished) {
+        printf(" FINISHED (%03d) ", p.info);
+    } else if (p.estado == stopped) {
+        printf(" STOPPED (%s) ", NombreSenal(p.info));
+    } else if (p.estado == signaled) {
+        printf(" SIGNALED (%s) ", NombreSenal(p.info));
+    } else if (p.estado == active) {
+        printf(" ACTIVO (%03d) ", p.info);
+    }
+
+    printComand(p.comando, false, true);
+}
 

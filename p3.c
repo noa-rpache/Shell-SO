@@ -77,7 +77,7 @@ int showvar(tItemL comando, char *envp[]);
 
 int changevar(tItemL comando, char *envp[]);
 
-int job(tItemL comando, tHistProc *procesos);
+void job(tItemL comando, tHistProc *procesos);
 
 
 int main(int argc, char *arvg[], char *envp[]) {
@@ -166,7 +166,7 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
             else if (strcmp(peticion.comando, "deljobs") == 0)
                 deleteJobs(peticion, procesos);
             else if (strcmp(peticion.comando, "jobs") == 0)
-                job(peticion.comando,procesos);
+                job(peticion, procesos);
             else if (strcmp(peticion.comando, "execute") == 0)
                 inputExecute(peticion);
             else
@@ -1130,47 +1130,14 @@ int changevar(tItemL comando, char *envp[]) {
 void listJobs(tHistProc procesos) {
 
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
-        tItemP p = getProc(i);
-        int result;
-
-        if ((result = waitpid(p.pid, &(p.info), WNOHANG | WUNTRACED | WCONTINUED)) == p.pid) {
-            if (WIFEXITED(p.info)) {
-                p.estado = finished;
-                p.info = WEXITSTATUS(p.info);
-            } else if (WIFSIGNALED(p.info)) {
-                p.estado = signaled;
-                p.info = WTERMSIG(p.info);
-            } else if (WIFSTOPPED(p.info)) {
-                p.estado = stopped;
-                p.info = WTERMSIG(p.info);
-            } else if (WIFCONTINUED(p.info)) {
-                p.estado = active;
-                //no hace falta actualizar el int de información
-            }
-        } else {
-            if (result == 0)
-                printf(" NOT AVAILABLE ");
-            else
-                strerror(errno);
-        }
-
-        printf("%10d p = %d %s ", p.pid, /*user,*/ getpriority(PRIO_PROCESS, p.pid), p.fecha);
-
-
-
-
-        //printf( número entre paréntesis que no tengo claro lo que es )
-        printf("() ");
-
-        printComand(p.comando, false, false);
-        printf("\n");
+        procInfo(getProc(i));
     }
 
 }
 
 void deleteJobs(tItemL comando, tHistProc *procesos) {
     if (comando.tokens == 1) {
-        //se borran todos??
+        //se borran todos -> efectivamente
         deleteProcList(procesos);
         createProcList(procesos);
     } else {
@@ -1313,14 +1280,13 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
             argv[j + 1] = NULL;
         }
 
-        //execvp(Ejecutable(prog), argv);
-
         if ((aux.pid = execute(prog, argv, envp, prioridad, plano2, env)) == -1)
             return;
     }
 
     //lo quito para probar la lista con procesos en 1er plano//if(!plano2) return; //si no se ha ejecutado en 2o plano, no se añade a la lista
 
+    aux.pid = -50;
     time_t now;
     time(&now);
     if (errno == -1) {
@@ -1389,40 +1355,57 @@ void inputExecute(tItemL entrada) {
 
 }
 
-int job(tItemL comando, tHistProc *procesos) {
-    tItemT modo;
-    tItemT valor;
-    for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
+void job(tItemL comando, tHistProc *procesos) {
+
+    if (comando.tokens == 1) {
+        listJobs(*procesos);
+        return;
+    }
+
+    if (comando.tokens == 2) { //no sabemos si se ha introducido bien la entrada
+        tItemT modo;
         getToken(0, comando.comandos, modo);
-        tItemP p = getProc(i);
 
-        if (strcmp(modo, "-fg") == 0) {
-            getToken(1, comando.comandos, valor);
-            if (getProc(i).pid == atoi(valor)) {
-
-                waitpid(p.pid, NULL, 0);
-
-                if (strcmp(p.estado, "ACTIVO") == 0)
-                    printf("proceso %d ejecutado con normalidad. Se devuelve el valor %d\n", p.pid, p);
-
-                else
-                    printf("proceso %d ya esta finalizado ", p.pid);
-
-                deleteProcList(procesos);
-                break;
+        if (strcmp(modo, "-fg") == 0) listJobs(*procesos);
+        else {
+            int pid = atoi(modo);
+            tPosP i;
+            if ((i = findProc(pid, *procesos)) == PNULL) {
+                printf("no hay ningún proceso con ese pid en la lista\n");
+                return;
             }
-        } else if (comando.tokens == 1) {
+            procInfo(getProc(i));
+        }
+        return;
+    }
 
-            if (p.pid == atoi(modo)) {
+    if (comando.tokens == 3) { //se quiere ejecutar un pid en primer plano
+        tItemT modo;
+        getToken(0, comando.comandos, modo);
+        if (strcmp(modo, "-fg") != 0) {
+            printf("job [-fg] pid\tMuestra informacion del proceso pid.\n"
+                   "\t\t-fg: lo pasa a primer plano\n");
+        }
 
-                //printf("%d %12d p=%d %s (%03d) ", p.pid, //aqui no tengo claro que tiene que mostrar
-                //getpriority(PRIO_PROCESS, p.pid), p.fecha, p.info);
-                printf("%d p = %d %s (%03d)", p.pid, getpriority(PRIO_PROCESS, p.pid), p.fecha, p.info);
-                printComand(p.comando, false, true);
-                break;
-            }
-        } else
-            listJobs(procesos);
+        tItemT valor;
+        getToken(1, comando.comandos, valor);
+        int pid = atoi(valor);
+        tPosP i;
+        if ((i = findProc(pid, *procesos) )== PNULL) {
+            printf("no hay ningún proceso en segundo plano con ese pid\n");
+            return;
+        }
+
+        waitpid(pid, NULL, 0);
+
+        if (getProc(i).estado == active)
+            printf("proceso %d ejecutado con normalidad. Se devuelve el valor %d\n", getProc(i).pid, getProc(i).info);
+        else
+            printf("proceso %d ya esta finalizado ", getProc(i).pid);
+
+        deleteProc(i, procesos);
+
+        return;
     }
 
 }
