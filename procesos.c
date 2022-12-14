@@ -123,3 +123,12 @@ void deleteProcList(tHistProc *L) {
         free(p);
     }
 }
+
+tPosP findProc(int pid, tHistProc L){
+    tPosP p;
+
+    for(p = L->next; p != PNULL; p = p->next){
+        if(p->data.pid == pid) return p;
+    }
+    return PNULL;
+}

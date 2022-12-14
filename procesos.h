@@ -13,6 +13,7 @@
 #include "historial.h"
 
 #define PNULL NULL
+#define TAM_FECHA 20
 
 typedef enum {
     finished, stopped, signaled, active
@@ -21,10 +22,9 @@ typedef enum {
 typedef struct {
     int pid; //esto es el PID del propio proceso
     int info; //int con información sobre la salida
-    struct tm tiempo;
+    char fecha[TAM_FECHA];
     estadio estado;
-    tItemL comando;//línea de comandos, podemos guardar el tposl de cuando se introduce
-        // -> se añadirá cuando se haya probado bien esta lista, para comprobar que no hay coincidencias con la otra implementación
+    tItemL comando; //línea de comandos
 } tItemP;
 
 typedef struct tNodeP *tPosP;
@@ -54,7 +54,7 @@ bool insertProc(tItemP d, tHistProc *L);
 
 tItemP getProc(tPosP p);
 
-//tPosP findProc(int PID, tHistProc L);
+tPosP findProc(int pid, tHistProc L);
 
 void deleteProc(tPosP p, tHistProc *L);
 
