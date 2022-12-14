@@ -854,7 +854,7 @@ int CambiarVariable(char *var, char *valor, char *e[]) {
     int pos;
     char *aux;
     if ((pos = BuscarVariable(var, e)) == -1)//se busca la variable en el entorno e
-        return -1;//sino esta se devuelve -1
+        return -1;//si no está se devuelve -1
 
     if ((aux = (char *) malloc(strlen(var) + strlen(valor) + 2)) == NULL)
         return -1;
@@ -897,11 +897,17 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
-int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool env) {
-    int pid, currentPid; 
+int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prioridad, bool plano2, bool env) {
+    int pid, currentPid = getpid();
     //pid que se obtendrá del hijo y currentPid con el que trabajamos para setear la prioridad
-    
-    //printf("prog: %s, argv: %s\n", &prog[0], &argv[0]);
+
+    printf("prog: %s, argv:", &prog[0]);
+    int i = 0;
+    while (argv[i] != NULL) {
+        printf("%s ", argv[i]);
+        i++;
+    }
+    printf("\n");
 
     if (!plano2) { //se tiene que ejecutar en 1er plano -> el prompt está en pausa hasta que termina
 
@@ -914,15 +920,15 @@ int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool
                     return -1;
                 }
             }
-            
+
             if (env) {
-                if (OurExecvpe(prog, &argv, &envp) == -1) {
+                if (OurExecvpe(prog, argv, envp) == -1) {
                     perror("fallo al ejecutar el programa cambiando el entorno en primer plano");
                     exit(0);
                     return -1;
                 }
             } else {
-                if (execvp(Ejecutable(prog), &argv) == -1) {
+                if (execvp(Ejecutable(prog), argv) == -1) {
                     perror("fallo al ejecutar el programa sin cambiar el entorno en primer plano");
                     exit(0);
                     return -1;
@@ -931,8 +937,8 @@ int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool
             exit(0);
         }
 
-    } else { 
-    //se tiene que ejecutar en 2º plano -> el prompt y la shell siguen de chill
+    } else {
+        //se tiene que ejecutar en 2º plano -> el prompt y la shell siguen de chill
         currentPid = getpid();
         if (prioridad != 0) {
             if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
@@ -941,74 +947,60 @@ int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool
                 return -1;
             }
         }
-        
+
         if (env) {
-            if (OurExecvpe(prog, &argv, &envp) == -1) {
+            if (OurExecvpe(prog, argv, envp) == -1) {
                 perror("fallo al ejecutar el programa cambiando el entorno en segundo plano");
                 return -1;
             }
         } else {
-            if (execvp(Ejecutable(prog), &argv) == -1) {
+            if (execvp(Ejecutable(prog), argv) == -1) {
                 printf("%s\n", Ejecutable(prog));
                 perror("fallo al ejecutar el programa sin cambiar el entorno en segundo plano");
                 return -1;
             }
         }
-        
+
         exit(0);
     }
 
-    if (!plano2) waitpid(pid, NULL, 0); 
+    if (!plano2) waitpid(pid, NULL, 0);
     //esperar => prompt espera => el proceso padre
 
-    return pid; //va a devolver el pid del proceso creado
+    printf("el pid del proceso ejecutado es %d\n", currentPid);
+
+    return 1; //va a devolver el pid del proceso creado
 }
 
 int convertPriority(tItemT prioridad) {
-    return 0;
+
+    int pri;
+
+    pri = (int) strtoul(memmove(&prioridad[0], &prioridad[1], 256), NULL, 10);
+
+    return pri;
+}
+
+//devuelve el número de señal a partir del nombre
+int ValorSenal(char *sen) {
+    int i;
+    for (i = 0; sigstrnum[i].nombre != NULL; i++)
+        if (!strcmp(sen, sigstrnum[i].nombre))
+            return sigstrnum[i].valor;
+    return -1;
+}
+
+
+//devuelve el nombre de la señal a partir de sen, para donde no hay sig2str
+char *NombreSenal(int sen) {
+    int i;
+    for (i = 0; sigstrnum[i].nombre != NULL; i++)
+        if (sen == sigstrnum[i].valor)
+            return sigstrnum[i].nombre;
+    return ("SIGUNKNOWN");
 }
 
 
 
-int job(tItemL comando, tHistProc  procesos){
-    tItemT modo;
-    tItemT valor;
-    for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
-        getToken(0,comando.comandos,modo);
-        tItemP p = getProc(i);
-
-        if(strcmp(modo,"-fg")==0) {
-            getToken(1,comando.comandos,valor);
-            if(getProc(i).pid==atoi(valor)){
-
-                waitpid(p.pid,NULL,0);
-
-                if (strcmp(p.estado, "ACTIVO") == 0)
-                    printf("proceso %d ejecutado con normalidad. Se devuelve el valor %d\n", p.pid, p);
-
-                else
-                    printf("proceso %d ya esta finalizado ", p.pid);
-
-                deleteProcList(procesos);
-            break;
-        }
-}
-else if(comando.tokens==1){
-
-        if(p.pid ==atoi (modo)){
-        
-            strftime(time,MAX_LENGHT_PATH,"%Y/%m/%d %H:%M:%S",p.tiempo);
-            
-            printf("%d %12d p=%d %u %s (%03d) %s\n", p.pid, //aqui no tengo claro que tiene que mostrar);
-                   getpriority(PRIO_PROCESS,p.pid), time, p.estado, p, procesos);
-            break;
-        }
-}
-else
-            listJobs(procesos);
-    }
-
-
-}
 
 

@@ -27,7 +27,6 @@
 #include <sys/wait.h> //para waitpid
 #include <sys/time.h>
 #include <sys/resource.h>
-//#include "historial.h" //lista historial
 #include "memoria.h" //lista bloques de memoria
 #include "procesos.h" //para los procesos, este tiene incluido el historial.h
 
@@ -52,6 +51,82 @@ typedef struct {
     bool overwrite;
 } modo_IO;
 
+struct SEN {
+    char *nombre;
+    int valor;
+};
+
+//las siguientes funciones nos permiten obtener el nombre de una senal a partir del número y viceversa
+static struct SEN sigstrnum[] = {
+        {"HUP", SIGHUP},
+        {"INT", SIGINT},
+        {"QUIT", SIGQUIT},
+        {"ILL", SIGILL},
+        {"TRAP", SIGTRAP},
+        {"ABRT", SIGABRT},
+        {"IOT", SIGIOT},
+        {"BUS", SIGBUS},
+        {"FPE", SIGFPE},
+        {"KILL", SIGKILL},
+        {"USR1", SIGUSR1},
+        {"SEGV", SIGSEGV},
+        {"USR2", SIGUSR2},
+        {"PIPE", SIGPIPE},
+        {"ALRM", SIGALRM},
+        {"TERM", SIGTERM},
+        {"CHLD", SIGCHLD},
+        {"CONT", SIGCONT},
+        {"STOP", SIGSTOP},
+        {"TSTP", SIGTSTP},
+        {"TTIN", SIGTTIN},
+        {"TTOU", SIGTTOU},
+        {"URG", SIGURG},
+        {"XCPU", SIGXCPU},
+        {"XFSZ", SIGXFSZ},
+        {"VTALRM", SIGVTALRM},
+        {"PROF", SIGPROF},
+        {"WINCH", SIGWINCH},
+        {"IO", SIGIO},
+        {"SYS", SIGSYS},
+/*señales que no hay en todas partes*/
+#ifdef SIGPOLL
+        {"POLL", SIGPOLL},
+#endif
+#ifdef SIGPWR
+        {"PWR", SIGPWR},
+#endif
+#ifdef SIGEMT
+        {"EMT", SIGEMT},
+#endif
+#ifdef SIGINFO
+        {"INFO", SIGINFO},
+#endif
+#ifdef SIGSTKFLT
+        {"STKFLT", SIGSTKFLT},
+#endif
+#ifdef SIGCLD
+        {"CLD", SIGCLD},
+#endif
+#ifdef SIGLOST
+        {"LOST", SIGLOST},
+#endif
+#ifdef SIGCANCEL
+        {"CANCEL", SIGCANCEL},
+#endif
+#ifdef SIGTHAW
+        {"THAW", SIGTHAW},
+#endif
+#ifdef SIGFREEZE
+        {"FREEZE", SIGFREEZE},
+#endif
+#ifdef SIGLWP
+        {"LWP", SIGLWP},
+#endif
+#ifdef SIGWAITING
+        {"WAITING", SIGWAITING},
+#endif
+        {NULL, -1},
+};    /*fin array sigstrnum */
 
 //utilidades
 int TrocearCadena(char *cadena, char *trozos[]);
@@ -65,6 +140,8 @@ char LetraTF(mode_t m);
 char *ConvierteModo2(mode_t m);
 
 void getDir();
+
+int convertPriority(tItemT prioridad);
 
 //sobre directorios
 int isDirectory(const char *path);
@@ -123,17 +200,21 @@ ssize_t LeerFichero(char *f, void *p, size_t cont);
 
 ssize_t EscribirFichero(char *f, const void *p, size_t cont, int overwrite);
 
-//sobre procesos
+//sobre variables de entorno
 int BuscarVariable(char *var, char *e[]); //se busca *var en el entorno *e y se devuelve su posición
 
 int CambiarVariable(char *var, char *valor, char *e[]);
 
+//para ejecutar procesos
 int OurExecvpe(char *file, char *const argv[], char *const envp[]); //para ejecutar un proceso en 1er plano
 
 char *Ejecutable(char *s);//entiendo que busca el ejecutable en el sistema
 
-int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool env);
+int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prioridad, bool plano2, bool env);
 
-int convertPriority(tItemT prioridad);
+//sobre señales
+int ValorSenal(char *sen);
+
+char *NombreSenal(int sen);
 
 #endif //P0_SO_FUNCIONES_H
