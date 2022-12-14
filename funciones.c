@@ -967,3 +967,48 @@ int execute(char *prog, char *argv, char *envp, int prioridad, bool plano2, bool
 int convertPriority(tItemT prioridad) {
     return 0;
 }
+
+
+
+int job(tItemL comando, tHistProc  procesos){
+    tItemT modo;
+    tItemT valor;
+    for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
+        getToken(0,comando.comandos,modo);
+        tItemP p = getProc(i);
+
+        if(strcmp(modo,"-fg")==0) {
+            getToken(1,comando.comandos,valor);
+            if(getProc(i).pid==atoi(valor)){
+
+                waitpid(p.pid,NULL,0);
+
+                if (strcmp(p.estado, "ACTIVO") == 0)
+                    printf("proceso %d ejecutado con normalidad. Se devuelve el valor %d\n", p.pid, p);
+
+                else
+                    printf("proceso %d ya esta finalizado ", p.pid);
+
+                deleteProcList(procesos);
+            break;
+        }
+}
+else if(comando.tokens==1){
+
+        if(p.pid ==atoi (modo)){
+        
+            strftime(time,MAX_LENGHT_PATH,"%Y/%m/%d %H:%M:%S",p.tiempo);
+            
+            printf("%d %12d p=%d %u %s (%03d) %s\n", p.pid, //aqui no tengo claro que tiene que mostrar);
+                   getpriority(PRIO_PROCESS,p.pid), time, p.estado, p, procesos);
+            break;
+        }
+}
+else
+            listJobs(procesos);
+    }
+
+
+}
+
+
