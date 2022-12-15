@@ -22,7 +22,7 @@ tPosT lastToken(TokensList L) {
     return L.lastPos;
 }
 
-tPosT previousToken(tPosT p) {
+tPosT prevToken(tPosT p) {
     return --p;
 }
 

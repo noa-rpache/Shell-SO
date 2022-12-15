@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 #define TNULL -1
-#define MAX_TOKENS 15 //máximo nº de tokens
+#define MAX_TOKENS 16 //máximo nº de tokens
 #define MAX_LENGHT_PATH 100 //para cuando se quieran arrays de nombres de directorios
 
 typedef char tItemT[MAX_LENGHT_PATH]; //definición de los elementos que queremos insertar en data
@@ -37,7 +37,7 @@ tPosT lastToken(TokensList L);
 
 tPosT nextToken(tPosT p, TokensList L);
 
-tPosT previousToken(tPosT p);
+tPosT prevToken(tPosT p);
 
 bool insertToken(tItemT d, TokensList *L);
 
