@@ -161,11 +161,11 @@ bool procesarEntrada(tList *historial, tHistMem *bloques, tHistProc *procesos, c
                 showenv(peticion, envp);
             else if (strcmp(peticion.comando, "fork") == 0)
                 cmd_fork();
-            else if (strcmp(peticion.comando, "listjobs") == 0)
+            else if (strcmp(peticion.comando, "listjobs") == 0 || strcmp(peticion.comando, "jobs") == 0)
                 listJobs(*procesos);
             else if (strcmp(peticion.comando, "deljobs") == 0)
                 deleteJobs(peticion, procesos);
-            else if (strcmp(peticion.comando, "jobs") == 0)
+            else if (strcmp(peticion.comando, "job") == 0)
                 job(peticion, procesos);
             else if (strcmp(peticion.comando, "execute") == 0)
                 inputExecute(peticion);
@@ -227,7 +227,7 @@ void ayuda(tItemL comando) {
         printf("\tfin salir bye fecha pid autores hist comando carpeta infosis ayuda\n"
                "\tcrear delete deltree stat list\n"
                "\tallocate deallocate memdump memfill memory recurse\n"
-               "\tlistjobs deljobs priority showvar changevar showenv fork jobs execute ****\n");
+               "\tlistjobs deljobs priority showvar changevar showenv fork job execute ****\n");
     } else if (strcmp(modo, "fin") == 0)
         printf("fin\tTermina la ejecucion del shell\n");
     else if (strcmp(modo, "salir") == 0)
@@ -312,14 +312,20 @@ void ayuda(tItemL comando) {
         printf("	-addr: muestra el valor y donde se almacenan environ y el 3er arg main\n");
     } else if (strcmp(modo, "fork") == 0)
         printf("fork 	El shell hace fork y queda en espera a que su hijo termine\n");
-    else if (strcmp(modo, "jobs") == 0)
-        printf("jobs 	Lista los procesos en segundo plano\n");
-    else if (strcmp(modo, "execute") == 0) {
-        printf("execute VAR1 VAR2 ..prog args....[@pri]	Ejecuta, sin crear proceso,prog con argumentos en un entorno que contiene solo las variables VAR1, VAR2...\n");
-        printf("de todas formas, si quieres ejecutar un programa externo lo puedes hacer si lo introduces con *esta sintaxis* en vez de un comando\n");
+    else if (strcmp(modo, "job") == 0){
+        printf("job [-fg] pid	Muestra informacion del proceso pid.\n");
+		printf("                -fg: lo pasa a primer plano\n");
+    }else if (strcmp(modo, "execute") == 0) {
+        printf("execute VAR1 VAR2 ..prog args....[@pri]	Ejecuta, sin crear proceso, prog con argumentos en un entorno que contiene solo las variables VAR1, VAR2...\n");
     } else {
         printf("%s no encontrado\n", modo);
-        printf("de todas formas, si quieres ejecutar un programa externo lo puedes hacer si lo introduces con *esta sintaxis* en vez de un comando\n");
+        printf("de todas formas, si quieres ejecutar un programa creando un proceso lo puedes hacer así:\n");
+        printf("[VAR1 VAR2 .....] executable arg1 arg2......[@pri] [&]\n");
+        printf("\tVAR1, VAR2... son variables de entorno ya presentes en environ, no tienen que ir en mayúsculas\n");
+        printf("\texecutable es el programa y arg1, arg2... sus posibles argumentos\n");
+        printf("\t@pri aparece si se le quiere asignar la prioridad pri\n");
+        printf("\t& sirve para indicar si se quiere ejecutar en segundo plano\n");
+        
     }
 }
 
@@ -1128,7 +1134,7 @@ int changevar(tItemL comando, char *envp[]) {
 
 
 void listJobs(tHistProc procesos) {
-
+    printf("**Procesos en 2º plano de %d**\n", getpid());
     for (tPosP i = primerProc(procesos); i != PNULL; i = nextProc(i)) {
         procInfo(getProc(i));
     }
@@ -1138,22 +1144,25 @@ void listJobs(tHistProc procesos) {
 void deleteJobs(tItemL comando, tHistProc *procesos) {
     if (comando.tokens == 1) {
         //se borran todos -> efectivamente
+        printf("Se vacía la lista de procesos en 2º plano\n");
         deleteProcList(procesos);
         createProcList(procesos);
     } else {
         tItemT modo;
-        getToken(1, comando.comandos, modo);
+        getToken(0, comando.comandos, modo);
 
         if (strcmp("-term", modo) == 0) {
 
             for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
                 if (getProc(i).estado == finished || WIFEXITED(getProc(i).info)) deleteProc(i, procesos);
             }
+
         } else if (strcmp("-sig", modo) == 0) {
 
             for (tPosP i = primerProc(*procesos); i != PNULL; i = nextProc(i)) {
                 if (getProc(i).estado == signaled || WIFSIGNALED(getProc(i).info)) deleteProc(i, procesos);
             }
+
         } else {
             perror("no has introducido un modo correcto");
         }
@@ -1202,91 +1211,73 @@ void showenv(tItemL comando, char *envp[]) {
 
 void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sale al no meter comandos
 
+    tItemL backup = entrada;
     tItemP aux;
     int prioridad = 0; //valor neutral predeterminado
-    bool env = false, plano2 = false;
+    bool plano2 = false;
 
     if (entrada.tokens == 1) {
-        if ((aux.pid = execute(entrada.comando, NULL, NULL, prioridad, plano2, env) == -1))
+        if ((aux.pid = execute(entrada.comando, entrada, 0, 0, prioridad, plano2) == -1))
             return;
     } else {
 
         int salir, envCounter = 1, argCounter = 1;
         char prog[MAX_LENGHT_PATH];
-        tPosT i = -2;
+        tPosT i = -2, fin = TNULL;
         tItemT auxprog;
 
         if ((salir = BuscarVariable(entrada.comando, environ)) != -1) {
 
+            envCounter++; //hay que contar el comando
             i = firstToken(entrada.comandos);
 
             while (salir != -1 && i != TNULL) {
                 if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
                     envCounter++;
-                    env = true;
                     i = nextToken(i, entrada.comandos); //si no se ha encontrado una VAR no se avanza
                 }
             }
         }
 
-        if (i == -2) {
-            strcpy(prog, entrada.comando);
-            i = firstToken(entrada.comandos);
-        } else if (i == TNULL) {
+        if (i == TNULL) {
             printf("solo se han introducido variables de entorno\n");
             return;
-        } else { //se ha introducido alguna, así que hay que sacarla de los tokens
-            getToken(previousToken(i), entrada.comandos, auxprog);
+        }
+
+        if (i == -2) { //el programa está en el comando
+            strcpy(prog, entrada.comando);
+            i = firstToken(entrada.comandos);
+        } else { //se ha introducido alguna variable, así que hay que sacarla de los tokens
+            getToken(i, entrada.comandos, auxprog);
             strcpy(prog, auxprog);
         }
 
+        if (strcmp("&", entrada.comandos.data[entrada.comandos.lastPos]) == 0) {
+            plano2 = true;
+            //printf("hay 2º plano\n");
+            fin = entrada.comandos.lastPos;
+        }
 
-        while (i != TNULL) {
+        while (i != fin) {
 
             if (strncmp("@", entrada.comandos.data[i], 1) == 0 && prioridad == 0) {
                 prioridad = convertPriority(entrada.comandos.data[i]);
-            } else if (strcmp("&", entrada.comandos.data[i]) == 0 && plano2 == false) {
-                plano2 = true;
-                i = entrada.comandos.lastPos;
-            } else {
-                argCounter++;
+                //printf("hay prioridad %d\n", prioridad);
+                argCounter--;
             }
+            argCounter++;
             i = nextToken(i, entrada.comandos);
         }
-        argCounter--;
+        envCounter--;
 
-        //ahora a copiar los arrays
-        char *argv[argCounter], *envp[envCounter];
+        //printf("hay %d argumentos y %d variables de entorno\n",argCounter,envCounter);
 
-        if (envCounter != 0) {
-            envp[0] = entrada.comando;
-            int j;
-            for (j = 1; j < envCounter; j++) {
-                envp[j] = entrada.comandos.data[j -
-                                                1]; //no vale el mismo contador porque se tiene en cuenta el comando ppal
-                //printf("env[%d] %s = %s\n",j,env[j], entrada.comandos.data[j-1]);
-            }
-            envp[j + 1] = NULL;
-        }
-
-        if (argCounter != 0) {
-            int j, k = envCounter -
-                       1; //debería tener un -1 por el entrada.comando y un +1 por el programa en sí, el otro -1 es porque arrays
-            for (j = 0; j < argCounter; j++) {
-                argv[j] = entrada.comandos.data[k];
-                //printf("argv[%d] %s = %s\n k = %d\n",j,argv[j], entrada.comandos.data[k], k);
-                k++;
-            }
-            argv[j + 1] = NULL;
-        }
-
-        if ((aux.pid = execute(prog, argv, envp, prioridad, plano2, env)) == -1)
+        if ((aux.pid = execute(prog, entrada, argCounter, envCounter, prioridad, plano2)) == -1)
             return;
     }
 
-    //lo quito para probar la lista con procesos en 1er plano//if(!plano2) return; //si no se ha ejecutado en 2o plano, no se añade a la lista
+    if (!plano2) return; //si no se ha ejecutado en 2o plano no se añade a la lista
 
-    aux.pid = -50;
     time_t now;
     time(&now);
     if (errno == -1) {
@@ -1297,7 +1288,7 @@ void inputExecCreate(tItemL entrada, tHistProc *procesos) { //este es el que sal
     strftime(aux.fecha, TAM_FECHA, "%Y/%m/%d %H:%M:%S", local);
     aux.estado = active;
     aux.info = 0;
-    aux.comando = entrada;
+    aux.comando = backup;
 
     if (!insertProc(aux, procesos)) perror("no se ha podido introducir el proceso en la lista");
 
@@ -1319,9 +1310,7 @@ void inputExecute(tItemL entrada) {
         if ((salir = BuscarVariable(entrada.comandos.data[i], environ)) != -1) {
             envp[i] = entrada.comandos.data[i];
         }
-
         i = nextToken(i, entrada.comandos);
-
     }
 
     if (i == TNULL) {
@@ -1344,7 +1333,7 @@ void inputExecute(tItemL entrada) {
     }
 
 
-    if (prioridad != 0) { //"encontrar forma de convetirla"
+    if (prioridad != 0) {
         if (setpriority(PRIO_PROCESS, getpid(), prioridad) == -1) {
             strerror(errno);
             return;
@@ -1391,7 +1380,7 @@ void job(tItemL comando, tHistProc *procesos) {
         getToken(1, comando.comandos, valor);
         int pid = atoi(valor);
         tPosP i;
-        if ((i = findProc(pid, *procesos) )== PNULL) {
+        if ((i = findProc(pid, *procesos)) == PNULL) {
             printf("no hay ningún proceso en segundo plano con ese pid\n");
             return;
         }

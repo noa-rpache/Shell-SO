@@ -56,77 +56,6 @@ struct SEN {
     int valor;
 };
 
-//las siguientes funciones nos permiten obtener el nombre de una senal a partir del número y viceversa
-static struct SEN sigstrnum[] = {
-        {"HUP", SIGHUP},
-        {"INT", SIGINT},
-        {"QUIT", SIGQUIT},
-        {"ILL", SIGILL},
-        {"TRAP", SIGTRAP},
-        {"ABRT", SIGABRT},
-        {"IOT", SIGIOT},
-        {"BUS", SIGBUS},
-        {"FPE", SIGFPE},
-        {"KILL", SIGKILL},
-        {"USR1", SIGUSR1},
-        {"SEGV", SIGSEGV},
-        {"USR2", SIGUSR2},
-        {"PIPE", SIGPIPE},
-        {"ALRM", SIGALRM},
-        {"TERM", SIGTERM},
-        {"CHLD", SIGCHLD},
-        {"CONT", SIGCONT},
-        {"STOP", SIGSTOP},
-        {"TSTP", SIGTSTP},
-        {"TTIN", SIGTTIN},
-        {"TTOU", SIGTTOU},
-        {"URG", SIGURG},
-        {"XCPU", SIGXCPU},
-        {"XFSZ", SIGXFSZ},
-        {"VTALRM", SIGVTALRM},
-        {"PROF", SIGPROF},
-        {"WINCH", SIGWINCH},
-        {"IO", SIGIO},
-        {"SYS", SIGSYS},
-/*señales que no hay en todas partes*/
-#ifdef SIGPOLL
-        {"POLL", SIGPOLL},
-#endif
-#ifdef SIGPWR
-        {"PWR", SIGPWR},
-#endif
-#ifdef SIGEMT
-        {"EMT", SIGEMT},
-#endif
-#ifdef SIGINFO
-        {"INFO", SIGINFO},
-#endif
-#ifdef SIGSTKFLT
-        {"STKFLT", SIGSTKFLT},
-#endif
-#ifdef SIGCLD
-        {"CLD", SIGCLD},
-#endif
-#ifdef SIGLOST
-        {"LOST", SIGLOST},
-#endif
-#ifdef SIGCANCEL
-        {"CANCEL", SIGCANCEL},
-#endif
-#ifdef SIGTHAW
-        {"THAW", SIGTHAW},
-#endif
-#ifdef SIGFREEZE
-        {"FREEZE", SIGFREEZE},
-#endif
-#ifdef SIGLWP
-        {"LWP", SIGLWP},
-#endif
-#ifdef SIGWAITING
-        {"WAITING", SIGWAITING},
-#endif
-        {NULL, -1},
-};    /*fin array sigstrnum */
 
 //utilidades
 int TrocearCadena(char *cadena, char *trozos[]);
@@ -142,8 +71,6 @@ char *ConvierteModo2(mode_t m);
 void getDir();
 
 int convertPriority(tItemT prioridad);
-
-char *currentUser();
 
 //sobre directorios
 int isDirectory(const char *path);
@@ -212,13 +139,16 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]); //para ejecu
 
 char *Ejecutable(char *s);//entiendo que busca el ejecutable en el sistema
 
-int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prioridad, bool plano2, bool env);
+int execute(char *prog, tItemL entrada, int argCounter, int envCounter, int prioridad, bool plano2);
 
 //sobre señales
 int ValorSenal(char *sen);
 
 char *NombreSenal(int sen);
 
+//para mostrar la información de un proceso
 void procInfo(tItemP p);
+
+char *currentUser();
 
 #endif //P0_SO_FUNCIONES_H

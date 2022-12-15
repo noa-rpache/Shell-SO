@@ -6,6 +6,79 @@
 
 #include "funciones.h"
 
+//las siguientes funciones nos permiten obtener el nombre de una senal a partir del número y viceversa
+static struct SEN sigstrnum[] = {
+        {"HUP", SIGHUP},
+        {"INT", SIGINT},
+        {"QUIT", SIGQUIT},
+        {"ILL", SIGILL},
+        {"TRAP", SIGTRAP},
+        {"ABRT", SIGABRT},
+        {"IOT", SIGIOT},
+        {"BUS", SIGBUS},
+        {"FPE", SIGFPE},
+        {"KILL", SIGKILL},
+        {"USR1", SIGUSR1},
+        {"SEGV", SIGSEGV},
+        {"USR2", SIGUSR2},
+        {"PIPE", SIGPIPE},
+        {"ALRM", SIGALRM},
+        {"TERM", SIGTERM},
+        {"CHLD", SIGCHLD},
+        {"CONT", SIGCONT},
+        {"STOP", SIGSTOP},
+        {"TSTP", SIGTSTP},
+        {"TTIN", SIGTTIN},
+        {"TTOU", SIGTTOU},
+        {"URG", SIGURG},
+        {"XCPU", SIGXCPU},
+        {"XFSZ", SIGXFSZ},
+        {"VTALRM", SIGVTALRM},
+        {"PROF", SIGPROF},
+        {"WINCH", SIGWINCH},
+        {"IO", SIGIO},
+        {"SYS", SIGSYS},
+/*señales que no hay en todas partes*/
+#ifdef SIGPOLL
+        {"POLL", SIGPOLL},
+#endif
+#ifdef SIGPWR
+        {"PWR", SIGPWR},
+#endif
+#ifdef SIGEMT
+        {"EMT", SIGEMT},
+#endif
+#ifdef SIGINFO
+        {"INFO", SIGINFO},
+#endif
+#ifdef SIGSTKFLT
+        {"STKFLT", SIGSTKFLT},
+#endif
+#ifdef SIGCLD
+        {"CLD", SIGCLD},
+#endif
+#ifdef SIGLOST
+        {"LOST", SIGLOST},
+#endif
+#ifdef SIGCANCEL
+        {"CANCEL", SIGCANCEL},
+#endif
+#ifdef SIGTHAW
+        {"THAW", SIGTHAW},
+#endif
+#ifdef SIGFREEZE
+        {"FREEZE", SIGFREEZE},
+#endif
+#ifdef SIGLWP
+        {"LWP", SIGLWP},
+#endif
+#ifdef SIGWAITING
+        {"WAITING", SIGWAITING},
+#endif
+        {NULL, -1},
+};    /*fin array sigstrnum */
+
+
 //auxiliares
 int TrocearCadena(char *cadena, char *trozos[]) {
     int i = 1;
@@ -897,83 +970,70 @@ int OurExecvpe(char *file, char *const argv[], char *const envp[]) {
     return (execve(Ejecutable(file), argv, envp));
 }
 
-int execute(char *prog, char *argv[MAX_TOKENS], char *envp[MAX_TOKENS], int prioridad, bool plano2, bool env) {
-    int pid, currentPid = getpid();
-    //pid que se obtendrá del hijo y currentPid con el que trabajamos para setear la prioridad
+int execute(char *prog, tItemL entrada, int argCounter, int envCounter, int prioridad, bool plano2) {
+    int pid = 300; //pid que se obtendrá del hijo y currentPid con el que trabajamos para setear la prioridad
+    char *argv[argCounter], *envp[envCounter];
+    bool entorno = false;
 
-    /*printf("prog: %s, argv:", &prog[0]);
-    int i = 0;
-    while (argv[i] != NULL) {
-        printf("%s ", argv[i]);
-        i++;
+    //printf("prog: %s\n",prog);
+    if (envCounter != 0) {
+        entorno = true;
+        envp[0] = entrada.comando; //printf("env[0] = %s = %s\n",envp[0], entrada.comando);
+        int j;
+        for (j = 1; j < envCounter; j++) { //no vale el mismo contador porque se tiene en cuenta el comando ppal
+            envp[j] = entrada.comandos.data[j - 1]; //printf("env[%d] %s = %s\n",j,envp[j], entrada.comandos.data[j-1]);
+        }
+        envp[j] = NULL; //printf("\n");
     }
-    printf("\n");*/
 
-    if (!plano2) { //se tiene que ejecutar en 1er plano -> el prompt está en pausa hasta que termina
+    if (argCounter != 0) {
+        int j, k = envCounter;
+        argv[0] = prog; //printf("argv[0] %s = %s\n k = 0\n", argv[0], prog);
+        //debería tener un -1 por el entrada.comando y un +1 por el programa en sí, el otro -1 es porque arrays
+        for (j = 1; j < argCounter; j++) {
+            argv[j] = entrada.comandos.data[k]; //printf("argv[%d] %s = %s\n k = %d\n",j,argv[j], entrada.comandos.data[k], k);
+            k++;
+        }
+        argv[j] = NULL; //printf("\n");
+    }
+    printf("\n");
 
-        if ((pid = fork()) == 0) { //este el código que ejecutará el hijo
-            currentPid = getpid();
-            if (prioridad != 0) {
-                if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
-                    strerror(errno);
-                    exit(0); //salir del proceso hijo
-                }
+
+    if ((pid = fork()) == 0) { //este el código a ejecutarse
+
+        if (prioridad != 0) {
+            if (setpriority(PRIO_PROCESS, pid, prioridad) == -1) {
+                strerror(errno);
+                exit(0); //salir del proceso
             }
-
-            if (env) {
-                if (OurExecvpe(prog, argv, envp) == -1) {
-                    perror("fallo al ejecutar el programa cambiando el entorno en primer plano");
-                    exit(0);
-                }
-            } else {
-                if (execvp(Ejecutable(prog), argv) == -1) {
-                    perror("fallo al ejecutar el programa sin cambiar el entorno en primer plano");
-                    exit(0);
-                }
-            }
-            exit(0);
         }
 
-    } else {
-        //se tiene que ejecutar en 2º plano -> el prompt y la shell siguen de chill
-        currentPid = getpid();
-        if (prioridad != 0) {
-            if (setpriority(PRIO_PROCESS, currentPid, prioridad) == -1) {
-                strerror(errno);
+        if (entorno) {
+            if (OurExecvpe(prog, argv, envp) == -1) {
+                perror("fallo al ejecutar el programa cambiando el entorno en primer plano");
+                exit(0);
+            }
+        } else {
+            //printf("Ejecutable: %s\n", Ejecutable(prog));
+            if (execvp(Ejecutable(prog), argv) == -1) {
+                perror("fallo al ejecutar el programa sin cambiar el entorno en primer plano");
                 exit(0);
             }
         }
+        exit(0); //al terminar la ejecución se sale
 
-        if (env) {
-            if (OurExecvpe(prog, argv, envp) == -1) {
-                perror("fallo al ejecutar el programa cambiando el entorno en segundo plano");
-                return -1;
-            }
-        } else {
-            if (execvp(Ejecutable(prog), argv) == -1) {
-                printf("%s\n", Ejecutable(prog));
-                perror("fallo al ejecutar el programa sin cambiar el entorno en segundo plano");
-                return -1;
-            }
-        }
-
-        exit(0);
     }
 
-    if (!plano2) waitpid(pid, NULL, 0);
-    //esperar => prompt espera => el proceso padre
+    if (!plano2) waitpid(pid, NULL, 0); //esperar => prompt espera => el proceso padre
 
-    printf("el pid del proceso ejecutado es %d\n", currentPid);
+    //printf("el pid del proceso ejecutado es %d\n", pid);
 
-    return 1; //va a devolver el pid del proceso creado
+    return pid; //va a devolver el pid del proceso creado
 }
 
 int convertPriority(tItemT prioridad) {
-
     int pri;
-
     pri = (int) strtoul(memmove(&prioridad[0], &prioridad[1], 256), NULL, 10);
-
     return pri;
 }
 
